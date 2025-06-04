@@ -1,5 +1,7 @@
 # ROOTS App
 
+Roots App
+
 Esta es una aplicación React para gestión de proyectos, diseñada con una paleta de colores Earthy Sage Green.
 
 ## ¿Cómo ejecutar la app?
