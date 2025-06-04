@@ -1,0 +1,141 @@
+/* index.css: Estilos base para toda la app ROOTS */
+html {
+  box-sizing: border-box;
+  font-size: 16px;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+body {
+  background: #42524A;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  color: #F5F5DC;
+  margin: 0;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #FFFFFF;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.5em;
+}
+
+button, .MuiButton-root {
+  background: #FFC499;
+  color: #42524A;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(66,82,74,0.08);
+  border: none;
+  font-weight: 600;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+button:hover, .MuiButton-root:hover {
+  background: #F8CBA6;
+  box-shadow: 0 6px 28px rgba(66,82,74,0.13);
+}
+
+input, .MuiInputBase-root, .MuiTextField-root {
+  background: #F5F5DC !important;
+  color: #42524A !important;
+  border-radius: 14px !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.MuiDialog-paper {
+  background: #F5F5DC !important;
+  color: #42524A !important;
+  border-radius: 24px !important;
+}
+
+.MuiPaper-root, .MuiCard-root {
+  background: #42524A !important;
+  color: #F5F5DC !important;
+  border-radius: 24px !important;
+  box-shadow: 0 4px 24px rgba(66,82,74,0.08) !important;
+}
+
+.MuiTable-root, table {
+  background: #F8F6F2 !important;
+  border-radius: 18px;
+  box-shadow: none;
+}
+
+.MuiTableCell-root, th, td {
+  border: none !important;
+  color: #786C3B !important;
+  font-size: 1rem;
+  background: transparent !important;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #E9E9E9;
+}
+::-webkit-scrollbar-thumb {
+  background: #C5C5C5;
+  border-radius: 8px;
+}
+
+input, textarea, button {
+  font-family: inherit;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: #68756D;
+  margin-top: 0;
+}
+
+a {
+  color: #B57B66;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  background: #B57B66;
+  color: #F4F3F1;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(100,100,100,0.08);
+  margin-top: 10px;
+  transition: background 0.2s;
+}
+button:hover {
+  background: #A1A79E;
+  color: #333;
+}
+
+input, textarea {
+  border: 1px solid #A1A79E;
+  border-radius: 6px;
+  padding: 7px 10px;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  background: #fff;
+  color: #333;
+}
+
+textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+pre {
+  background: #F4F3F1;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 0.95rem;
+  overflow-x: auto;
+}
