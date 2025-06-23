@@ -15,12 +15,14 @@ export type Category = {
     name: string;
 };
 
+export type ProjectStatus = 'En Curso' | 'Completado' | 'Próximo';
+
 export type Project = {
     id: string;
     name: string;
     description: string;
     address: string;
-    status: 'En Curso' | 'Completado' | 'Próximo';
+    status: ProjectStatus;
     investment: string;
     googleSheetId: string;
     participants: Participant[];
@@ -39,6 +41,7 @@ type ProjectsContextType = {
     projects: Project[];
     addProject: (project: AddProjectData) => void;
     getProjectById: (id: string | null) => Project | undefined;
+    updateProjectStatus: (projectId: string, newStatus: ProjectStatus) => void;
 };
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -53,7 +56,7 @@ const PROJECTS_MOCK_DATA: Project[] = [
         status: 'En Curso',
         investment: '10,000',
         progress: 75,
-        googleSheetId: '12345_your_sheet_id_here_1',
+        googleSheetId: '1i2nUGU9y2G2YdkE_n2wNq0t6sS9_gDI6gU4g8fF-yZk',
         participants: [
             { name: 'Ana García', contribution: 5000, share: 50, src: 'https://placehold.co/40x40.png', fallback: 'AG' },
             { name: 'Luis Torres', contribution: 3000, share: 30, src: 'https://placehold.co/40x40.png', fallback: 'LT' },
@@ -73,7 +76,7 @@ const PROJECTS_MOCK_DATA: Project[] = [
         status: 'Completado',
         investment: '25,000',
         progress: 100,
-        googleSheetId: 'YOUR_SHEET_ID_HERE_2',
+        googleSheetId: '1mN8oP7qR_sT5uV9xW2yZ4aB6cE8gJ1kF3hD5iG7jA9vW',
         participants: [
             { name: 'DE', src: 'https://placehold.co/40x40.png', fallback: 'DE' },
         ],
@@ -87,7 +90,7 @@ const PROJECTS_MOCK_DATA: Project[] = [
         status: 'En Curso',
         investment: '7,500',
         progress: 40,
-        googleSheetId: 'YOUR_SHEET_ID_HERE_3',
+        googleSheetId: '1kL9pS3rT_wU7yV1xZ5bA8dF0gH2jK4eG6iC9bA2sU3vX',
         participants: [
             { name: 'Fernanda Gómez', contribution: 4000, share: 53, src: 'https://placehold.co/40x40.png', fallback: 'FG' },
             { name: 'Hugo Iglesias', contribution: 2000, share: 27, src: 'https://placehold.co/40x40.png', fallback: 'HI' },
@@ -106,7 +109,7 @@ const PROJECTS_MOCK_DATA: Project[] = [
         status: 'Próximo',
         investment: '3,000',
         progress: 0,
-        googleSheetId: 'YOUR_SHEET_ID_HERE_4',
+        googleSheetId: '1bA2sD3fG_hJ5kL7mN9oP1qR3sT5uV7xW9yZ0aB2cE4dF',
         participants: [
             { name: 'LM', src: 'https://placehold.co/40x40.png', fallback: 'LM' },
         ],
@@ -136,8 +139,16 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         return projects.find(p => p.id === id);
     };
 
+    const updateProjectStatus = (projectId: string, newStatus: ProjectStatus) => {
+        setProjects(prevProjects => 
+            prevProjects.map(p => 
+                p.id === projectId ? { ...p, status: newStatus } : p
+            )
+        );
+    };
+
     return (
-        <ProjectsContext.Provider value={{ projects, addProject, getProjectById }}>
+        <ProjectsContext.Provider value={{ projects, addProject, getProjectById, updateProjectStatus }}>
             {children}
         </ProjectsContext.Provider>
     );

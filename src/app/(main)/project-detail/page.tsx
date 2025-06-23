@@ -12,12 +12,14 @@ import { Pie, PieChart, Cell } from "recharts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link";
-import { Users, DollarSign, Target, Landmark, MapPin, Loader2, AlertCircle } from "lucide-react";
+import { Users, DollarSign, Target, Landmark, MapPin, Loader2, AlertCircle, ChevronDown } from "lucide-react";
 import { CreateExpenseDialog } from "@/components/create-expense-dialog";
 import { CreateCategoryDialog } from "@/components/create-category-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useProjects } from "@/contexts/ProjectsContext";
-import type { Category as ProjectCategory } from "@/contexts/ProjectsContext";
+import type { Category as ProjectCategory, ProjectStatus } from "@/contexts/ProjectsContext";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 
 // --- TYPES ---
@@ -45,7 +47,7 @@ const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--c
 export default function ProjectDetailPage() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get('id');
-  const { getProjectById } = useProjects();
+  const { getProjectById, updateProjectStatus } = useProjects();
   const project = getProjectById(projectId);
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -55,12 +57,6 @@ export default function ProjectDetailPage() {
 
   useEffect(() => {
     if (!project) {
-      setIsLoading(false);
-      return;
-    }
-    
-    if (!project.googleSheetId || project.googleSheetId.includes('YOUR_SHEET_ID_HERE') || project.googleSheetId.includes('12345_your_sheet_id_here')) {
-      setError("Aún necesitas conectar este proyecto a una hoja de cálculo. Edita el proyecto para añadir un ID de Google Sheet válido.");
       setIsLoading(false);
       return;
     }
@@ -376,7 +372,34 @@ export default function ProjectDetailPage() {
               <CardTitle className="font-headline text-3xl">{project.name}</CardTitle>
               <CardDescription>{project.description}</CardDescription>
             </div>
-            <Badge className="text-base">{project.status}</Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-base transition-colors hover:bg-muted">
+                    <Badge 
+                      className={
+                        "pointer-events-none text-base " + 
+                        (project.status === 'En Curso' ? 'bg-blue-500/20 text-blue-700' : 
+                         project.status === 'Próximo' ? 'bg-amber-500/20 text-amber-700' : '')
+                      } 
+                      variant={project.status === 'Completado' ? 'secondary' : 'default'}
+                    >
+                      {project.status}
+                    </Badge>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => updateProjectStatus(project.id, 'Próximo')}>
+                  Próximo
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => updateProjectStatus(project.id, 'En Curso')}>
+                  En Curso
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => updateProjectStatus(project.id, 'Completado')}>
+                  Completado
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardHeader>
       </Card>
