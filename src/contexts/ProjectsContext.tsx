@@ -87,7 +87,8 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     const { toast } = useToast();
 
     useEffect(() => {
-        if (!user) {
+        // If there's no user or the database isn't configured, don't try to fetch data.
+        if (!user || !db) {
             setProjects([]);
             setLoading(false);
             return;
@@ -131,6 +132,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
             toast({ title: "No autenticado", description: "Debes iniciar sesión para crear un proyecto.", variant: "destructive" });
             return;
         }
+        if (!db) {
+            toast({ title: "Modo Demostración", description: "La creación de proyectos requiere configuración de Firebase.", variant: "destructive" });
+            return;
+        }
 
         const newProject = {
             ...projectData,
@@ -167,6 +172,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     }, [projects]);
 
     const updateProjectStatus = async (projectId: string, newStatus: ProjectStatus) => {
+        if (!db) {
+            toast({ title: "Modo Demostración", description: "Esta función requiere configuración de Firebase.", variant: "destructive" });
+            return;
+        }
         const projectRef = doc(db, 'projects', projectId);
         try {
             await updateDoc(projectRef, { status: newStatus });
@@ -178,6 +187,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     };
     
     const updateProject = async (projectId: string, projectData: UpdateProjectData) => {
+        if (!db) {
+            toast({ title: "Modo Demostración", description: "Esta función requiere configuración de Firebase.", variant: "destructive" });
+            return;
+        }
         const projectRef = doc(db, 'projects', projectId);
         try {
             await updateDoc(projectRef, projectData);
@@ -189,6 +202,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const addCategoryToProject = async (projectId: string, category: Category) => {
+        if (!db) {
+            toast({ title: "Modo Demostración", description: "Esta función requiere configuración de Firebase.", variant: "destructive" });
+            return;
+        }
         const projectRef = doc(db, 'projects', projectId);
         try {
             const projectSnap = await getDoc(projectRef);
@@ -205,6 +222,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const updateCategoryInProject = async (projectId: string, categoryName: string, newCategoryData: { budget: number }) => {
+        if (!db) {
+            toast({ title: "Modo Demostración", description: "Esta función requiere configuración de Firebase.", variant: "destructive" });
+            return;
+        }
         const projectRef = doc(db, 'projects', projectId);
         try {
             const projectSnap = await getDoc(projectRef);
@@ -223,6 +244,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const deleteCategoryFromProject = async (projectId: string, categoryName: string) => {
+        if (!db) {
+            toast({ title: "Modo Demostración", description: "Esta función requiere configuración de Firebase.", variant: "destructive" });
+            return;
+        }
         const projectRef = doc(db, 'projects', projectId);
         try {
             const projectSnap = await getDoc(projectRef);
@@ -239,6 +264,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const updateParticipantRole = async (projectId: string, participantEmail: string, newRole: 'admin' | 'editor' | 'viewer') => {
+        if (!db) {
+            toast({ title: "Modo Demostración", description: "Esta función requiere configuración de Firebase.", variant: "destructive" });
+            return;
+        }
         const projectRef = doc(db, 'projects', projectId);
         try {
              const projectSnap = await getDoc(projectRef);
@@ -283,3 +312,5 @@ export const useProjects = () => {
     }
     return context;
 };
+
+    
