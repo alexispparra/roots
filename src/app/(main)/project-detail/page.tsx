@@ -40,6 +40,20 @@ type CategoryWithSpent = ProjectCategory & {
   budget: number;
 }
 
+// --- MOCK DATA for projects without a real Google Sheet ---
+const MOCK_TRANSACTIONS: Transaction[] = [
+  { id: 'MT-1', date: '2024-07-20', description: 'Licencia de software', category: 'Desarrollo', user: 'Ana García', paymentMethod: 'Banco', amountARS: 150000, exchangeRate: 1000, amountUSD: 150 },
+  { id: 'MT-2', date: '2024-07-21', description: 'Diseño de logo', category: 'Diseño UI/UX', user: 'Luis Torres', paymentMethod: 'Factura', amountARS: 80000, exchangeRate: 1000, amountUSD: 80 },
+  { id: 'MT-3', date: '2024-07-22', description: 'Campaña en redes', category: 'Marketing', user: 'Carlos Ruiz', paymentMethod: 'Efectivo', amountARS: 120000, exchangeRate: 1050, amountUSD: 114.28 },
+  { id: 'MT-4', date: '2024-07-23', description: 'Servidor de pruebas', category: 'Desarrollo', user: 'Ana García', paymentMethod: 'Banco', amountARS: 50000, exchangeRate: 1050, amountUSD: 47.62 },
+];
+
+const MOCK_CATEGORIES = [
+    { name: "Desarrollo", budget: 5000 },
+    { name: "Diseño UI/UX", budget: 2000 },
+    { name: "Marketing", budget: 3000 },
+];
+
 
 const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -56,14 +70,28 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!project || !project.googleSheetId) {
+     if (!project) {
         setIsLoading(false);
-        setError(null);
-        setTransactions([]);
-        setCategories([]);
         return;
     }
 
+    // If there's no sheet ID, use mock data to populate the UI.
+    if (!project.googleSheetId) {
+        const categoriesWithSpent = MOCK_CATEGORIES.map(cat => {
+            const spent = MOCK_TRANSACTIONS
+                .filter(t => t.category === cat.name)
+                .reduce((sum, t) => sum + t.amountUSD, 0);
+            return { ...cat, spent };
+        });
+        
+        setTransactions(MOCK_TRANSACTIONS);
+        setCategories(categoriesWithSpent);
+        setIsLoading(false);
+        setError(null);
+        return;
+    }
+
+    // If there is a sheet ID, fetch real data.
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
@@ -138,18 +166,6 @@ export default function ProjectDetailPage() {
 
 
   const renderContent = () => {
-    if (!project.googleSheetId) {
-        return (
-            <Alert className="mt-6">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Sin conexión a Google Sheets</AlertTitle>
-                <AlertDescription>
-                    Este proyecto no tiene un ID de Google Sheets asociado. Para ver los datos financieros, edita el proyecto y añade un ID válido.
-                </AlertDescription>
-            </Alert>
-        );
-    }
-      
     if (isLoading) {
       return (
         <div className="flex items-center justify-center h-64">
