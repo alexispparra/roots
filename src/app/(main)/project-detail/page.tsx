@@ -19,10 +19,11 @@ import { CreateIncomeDialog } from "@/components/create-income-dialog";
 import { CreateCategoryDialog } from "@/components/create-category-dialog";
 import { EditCategoryDialog } from "@/components/edit-category-dialog";
 import { EditExpenseDialog } from "@/components/edit-expense-dialog";
+import { EditProjectDialog } from "@/components/edit-project-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useProjects } from "@/contexts/ProjectsContext";
-import type { Category as ProjectCategory, ProjectStatus } from "@/contexts/ProjectsContext";
+import type { Category as ProjectCategory, ProjectStatus, UpdateProjectData } from "@/contexts/ProjectsContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -86,11 +87,11 @@ export default function ProjectDetailPage() {
   const { toast } = useToast();
 
   const projectId = searchParams.get('id');
-  const { getProjectById, updateProjectStatus, addCategoryToProject, updateCategoryInProject, deleteCategoryFromProject } = useProjects();
+  const { getProjectById, updateProjectStatus, addCategoryToProject, updateCategoryInProject, deleteCategoryFromProject, updateProject } = useProjects();
   const project = getProjectById(projectId);
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [categories, setCategories] = useState<CategoryWithSpent[]>([]);
+  const [categories, setCategories] = useState<ProjectCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -105,6 +106,7 @@ export default function ProjectDetailPage() {
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(searchParams.get('category') ? decodeURIComponent(searchParams.get('category')!) : null);
   
+  const [isEditingProject, setIsEditingProject] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ProjectCategory | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<ProjectCategory | null>(null);
   const [editingExpense, setEditingExpense] = useState<Transaction | null>(null);
@@ -125,21 +127,20 @@ export default function ProjectDetailPage() {
     }
 
     const processDataAndSetYears = (txns: Transaction[], allCategories: ProjectCategory[]) => {
-        const categoriesWithSpent = allCategories.map(cat => {
-            const spent = txns
-                .filter(t => t.category === cat.name)
-                .reduce((sum, t) => sum + t.amountUSD, 0);
-            return { ...cat, spent };
-        });
-        
         setTransactions(txns);
-        setCategories(categoriesWithSpent);
+        setCategories(allCategories);
 
         const years = [...new Set(txns.map(t => new Date(t.date).getFullYear()))].sort((a, b) => b - a);
         if (years.length > 0) {
             setAllYears(years);
-            setCashflowYear(years[0]);
-            setTransactionsYear(years[0]);
+            const currentYear = new Date().getFullYear();
+            if(years.includes(currentYear)) {
+                setCashflowYear(currentYear);
+                setTransactionsYear(currentYear);
+            } else {
+                setCashflowYear(years[0]);
+                setTransactionsYear(years[0]);
+            }
         } else {
             const currentYear = new Date().getFullYear();
             setAllYears([currentYear]);
@@ -152,7 +153,7 @@ export default function ProjectDetailPage() {
     }
 
     if (!project.googleSheetId) {
-        processDataAndSetYears(MOCK_TRANSACTIONS, MOCK_CATEGORIES);
+        processDataAndSetYears(MOCK_TRANSACTIONS, project.categories || MOCK_CATEGORIES);
         return;
     }
 
@@ -186,9 +187,24 @@ export default function ProjectDetailPage() {
     fetchData();
   }, [project]);
   
+  const handleUpdateProject = (data: UpdateProjectData) => {
+    if (project) {
+      updateProject(project.id, data);
+      toast({
+          title: "Proyecto Actualizado",
+          description: "Los detalles del proyecto han sido guardados.",
+      });
+    }
+    setIsEditingProject(false);
+  }
+
   const handleAddCategory = (data: { name: string; budget: number }) => {
       if (project) {
         addCategoryToProject(project.id, data);
+        toast({
+          title: "Categoría Añadida",
+          description: `La categoría "${data.name}" ha sido creada.`,
+        });
       }
   };
 
@@ -242,6 +258,10 @@ export default function ProjectDetailPage() {
         type: 'expense',
     };
     setTransactions(prev => [newTransaction, ...prev]);
+    toast({
+      title: "Gasto Registrado",
+      description: "El nuevo gasto ha sido añadido al proyecto.",
+    });
   };
   
   const handleUpdateExpense = (data: any) => {
@@ -284,6 +304,10 @@ export default function ProjectDetailPage() {
         type: 'income',
     };
     setTransactions(prev => [newTransaction, ...prev]);
+    toast({
+      title: "Ingreso Registrado",
+      description: "El nuevo ingreso ha sido añadido al proyecto.",
+    });
   };
 
 
@@ -403,7 +427,7 @@ export default function ProjectDetailPage() {
     );
   }
   
-  const projectCategories = project.googleSheetId ? categories : project.categories.map(c => ({...c, spent: 0}));
+  const projectCategories = project.googleSheetId ? categories : project.categories;
 
   const totalSpent = useMemo(() => transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amountUSD, 0), [transactions]);
   const totalBudget = useMemo(() => projectCategories.reduce((sum, cat) => sum + cat.budget, 0), [projectCategories]);
@@ -430,11 +454,11 @@ export default function ProjectDetailPage() {
   
   const monthlyFlowData = useMemo(() => {
       const monthlyTotals: {[key: string]: { month: string, Gastos: number, Ingresos: number }} = {};
-      const selectedYear = cashflowYear.toString();
+      const selectedYear = cashflowYear;
       
       transactions.forEach(t => {
           const transactionDate = new Date(t.date);
-          if (transactionDate.getFullYear().toString() === selectedYear) {
+          if (transactionDate.getFullYear() === selectedYear) {
               const monthKey = format(transactionDate, 'yyyy-MM');
               const monthName = format(transactionDate, 'MMM', { locale: es });
               if (!monthlyTotals[monthKey]) {
@@ -878,7 +902,7 @@ export default function ProjectDetailPage() {
             </CardHeader>
             <CardContent>
              {(() => {
-                const sortedMonths = Object.keys(monthlyGroupedTransactions).sort().reverse();
+                const sortedMonths = Object.keys(monthlyGroupedTransactions).sort((a,b) => b.localeCompare(a));
                 if (sortedMonths.length === 0) {
                     return (
                         <div className="h-48 flex items-center justify-center text-center text-muted-foreground">
@@ -1239,9 +1263,12 @@ export default function ProjectDetailPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-4">
               <CardTitle className="font-headline text-3xl">{project.name}</CardTitle>
               <CardDescription>{project.description}</CardDescription>
+              <Button variant="ghost" size="icon" className="shrink-0" onClick={() => setIsEditingProject(true)}>
+                <Edit className="h-5 w-5 text-muted-foreground" />
+              </Button>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -1275,6 +1302,13 @@ export default function ProjectDetailPage() {
         </CardHeader>
       </Card>
       {renderContent()}
+
+      <EditProjectDialog
+        isOpen={isEditingProject}
+        onOpenChange={setIsEditingProject}
+        project={project}
+        onUpdateProject={handleUpdateProject}
+      />
 
       <EditCategoryDialog
         isOpen={!!editingCategory}
@@ -1324,5 +1358,3 @@ export default function ProjectDetailPage() {
     </div>
   );
 }
-
-    

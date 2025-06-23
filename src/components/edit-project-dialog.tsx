@@ -1,10 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { PlusCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -14,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Form,
@@ -26,7 +24,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { useProjects } from "@/contexts/ProjectsContext"
+import type { Project, UpdateProjectData } from "@/contexts/ProjectsContext"
 
 const formSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
@@ -35,40 +33,43 @@ const formSchema = z.object({
   googleSheetId: z.string().optional(),
 })
 
-export function CreateProjectDialog() {
-  const [open, setOpen] = useState(false)
-  const { addProject } = useProjects();
+type EditProjectDialogProps = {
+  project: Project | null;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  onUpdateProject: (data: UpdateProjectData) => void;
+}
+
+export function EditProjectDialog({ project, isOpen, onOpenChange, onUpdateProject }: EditProjectDialogProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      address: "",
-      googleSheetId: "",
-    },
   })
 
+  useEffect(() => {
+    if (project) {
+      form.reset({
+        name: project.name,
+        description: project.description,
+        address: project.address,
+        googleSheetId: project.googleSheetId,
+      })
+    }
+  }, [project, form, isOpen])
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    addProject(values);
-    setOpen(false)
-    form.reset()
+    onUpdateProject(values);
+    onOpenChange(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2" />
-          Crear Proyecto
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
+              <DialogTitle>Editar Proyecto</DialogTitle>
               <DialogDescription>
-                Completa los detalles para iniciar tu nuevo emprendimiento.
+                Actualiza los detalles de tu proyecto.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -129,7 +130,7 @@ export function CreateProjectDialog() {
               />
             </div>
             <DialogFooter>
-              <Button type="submit">Crear Proyecto</Button>
+              <Button type="submit">Guardar Cambios</Button>
             </DialogFooter>
           </form>
         </Form>

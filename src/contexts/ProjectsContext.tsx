@@ -25,17 +25,24 @@ export type Project = {
     address: string;
     status: ProjectStatus;
     investment: string;
-    googleSheetId: string;
+    googleSheetId?: string;
     participants: Participant[];
     progress: number;
     categories: Category[];
 };
 
-type AddProjectData = {
+export type AddProjectData = {
     name: string;
     description?: string;
     address: string;
-    googleSheetId: string;
+    googleSheetId?: string;
+}
+
+export type UpdateProjectData = {
+    name: string;
+    description?: string;
+    address: string;
+    googleSheetId?: string;
 }
 
 type ProjectsContextType = {
@@ -46,6 +53,7 @@ type ProjectsContextType = {
     addCategoryToProject: (projectId: string, category: Category) => void;
     updateCategoryInProject: (projectId: string, categoryName: string, newCategoryData: { budget: number }) => void;
     deleteCategoryFromProject: (projectId: string, categoryName: string) => void;
+    updateProject: (projectId: string, projectData: UpdateProjectData) => void;
 };
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -154,11 +162,14 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
 
     const addCategoryToProject = (projectId: string, category: Category) => {
         setProjects(prevProjects => 
-            prevProjects.map(p => 
-                p.id === projectId 
-                    ? { ...p, categories: [...p.categories, category] } 
-                    : p
-            )
+            prevProjects.map(p => {
+                if (p.id === projectId) {
+                    const existingCategory = p.categories.find(c => c.name === category.name);
+                    if (existingCategory) return p; // Avoid duplicates
+                    return { ...p, categories: [...p.categories, category] };
+                }
+                return p;
+            })
         );
     };
 
@@ -186,8 +197,16 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         );
     };
 
+    const updateProject = (projectId: string, projectData: UpdateProjectData) => {
+        setProjects(prevProjects =>
+            prevProjects.map(p =>
+                p.id === projectId ? { ...p, ...projectData } : p
+            )
+        );
+    };
+
     return (
-        <ProjectsContext.Provider value={{ projects, addProject, getProjectById, updateProjectStatus, addCategoryToProject, updateCategoryInProject, deleteCategoryFromProject }}>
+        <ProjectsContext.Provider value={{ projects, addProject, getProjectById, updateProjectStatus, addCategoryToProject, updateCategoryInProject, deleteCategoryFromProject, updateProject }}>
             {children}
         </ProjectsContext.Provider>
     );

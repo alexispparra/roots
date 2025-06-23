@@ -1,17 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, MapPin } from "lucide-react";
+import { Users, MapPin, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { CreateProjectDialog } from "@/components/create-project-dialog";
 import { useProjects } from "@/contexts/ProjectsContext";
+import { EditProjectDialog } from "@/components/edit-project-dialog";
+import type { Project, UpdateProjectData } from "@/contexts/ProjectsContext";
 
 
 export default function ProjectsPage() {
-  const { projects } = useProjects();
+  const { projects, updateProject } = useProjects();
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+
+  const handleUpdateProject = (data: UpdateProjectData) => {
+    if (editingProject) {
+      updateProject(editingProject.id, data);
+    }
+    setEditingProject(null);
+  };
 
   return (
     <div className="grid gap-6">
@@ -30,7 +41,12 @@ export default function ProjectsPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="font-headline text-xl">{project.name}</CardTitle>
-                <Badge variant={project.status === 'Completado' ? 'secondary' : 'default'} className={project.status === 'En Curso' ? 'bg-blue-500/20 text-blue-700' : project.status === 'Próximo' ? 'bg-amber-500/20 text-amber-700' : ''}>{project.status}</Badge>
+                <div className="flex items-center gap-2">
+                    <Badge variant={project.status === 'Completado' ? 'secondary' : 'default'} className={project.status === 'En Curso' ? 'bg-blue-500/20 text-blue-700' : project.status === 'Próximo' ? 'bg-amber-500/20 text-amber-700' : ''}>{project.status}</Badge>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingProject(project)}>
+                        <Edit className="h-4 w-4" />
+                    </Button>
+                </div>
               </div>
               <p className="text-sm text-muted-foreground pt-2">{project.description}</p>
             </CardHeader>
@@ -61,6 +77,12 @@ export default function ProjectsPage() {
           </Card>
         ))}
       </div>
+      <EditProjectDialog
+        isOpen={!!editingProject}
+        onOpenChange={(isOpen) => !isOpen && setEditingProject(null)}
+        project={editingProject}
+        onUpdateProject={handleUpdateProject}
+      />
     </div>
   );
 }
