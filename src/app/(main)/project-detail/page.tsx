@@ -1,106 +1,146 @@
 "use client"
 
 import { useSearchParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import type { ChartConfig } from "@/components/ui/chart"
-import { Pie, PieChart } from "recharts"
+import { Pie, PieChart, Cell } from "recharts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link";
-import { Users, DollarSign, Target, Landmark, MapPin } from "lucide-react";
+import { Users, DollarSign, Target, Landmark, MapPin, Loader2, AlertCircle } from "lucide-react";
 import { CreateExpenseDialog } from "@/components/create-expense-dialog";
 import { CreateCategoryDialog } from "@/components/create-category-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// --- MOCK DATA ---
-const projectsData = {
+
+// --- MOCK PROJECT METADATA ---
+const projectsMetadata = {
   'PROJ-001': {
     name: "Lanzamiento App Móvil",
     address: "Av. Libertador 498, Buenos Aires",
     status: "En Curso",
-    googleSheetId: 'YOUR_SHEET_ID_HERE_1',
-    summaryData: [
-      { metric: "Gasto Total", value: "$7,000", icon: <DollarSign /> },
-      { metric: "Presupuesto Restante", value: "$5,000", icon: <Target /> },
-      { metric: "Participantes", value: "3", icon: <Users /> },
-      { metric: "Fondos", value: "$10,000", icon: <Landmark /> },
-    ],
-    spendingData: [
-      { category: "Desarrollo", amount: 3500, fill: "var(--color-dev)" },
-      { category: "Diseño UI/UX", amount: 2000, fill: "var(--color-design)" },
-      { category: "Marketing", amount: 1500, fill: "var(--color-marketing)" },
-    ],
-    spendingConfig: {
-      amount: { label: "Monto" },
-      dev: { label: "Desarrollo", color: "hsl(var(--chart-1))" },
-      design: { label: "Diseño UI/UX", color: "hsl(var(--chart-2))" },
-      marketing: { label: "Marketing", color: "hsl(var(--chart-3))" },
-    } satisfies ChartConfig,
+    googleSheetId: '12345_your_sheet_id_here_1', // Replace with your actual sheet ID
     participants: [
         { name: "Ana García", contribution: 5000, share: 50, avatar: 'https://placehold.co/40x40.png', fallback: 'AG' },
         { name: "Luis Torres", contribution: 3000, share: 30, avatar: 'https://placehold.co/40x40.png', fallback: 'LT' },
         { name: "Carlos Ruiz", contribution: 2000, share: 20, avatar: 'https://placehold.co/40x40.png', fallback: 'CR' },
     ],
-    transactions: [
-      { id: 'T001', date: '2024-07-28', description: 'Servidores AWS', category: 'Desarrollo', user: 'Ana García', montoARS: 525000, cambio: 1050, medioDePago: 'Banco'},
-      { id: 'T002', date: '2024-07-27', description: 'Licencia Figma', category: 'Diseño UI/UX', user: 'Ana García', montoARS: 157500, cambio: 1050, medioDePago: 'Banco'},
-      { id: 'T003', date: '2024-07-26', description: 'Campaña Google Ads', category: 'Marketing', user: 'Luis Torres', montoARS: 840000, cambio: 1050, medioDePago: 'Factura'},
-      { id: 'T004', date: '2024-07-25', description: 'Compra de dominio', category: 'Desarrollo', user: 'Carlos Ruiz', montoARS: 26250, cambio: 1050, medioDePago: 'Efectivo'},
-      { id: 'T005', date: '2024-07-24', description: 'Servicios de contabilidad', category: 'Administrativo', user: 'Ana García', montoARS: 525000, cambio: 1050, medioDePago: 'Otro'},
-    ],
-    categories: [
-      { name: "Desarrollo", spent: 3525, budget: 6000 },
-      { name: "Diseño UI/UX", spent: 2150, budget: 3000 },
-      { name: "Marketing", spent: 2300, budget: 2500 },
-      { name: "Administrativo", spent: 500, budget: 1000 },
-    ]
   },
   'PROJ-003': {
     name: "Campaña Marketing Q3",
     address: "Av. Siempre Viva 742, Springfield",
     status: "En Curso",
-    googleSheetId: 'YOUR_SHEET_ID_HERE_3',
-    summaryData: [
-      { metric: "Gasto Total", value: "$4,200", icon: <DollarSign /> },
-      { metric: "Presupuesto Restante", value: "$3,300", icon: <Target /> },
-      { metric: "Participantes", value: "3", icon: <Users /> },
-      { metric: "Fondos", value: "$7,500", icon: <Landmark /> },
-    ],
-    spendingData: [
-      { category: "Publicidad", amount: 2800, fill: "var(--color-dev)" },
-      { category: "Contenido", amount: 1400, fill: "var(--color-design)" },
-    ],
-    spendingConfig: {
-      amount: { label: "Monto" },
-      dev: { label: "Publicidad", color: "hsl(var(--chart-1))" },
-      design: { label: "Contenido", color: "hsl(var(--chart-2))" },
-    } satisfies ChartConfig,
+    googleSheetId: '12345_your_sheet_id_here_3', // Replace with your actual sheet ID
     participants: [
         { name: "Fernanda Gómez", contribution: 4000, share: 53, avatar: 'https://placehold.co/40x40.png', fallback: 'FG' },
         { name: "Hugo Iglesias", contribution: 2000, share: 27, avatar: 'https://placehold.co/40x40.png', fallback: 'HI' },
         { name: "Julia Ponce", contribution: 1500, share: 20, avatar: 'https://placehold.co/40x40.png', fallback: 'JP' },
     ],
-    transactions: [
-      { id: 'T006', date: '2024-07-28', description: 'Anuncios en Meta', category: 'Publicidad', user: 'Fernanda Gómez', montoARS: 210000, cambio: 1050, medioDePago: 'Banco'},
-      { id: 'T007', date: '2024-07-27', description: 'Redacción de artículos', category: 'Contenido', user: 'Hugo Iglesias', montoARS: 105000, cambio: 1050, medioDePago: 'Efectivo'},
-    ],
-    categories: [
-      { name: "Publicidad", spent: 4000, budget: 5000 },
-      { name: "Contenido", spent: 2000, budget: 2500 },
-    ]
   }
 }
 
+// --- TYPES ---
+type Transaction = {
+  id: string;
+  date: string;
+  description: string;
+  category: string;
+  user: string;
+  paymentMethod: string;
+  amountARS: number;
+  exchangeRate: number;
+  amountUSD: number;
+};
+
+type Category = {
+  name: string;
+  budget: number;
+  spent: number;
+};
+
+const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+
+
 export default function ProjectDetailPage() {
   const searchParams = useSearchParams();
-  const projectId = searchParams.get('id') as keyof typeof projectsData | null;
+  const projectId = searchParams.get('id') as keyof typeof projectsMetadata | null;
+  const project = (projectId && projectsMetadata[projectId]) ? projectsMetadata[projectId] : projectsMetadata['PROJ-001'];
+
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!project.googleSheetId) {
+      setError("Este proyecto no tiene un ID de Google Sheet configurado.");
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/sheets/${project.googleSheetId}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Error: ${response.statusText}`);
+        }
+        const data = await response.json();
+        
+        // Process transactions and calculate spent amounts for categories
+        const transactionsWithUSD = data.transactions.map((t: any, index: number) => ({
+          ...t,
+          id: `T${index}`,
+          amountUSD: t.amountARS / t.exchangeRate
+        }));
+
+        const categoriesWithSpent = data.categories.map((cat: any) => {
+          const spent = transactionsWithUSD
+            .filter((t: Transaction) => t.category === cat.name)
+            .reduce((sum: number, t: Transaction) => sum + t.amountUSD, 0);
+          return { ...cat, spent };
+        });
+
+        setTransactions(transactionsWithUSD);
+        setCategories(categoriesWithSpent);
+
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [project.googleSheetId]);
+
+  const totalSpent = categories.reduce((sum, cat) => sum + cat.spent, 0);
+  const totalBudget = categories.reduce((sum, cat) => sum + cat.budget, 0);
+  const remainingBudget = totalBudget - totalSpent;
+  const totalContribution = project.participants.reduce((sum, p) => sum + p.contribution, 0);
+
+  const spendingData = categories.map(cat => ({
+    category: cat.name,
+    amount: cat.spent,
+    fill: `var(--color-${cat.name.toLowerCase().replace(/ /g, '-')})`
+  }));
   
-  // Fallback to the first project if no ID is provided or ID is invalid
-  const project = (projectId && projectsData[projectId]) ? projectsData[projectId] : projectsData['PROJ-001'];
-  
+  const spendingConfig = categories.reduce((acc, category, index) => {
+    acc[category.name.toLowerCase().replace(/ /g, '-')] = {
+      label: category.name,
+      color: CHART_COLORS[index % CHART_COLORS.length]
+    };
+    return acc;
+  }, { amount: { label: "Monto" } } as ChartConfig);
+
+
   if (!project) {
     return (
       <Card>
@@ -112,20 +152,32 @@ export default function ProjectDetailPage() {
     );
   }
 
-  return (
-    <div className="grid gap-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="font-headline text-3xl">{project.name}</CardTitle>
-              <CardDescription>Detalles del emprendimiento y su estado financiero.</CardDescription>
-            </div>
-            <Badge className="text-base">{project.status}</Badge>
-          </div>
-        </CardHeader>
-      </Card>
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="ml-4">Cargando datos desde Google Sheets...</p>
+        </div>
+      );
+    }
 
+    if (error) {
+       return (
+         <Alert variant="destructive" className="mt-6">
+           <AlertCircle className="h-4 w-4" />
+           <AlertTitle>Error al cargar los datos</AlertTitle>
+           <AlertDescription>
+             No se pudieron obtener los datos de Google Sheets. Verifica la configuración.
+             <p className="font-mono text-xs mt-2 bg-destructive-foreground/10 p-2 rounded">
+                {error}
+             </p>
+           </AlertDescription>
+         </Alert>
+       )
+    }
+    
+    return (
       <Tabs defaultValue="summary" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
@@ -136,17 +188,42 @@ export default function ProjectDetailPage() {
         <TabsContent value="summary" className="mt-6">
           <div className="grid gap-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {project.summaryData.map(item => (
-                  <Card key={item.metric}>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">{item.metric}</CardTitle>
-                          <div className="text-muted-foreground [&>svg]:h-4 [&>svg]:w-4">{item.icon}</div>
-                      </CardHeader>
-                      <CardContent>
-                          <div className="text-2xl font-bold font-headline">{item.value}</div>
-                      </CardContent>
-                  </Card>
-              ))}
+               <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Gasto Total</CardTitle>
+                      <DollarSign className="text-muted-foreground h-4 w-4" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold font-headline">${totalSpent.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                  </CardContent>
+              </Card>
+              <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Presupuesto Restante</CardTitle>
+                      <Target className="text-muted-foreground h-4 w-4" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold font-headline">${remainingBudget.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                  </CardContent>
+              </Card>
+              <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Participantes</CardTitle>
+                      <Users className="text-muted-foreground h-4 w-4" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold font-headline">{project.participants.length}</div>
+                  </CardContent>
+              </Card>
+               <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Fondos Totales</CardTitle>
+                      <Landmark className="text-muted-foreground h-4 w-4" />
+                  </CardHeader>
+                  <CardContent>
+                      <div className="text-2xl font-bold font-headline">${totalContribution.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                  </CardContent>
+              </Card>
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -190,10 +267,14 @@ export default function ProjectDetailPage() {
                       <CardDescription>Distribución de los gastos.</CardDescription>
                   </CardHeader>
                   <CardContent>
-                      <ChartContainer config={project.spendingConfig} className="mx-auto aspect-square max-h-[250px]">
+                      <ChartContainer config={spendingConfig} className="mx-auto aspect-square max-h-[250px]">
                           <PieChart>
                               <ChartTooltip content={<ChartTooltipContent nameKey="category" hideLabel />} />
-                              <Pie data={project.spendingData} dataKey="amount" nameKey="category" innerRadius={50} />
+                              <Pie data={spendingData} dataKey="amount" nameKey="category" innerRadius={50}>
+                                {spendingData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                ))}
+                              </Pie>
                           </PieChart>
                       </ChartContainer>
                   </CardContent>
@@ -222,10 +303,10 @@ export default function ProjectDetailPage() {
               <div className="grid gap-2">
                 <CardTitle className="font-headline">Transacciones del Proyecto</CardTitle>
                 <CardDescription>
-                  Historial de ingresos y gastos del proyecto.
+                  Historial de ingresos y gastos del proyecto desde Google Sheets.
                 </CardDescription>
               </div>
-              <CreateExpenseDialog categories={project.categories} participants={project.participants} />
+              <CreateExpenseDialog categories={categories} participants={project.participants} />
             </CardHeader>
             <CardContent>
               <Table>
@@ -242,21 +323,21 @@ export default function ProjectDetailPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {project.transactions.map(t => (
+                  {transactions.map(t => (
                     <TableRow key={t.id}>
-                      <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</TableCell>
+                      <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</TableCell>
                       <TableCell className="font-medium">{t.description}</TableCell>
                       <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
                       <TableCell>{t.user}</TableCell>
-                      <TableCell><Badge variant="secondary">{t.medioDePago}</Badge></TableCell>
+                      <TableCell><Badge variant="secondary">{t.paymentMethod}</Badge></TableCell>
                        <TableCell className="text-right font-medium text-destructive font-mono">
-                        -${t.montoARS.toLocaleString('es-AR')}
+                        -${t.amountARS.toLocaleString('es-AR')}
                       </TableCell>
                        <TableCell className="text-right font-mono text-muted-foreground text-sm">
-                        {t.cambio.toLocaleString('es-AR')}
+                        {t.exchangeRate.toLocaleString('es-AR')}
                        </TableCell>
                        <TableCell className="text-right font-medium text-destructive font-mono">
-                        -${(t.montoARS / t.cambio).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -278,7 +359,7 @@ export default function ProjectDetailPage() {
               </CardHeader>
             </Card>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {project.categories.map((category) => (
+              {categories.map((category) => (
                 <Card key={category.name}>
                     <CardHeader>
                         <CardTitle className="flex items-center justify-between">
@@ -287,7 +368,7 @@ export default function ProjectDetailPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-2">
-                        <div className="text-3xl font-bold">${category.spent.toLocaleString()}</div>
+                        <div className="text-3xl font-bold">${category.spent.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                         <p className="text-xs text-muted-foreground">de ${category.budget.toLocaleString()} presupuestados</p>
                         <Progress value={(category.spent / category.budget) * 100} className="h-2 mt-2" />
                     </CardContent>
@@ -297,6 +378,23 @@ export default function ProjectDetailPage() {
            </div>
         </TabsContent>
       </Tabs>
+    )
+  }
+
+  return (
+    <div className="grid gap-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="font-headline text-3xl">{project.name}</CardTitle>
+              <CardDescription>Detalles del emprendimiento y su estado financiero.</CardDescription>
+            </div>
+            <Badge className="text-base">{project.status}</Badge>
+          </div>
+        </CardHeader>
+      </Card>
+      {renderContent()}
     </div>
   );
 }
