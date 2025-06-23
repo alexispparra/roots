@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -67,6 +68,10 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
     defaultValues: {
       date: new Date(),
       description: "",
+      userId: "",
+      categoryId: "",
+      paymentMethod: "",
+      amountARS: 0,
       exchangeRate: 1,
     },
   })
@@ -77,6 +82,10 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
     form.reset({
       date: new Date(),
       description: "",
+      userId: "",
+      categoryId: "",
+      paymentMethod: "",
+      amountARS: 0,
       exchangeRate: 1,
     })
   }
