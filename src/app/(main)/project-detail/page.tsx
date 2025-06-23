@@ -141,7 +141,7 @@ export default function ProjectDetailPage() {
           type: t.amountARS > 0 ? 'expense' : 'income' 
         }));
 
-        const categoriesWithSpent = data.categories.map((any: any) => {
+        const categoriesWithSpent = data.categories.map((cat: any) => {
           const spent = transactionsWithUSD
             .filter((t: Transaction) => t.category === cat.name && t.type === 'expense')
             .reduce((sum: number, t: Transaction) => sum + t.amountUSD, 0);
@@ -393,46 +393,12 @@ export default function ProjectDetailPage() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <Card className="lg:col-span-2">
                 <CardHeader>
-                  <CardTitle className="font-headline">Participantes y Aportes</CardTitle>
-                  <CardDescription>Inversión individual y participación en el proyecto.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                      <TableHeader>
-                          <TableRow>
-                              <TableHead>Participante</TableHead>
-                              <TableHead className="text-right">Aporte (U$S)</TableHead>
-                              <TableHead className="text-right">Participación</TableHead>
-                          </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                          {project.participants.map(p => (
-                              <TableRow key={p.name}>
-                                  <TableCell>
-                                      <div className="flex items-center gap-3">
-                                          <Avatar>
-                                              <AvatarImage src={p.src} />
-                                              <AvatarFallback>{p.fallback}</AvatarFallback>
-                                          </Avatar>
-                                          <span className="font-medium">{p.name}</span>
-                                      </div>
-                                  </TableCell>
-                                  <TableCell className="text-right font-mono">${(p.contribution || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
-                                  <TableCell className="text-right font-mono">{p.share || 0}%</TableCell>
-                              </TableRow>
-                          ))}
-                      </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
                   <CardTitle className="font-headline">Gastos por Categoría</CardTitle>
                   <CardDescription>Distribución de los gastos en U$S.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-6">
                   {spendingByCategoryData.length > 0 ? (
-                    <ChartContainer config={spendingConfig} className="mx-auto aspect-square max-h-[250px]">
+                    <ChartContainer config={spendingConfig} className="h-[250px] w-full">
                       <PieChart>
                         <ChartTooltip content={<ChartTooltipContent nameKey="category" hideLabel />} />
                         <Pie data={spendingByCategoryData} dataKey="amount" nameKey="category" innerRadius={50}>
@@ -443,7 +409,7 @@ export default function ProjectDetailPage() {
                       </PieChart>
                     </ChartContainer>
                   ) : (
-                    <div className="mx-auto flex h-[250px] w-full items-center justify-center rounded-lg bg-muted/50">
+                    <div className="flex h-[250px] w-full items-center justify-center rounded-lg bg-muted/50">
                       <p className="text-sm text-muted-foreground">No hay datos de gastos para mostrar.</p>
                     </div>
                   )}
@@ -491,6 +457,40 @@ export default function ProjectDetailPage() {
                       </TableFooter>
                     </Table>
                   </div>
+                </CardContent>
+              </Card>
+              <Card className="lg:col-span-1">
+                <CardHeader>
+                  <CardTitle className="font-headline">Participantes y Aportes</CardTitle>
+                  <CardDescription>Inversión individual y participación en el proyecto.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                      <TableHeader>
+                          <TableRow>
+                              <TableHead>Participante</TableHead>
+                              <TableHead className="text-right">Aporte (U$S)</TableHead>
+                              <TableHead className="text-right">Participación</TableHead>
+                          </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                          {project.participants.map(p => (
+                              <TableRow key={p.name}>
+                                  <TableCell>
+                                      <div className="flex items-center gap-3">
+                                          <Avatar>
+                                              <AvatarImage src={p.src} />
+                                              <AvatarFallback>{p.fallback}</AvatarFallback>
+                                          </Avatar>
+                                          <span className="font-medium">{p.name}</span>
+                                      </div>
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono">${(p.contribution || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                  <TableCell className="text-right font-mono">{p.share || 0}%</TableCell>
+                              </TableRow>
+                          ))}
+                      </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
                <Card className="lg:col-span-3">
@@ -906,7 +906,7 @@ export default function ProjectDetailPage() {
                               {categoryVsTotalData.length > 0 ? (
                                   <ChartContainer
                                       config={categoryVsTotalChartConfig}
-                                      className="mx-auto aspect-square max-h-[200px]"
+                                      className="h-[200px] w-full"
                                   >
                                       <PieChart>
                                           <ChartTooltip
@@ -949,7 +949,7 @@ export default function ProjectDetailPage() {
                                       </PieChart>
                                   </ChartContainer>
                               ) : (
-                                  <div className="mx-auto flex h-[200px] w-[200px] items-center justify-center rounded-full bg-muted/50">
+                                  <div className="flex h-[200px] w-[200px] items-center justify-center rounded-full bg-muted/50 mx-auto">
                                       <p className="text-sm text-muted-foreground">Sin gastos.</p>
                                   </div>
                               )}
