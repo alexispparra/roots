@@ -14,8 +14,8 @@ export default function AccountsPage() {
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Cuentas</CardTitle>
-          <CardDescription>Gestiona tus cuentas bancarias, tarjetas y efectivo.</CardDescription>
+          <CardTitle className="font-headline">Cuentas Bancarias y Tarjetas</CardTitle>
+          <CardDescription>Gestiona tus fuentes de fondos como cuentas bancarias y tarjetas.</CardDescription>
         </CardHeader>
       </Card>
       <div className="grid gap-6 md:grid-cols-2">

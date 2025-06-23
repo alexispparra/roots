@@ -20,6 +20,9 @@ import {
   ChevronRight,
   FolderKanban,
   WandSparkles,
+  Wallet,
+  BarChart2,
+  LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProjects } from "@/contexts/ProjectsContext";
@@ -112,6 +115,45 @@ export function Navigation() {
         </SidebarMenuSub>
       </SidebarMenuItem>
       
+       <SidebarMenuItem>
+        <SidebarMenuButton
+          asChild
+          isActive={pathname === "/transactions"}
+          tooltip="Cuentas"
+        >
+          <Link href="/transactions">
+            <Wallet />
+            <span>Cuentas</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          asChild
+          isActive={pathname === "/charts"}
+          tooltip="Reportes"
+        >
+          <Link href="/charts">
+            <BarChart2 />
+            <span>Reportes</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
+       <SidebarMenuItem>
+        <SidebarMenuButton
+          asChild
+          isActive={pathname === "/categories"}
+          tooltip="Categorías"
+        >
+          <Link href="/categories">
+            <LayoutGrid />
+            <span>Categorías</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
       <SidebarMenuItem>
         <SidebarMenuButton
           asChild

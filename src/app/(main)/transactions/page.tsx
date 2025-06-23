@@ -33,9 +33,9 @@ export default function TransactionsPage() {
     <Card>
       <CardHeader className="flex flex-row items-center">
         <div className="grid gap-2">
-          <CardTitle className="font-headline">Transacciones</CardTitle>
+          <CardTitle className="font-headline">Cuentas</CardTitle>
           <CardDescription>
-            Un historial completo de tus ingresos y gastos.
+            Un registro detallado de todos los gastos e ingresos del día a día.
           </CardDescription>
         </div>
         <Button size="sm" className="ml-auto gap-1">

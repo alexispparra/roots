@@ -6,8 +6,8 @@ export default function CategoriesPage() {
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Categorías Globales</CardTitle>
-          <CardDescription>Esta sección se adaptará para la gestión de categorías por proyecto.</CardDescription>
+          <CardTitle className="font-headline">Categorías</CardTitle>
+          <CardDescription>Gestiona las categorías de gastos para todos tus proyectos.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
             <LayoutGrid className="h-16 w-16 mb-4" />

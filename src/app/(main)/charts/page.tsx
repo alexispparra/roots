@@ -6,8 +6,8 @@ export default function ReportsPage() {
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Reportes Globales</CardTitle>
-          <CardDescription>Esta sección se adaptará para la reportería por proyecto.</CardDescription>
+          <CardTitle className="font-headline">Reportes</CardTitle>
+          <CardDescription>Análisis visual de tus finanzas y cashflow por proyecto.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
             <BarChart2 className="h-16 w-16 mb-4" />
