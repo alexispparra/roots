@@ -30,6 +30,7 @@ export function Navigation() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentProjectId = searchParams.get('id');
+  const currentCategoryName = searchParams.get('category');
   const { projects } = useProjects();
   
   const activeProjectsData = projects.filter(p => p.status === 'En Curso');
@@ -100,7 +101,13 @@ export function Navigation() {
                 <ul className="pl-10 w-full flex flex-col gap-1 pb-1">
                   {project.categories.map(category => (
                     <li key={category.name}>
-                      <Link href={`/project-detail?id=${project.id}&tab=categories`} className={cn("flex items-center gap-2 p-1.5 text-sm rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground")}>
+                      <Link 
+                        href={`/project-detail?id=${project.id}&tab=categories&category=${encodeURIComponent(category.name)}`} 
+                        className={cn(
+                          "flex items-center gap-2 p-1.5 text-sm rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                          pathname === '/project-detail' && currentProjectId === project.id && currentCategoryName && decodeURIComponent(currentCategoryName) === category.name && "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                        )}
+                      >
                           <Tag className="h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{category.name}</span>
                       </Link>

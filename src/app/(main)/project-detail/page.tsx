@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +74,9 @@ const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--c
 
 export default function ProjectDetailPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const projectId = searchParams.get('id');
   const { getProjectById, updateProjectStatus, addCategoryToProject } = useProjects();
   const project = getProjectById(projectId);
@@ -87,7 +90,16 @@ export default function ProjectDetailPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [cashflowDateRange, setCashflowDateRange] = useState<DateRange | undefined>();
   const [cashflowCategoryFilter, setCashflowCategoryFilter] = useState<string>("Todas");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(searchParams.get('category') ? decodeURIComponent(searchParams.get('category')!) : null);
+  
+  useEffect(() => {
+    const tab = searchParams.get('tab') || 'overview';
+    const category = searchParams.get('category');
+    setActiveTab(tab);
+    setSelectedCategory(category ? decodeURIComponent(category) : null);
+  }, [searchParams]);
 
 
   useEffect(() => {
@@ -122,12 +134,11 @@ export default function ProjectDetailPage() {
         }
         const data = await response.json();
         
-        // This assumes your sheet has a 'type' column now
         const transactionsWithUSD = data.transactions.map((t: any, index: number) => ({
           ...t,
           id: `T${index}`,
           amountUSD: t.amountARS / t.exchangeRate,
-          type: t.amountARS > 0 ? 'expense' : 'income' // Simple logic, adjust as needed
+          type: t.amountARS > 0 ? 'expense' : 'income' 
         }));
 
         const categoriesWithSpent = data.categories.map((cat: any) => {
@@ -153,9 +164,31 @@ export default function ProjectDetailPage() {
   const handleAddCategory = (data: { name: string; budget: number }) => {
       if (project) {
         addCategoryToProject(project.id, data);
-        // Here you could add a toast notification
       }
   };
+
+  const handleTabChange = (tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    if (tab !== 'categories') {
+      params.delete('category');
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleSelectCategory = (categoryName: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', 'categories');
+    params.set('category', encodeURIComponent(categoryName));
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleDeselectCategory = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('category');
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
@@ -237,7 +270,7 @@ export default function ProjectDetailPage() {
           const transactionDate = new Date(t.date);
           if (transactionDate.getFullYear().toString() === currentYear) {
               const monthKey = format(transactionDate, 'yyyy-MM');
-              const monthName = format(transactionDate, 'MMM');
+              const monthName = format(transactionDate, 'MMM', { locale: es });
               if (!monthlyTotals[monthKey]) {
                   monthlyTotals[monthKey] = { month: monthName, Gastos: 0, Ingresos: 0 };
               }
@@ -249,7 +282,7 @@ export default function ProjectDetailPage() {
           }
       });
 
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
       return months.map((monthName, index) => {
         const monthKey = `${currentYear}-${String(index + 1).padStart(2, '0')}`;
         return monthlyTotals[monthKey] || { month: monthName, Gastos: 0, Ingresos: 0 };
@@ -284,7 +317,7 @@ export default function ProjectDetailPage() {
     }
     
     return (
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Visión General</TabsTrigger>
           <TabsTrigger value="cashflow">Resumen Financiero</TabsTrigger>
@@ -686,7 +719,7 @@ export default function ProjectDetailPage() {
                       <CardHeader>
                         <CardTitle className="flex items-center justify-between">
                           <span>{category.name}</span>
-                          <Button variant="link" className="h-auto p-0 text-sm font-medium" onClick={() => setSelectedCategory(category.name)}>
+                          <Button variant="link" className="h-auto p-0 text-sm font-medium" onClick={() => handleSelectCategory(category.name)}>
                             Ver detalle
                           </Button>
                         </CardTitle>
@@ -729,7 +762,7 @@ export default function ProjectDetailPage() {
                   <Card>
                     <CardHeader>
                       <div className="flex flex-col items-start">
-                          <Button variant="ghost" size="sm" className="mb-2 -ml-3" onClick={() => setSelectedCategory(null)}>
+                          <Button variant="ghost" size="sm" className="mb-2 -ml-3" onClick={handleDeselectCategory}>
                               <ArrowLeft className="mr-2 h-4 w-4" />
                               Volver a Categorías
                           </Button>
