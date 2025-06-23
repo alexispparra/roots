@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/firebase";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 export default function MainLayout({
   children,
@@ -24,12 +25,14 @@ export default function MainLayout({
 }) {
   const router = useRouter();
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
     if (auth) {
       await auth.signOut();
+      toast({ title: "Has cerrado sesión." });
+      // The AuthGuard will handle redirecting to the login page
     }
-    router.push('/login');
   };
 
   return (
