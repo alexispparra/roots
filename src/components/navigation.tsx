@@ -29,6 +29,7 @@ const allProjectsData = [
         id: 'PROJ-001', 
         name: 'Lanzamiento App Móvil', 
         status: 'En Curso',
+        googleSheetId: 'YOUR_SHEET_ID_HERE_1',
         categories: [
             { name: "Desarrollo" },
             { name: "Diseño UI/UX" },
@@ -39,12 +40,14 @@ const allProjectsData = [
         id: 'PROJ-002', 
         name: 'Rediseño Web Corporativa', 
         status: 'Completado',
+        googleSheetId: 'YOUR_SHEET_ID_HERE_2',
         categories: []
     },
     { 
         id: 'PROJ-003', 
         name: 'Campaña Marketing Q3', 
         status: 'En Curso',
+        googleSheetId: 'YOUR_SHEET_ID_HERE_3',
         categories: [
             { name: "Publicidad" },
             { name: "Contenido" },
@@ -54,6 +57,7 @@ const allProjectsData = [
         id: 'PROJ-004', 
         name: 'Investigación de Mercado', 
         status: 'Próximo',
+        googleSheetId: 'YOUR_SHEET_ID_HERE_4',
         categories: []
     },
 ];

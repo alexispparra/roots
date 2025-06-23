@@ -31,6 +31,7 @@ const formSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
   description: z.string().optional(),
   address: z.string().min(1, "La dirección es requerida."),
+  googleSheetId: z.string().min(1, "El ID de la hoja de Google es requerido."),
 })
 
 export function CreateProjectDialog() {
@@ -41,6 +42,7 @@ export function CreateProjectDialog() {
       name: "",
       description: "",
       address: "",
+      googleSheetId: "",
     },
   })
 
@@ -107,6 +109,19 @@ export function CreateProjectDialog() {
                     <FormLabel>Dirección</FormLabel>
                     <FormControl>
                       <Input placeholder="Ej: Av. Corrientes 123, CABA" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="googleSheetId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ID de la Hoja de Google Sheets</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Pega aquí el ID de tu hoja de cálculo" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

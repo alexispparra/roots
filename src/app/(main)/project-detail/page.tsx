@@ -21,6 +21,7 @@ const projectsData = {
     name: "Lanzamiento App Móvil",
     address: "Av. Libertador 498, Buenos Aires",
     status: "En Curso",
+    googleSheetId: 'YOUR_SHEET_ID_HERE_1',
     summaryData: [
       { metric: "Gasto Total", value: "$7,000", icon: <DollarSign /> },
       { metric: "Presupuesto Restante", value: "$5,000", icon: <Target /> },
@@ -61,6 +62,7 @@ const projectsData = {
     name: "Campaña Marketing Q3",
     address: "Av. Siempre Viva 742, Springfield",
     status: "En Curso",
+    googleSheetId: 'YOUR_SHEET_ID_HERE_3',
     summaryData: [
       { metric: "Gasto Total", value: "$4,200", icon: <DollarSign /> },
       { metric: "Presupuesto Restante", value: "$3,300", icon: <Target /> },

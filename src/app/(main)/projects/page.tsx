@@ -16,6 +16,7 @@ const projects = [
         address: 'Av. Libertador 498, Buenos Aires',
         status: 'En Curso',
         investment: '10,000',
+        googleSheetId: 'YOUR_SHEET_ID_HERE_1',
         participants: [
             { name: 'AL', src: 'https://placehold.co/40x40.png' },
             { name: 'BC', src: 'https://placehold.co/40x40.png' },
@@ -28,6 +29,7 @@ const projects = [
         address: 'Calle Falsa 123, Springfield',
         status: 'Completado',
         investment: '25,000', 
+        googleSheetId: 'YOUR_SHEET_ID_HERE_2',
         participants: [
             { name: 'DE', src: 'https://placehold.co/40x40.png' },
         ]
@@ -39,6 +41,7 @@ const projects = [
         address: 'Av. Siempre Viva 742, Springfield',
         status: 'En Curso',
         investment: '7,500', 
+        googleSheetId: 'YOUR_SHEET_ID_HERE_3',
         participants: [
             { name: 'FG', src: 'https://placehold.co/40x40.png' },
             { name: 'HI', src: 'https://placehold.co/40x40.png' },
@@ -52,6 +55,7 @@ const projects = [
         address: '1st Street, Washington D.C.',
         status: 'Próximo',
         investment: '3,000', 
+        googleSheetId: 'YOUR_SHEET_ID_HERE_4',
         participants: [
             { name: 'LM', src: 'https://placehold.co/40x40.png' },
         ]
