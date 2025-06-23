@@ -7,62 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { CreateProjectDialog } from "@/components/create-project-dialog";
+import { useProjects } from "@/contexts/ProjectsContext";
 
-const projects = [
-    { 
-        id: 'PROJ-001', 
-        name: 'Lanzamiento App Móvil', 
-        description: 'Desarrollo y lanzamiento de una nueva aplicación móvil para iOS y Android.',
-        address: 'Av. Libertador 498, Buenos Aires',
-        status: 'En Curso',
-        investment: '10,000',
-        googleSheetId: 'YOUR_SHEET_ID_HERE_1',
-        participants: [
-            { name: 'AL', src: 'https://placehold.co/40x40.png' },
-            { name: 'BC', src: 'https://placehold.co/40x40.png' },
-        ]
-    },
-    { 
-        id: 'PROJ-002', 
-        name: 'Rediseño Web Corporativa', 
-        description: 'Actualización completa del sitio web de la empresa con un nuevo diseño y CMS.',
-        address: 'Calle Falsa 123, Springfield',
-        status: 'Completado',
-        investment: '25,000', 
-        googleSheetId: 'YOUR_SHEET_ID_HERE_2',
-        participants: [
-            { name: 'DE', src: 'https://placehold.co/40x40.png' },
-        ]
-    },
-    { 
-        id: 'PROJ-003', 
-        name: 'Campaña Marketing Q3', 
-        description: 'Campaña publicitaria digital para el tercer trimestre del año.',
-        address: 'Av. Siempre Viva 742, Springfield',
-        status: 'En Curso',
-        investment: '7,500', 
-        googleSheetId: 'YOUR_SHEET_ID_HERE_3',
-        participants: [
-            { name: 'FG', src: 'https://placehold.co/40x40.png' },
-            { name: 'HI', src: 'https://placehold.co/40x40.png' },
-            { name: 'JK', src: 'https://placehold.co/40x40.png' },
-        ]
-    },
-    { 
-        id: 'PROJ-004', 
-        name: 'Investigación de Mercado', 
-        description: 'Estudio de mercado para identificar nuevas oportunidades de negocio.',
-        address: '1st Street, Washington D.C.',
-        status: 'Próximo',
-        investment: '3,000', 
-        googleSheetId: 'YOUR_SHEET_ID_HERE_4',
-        participants: [
-            { name: 'LM', src: 'https://placehold.co/40x40.png' },
-        ]
-    },
-];
 
 export default function ProjectsPage() {
+  const { projects } = useProjects();
+
   return (
     <div className="grid gap-6">
       <Card>
@@ -99,7 +49,7 @@ export default function ProjectsPage() {
                   {project.participants.map((p, i) => (
                     <Avatar key={i} className="h-8 w-8 border-2 border-card">
                       <AvatarImage src={p.src} />
-                      <AvatarFallback>{p.name}</AvatarFallback>
+                      <AvatarFallback>{p.fallback || p.name.substring(0,2)}</AvatarFallback>
                     </Avatar>
                   ))}
                 </div>

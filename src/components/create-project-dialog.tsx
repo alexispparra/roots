@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { useProjects } from "@/contexts/ProjectsContext"
 
 const formSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
@@ -36,6 +37,7 @@ const formSchema = z.object({
 
 export function CreateProjectDialog() {
   const [open, setOpen] = useState(false)
+  const { addProject } = useProjects();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,9 +49,7 @@ export function CreateProjectDialog() {
   })
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Nuevo proyecto:", values)
-    // Here you would typically call an API to create the project
-    // For now, we just log it and close the dialog.
+    addProject(values);
     setOpen(false)
     form.reset()
   }

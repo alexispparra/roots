@@ -21,59 +21,13 @@ import { ArrowUpRight, Briefcase, Users, Target } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useProjects } from "@/contexts/ProjectsContext";
 
-
-const projects = [
-    { 
-        id: 'PROJ-001', 
-        name: 'Lanzamiento App Móvil', 
-        status: 'En Curso', 
-        progress: 75,
-        address: 'Av. Libertador 498, Buenos Aires',
-        googleSheetId: 'YOUR_SHEET_ID_HERE_1',
-        participants: [
-            { name: 'AL', src: 'https://placehold.co/40x40.png' },
-            { name: 'BC', src: 'https://placehold.co/40x40.png' },
-        ]
-    },
-    { 
-        id: 'PROJ-002', 
-        name: 'Rediseño Web Corporativa', 
-        status: 'Completado', 
-        progress: 100,
-        address: 'Calle Falsa 123, Springfield',
-        googleSheetId: 'YOUR_SHEET_ID_HERE_2',
-        participants: [
-            { name: 'DE', src: 'https://placehold.co/40x40.png' },
-        ]
-    },
-    { 
-        id: 'PROJ-003', 
-        name: 'Campaña Marketing Q3', 
-        status: 'En Curso', 
-        progress: 40,
-        address: 'Av. Siempre Viva 742, Springfield',
-        googleSheetId: 'YOUR_SHEET_ID_HERE_3',
-        participants: [
-            { name: 'FG', src: 'https://placehold.co/40x40.png' },
-            { name: 'HI', src: 'https://placehold.co/40x40.png' },
-            { name: 'JK', src: 'https://placehold.co/40x40.png' },
-        ]
-    },
-    { 
-        id: 'PROJ-004', 
-        name: 'Investigación de Mercado', 
-        status: 'Próximo', 
-        progress: 0,
-        address: '1st Street, Washington D.C.',
-        googleSheetId: 'YOUR_SHEET_ID_HERE_4',
-        participants: [
-            { name: 'LM', src: 'https://placehold.co/40x40.png' },
-        ]
-    },
-]
 
 export default function DashboardPage() {
+  const { projects } = useProjects();
+  const activeProjects = projects.filter(p => p.status === 'En Curso');
+  
   return (
     <div className="grid gap-6">
       <Card>
@@ -89,9 +43,9 @@ export default function DashboardPage() {
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-headline">2</div>
+            <div className="text-2xl font-bold font-headline">{activeProjects.length}</div>
             <p className="text-xs text-muted-foreground">
-              de 4 proyectos totales
+              de {projects.length} proyectos totales
             </p>
           </CardContent>
         </Card>
@@ -159,7 +113,7 @@ export default function DashboardPage() {
                     {proj.participants.map((p, i) => (
                       <Avatar key={i} className="border-2 border-card">
                         <AvatarImage src={p.src} />
-                        <AvatarFallback>{p.name}</AvatarFallback>
+                        <AvatarFallback>{p.fallback || p.name.substring(0, 2)}</AvatarFallback>
                       </Avatar>
                     ))}
                   </div>

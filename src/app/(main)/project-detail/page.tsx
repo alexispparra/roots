@@ -16,33 +16,9 @@ import { Users, DollarSign, Target, Landmark, MapPin, Loader2, AlertCircle } fro
 import { CreateExpenseDialog } from "@/components/create-expense-dialog";
 import { CreateCategoryDialog } from "@/components/create-category-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useProjects } from "@/contexts/ProjectsContext";
+import type { Category as ProjectCategory } from "@/contexts/ProjectsContext";
 
-
-// --- MOCK PROJECT METADATA ---
-const projectsMetadata = {
-  'PROJ-001': {
-    name: "Lanzamiento App Móvil",
-    address: "Av. Libertador 498, Buenos Aires",
-    status: "En Curso",
-    googleSheetId: 'YOUR_SHEET_ID_HERE_1', // Reemplaza esto con el ID real de tu hoja de cálculo
-    participants: [
-        { name: "Ana García", contribution: 5000, share: 50, avatar: 'https://placehold.co/40x40.png', fallback: 'AG' },
-        { name: "Luis Torres", contribution: 3000, share: 30, avatar: 'https://placehold.co/40x40.png', fallback: 'LT' },
-        { name: "Carlos Ruiz", contribution: 2000, share: 20, avatar: 'https://placehold.co/40x40.png', fallback: 'CR' },
-    ],
-  },
-  'PROJ-003': {
-    name: "Campaña Marketing Q3",
-    address: "Av. Siempre Viva 742, Springfield",
-    status: "En Curso",
-    googleSheetId: 'YOUR_SHEET_ID_HERE_3', // Reemplaza esto con el ID real de tu hoja de cálculo
-    participants: [
-        { name: "Fernanda Gómez", contribution: 4000, share: 53, avatar: 'https://placehold.co/40x40.png', fallback: 'FG' },
-        { name: "Hugo Iglesias", contribution: 2000, share: 27, avatar: 'https://placehold.co/40x40.png', fallback: 'HI' },
-        { name: "Julia Ponce", contribution: 1500, share: 20, avatar: 'https://placehold.co/40x40.png', fallback: 'JP' },
-    ],
-  }
-}
 
 // --- TYPES ---
 type Transaction = {
@@ -57,28 +33,34 @@ type Transaction = {
   amountUSD: number;
 };
 
-type Category = {
-  name: string;
-  budget: number;
+type CategoryWithSpent = ProjectCategory & {
   spent: number;
-};
+  budget: number;
+}
+
 
 const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
 
 export default function ProjectDetailPage() {
   const searchParams = useSearchParams();
-  const projectId = searchParams.get('id') as keyof typeof projectsMetadata | null;
-  const project = (projectId && projectsMetadata[projectId]) ? projectsMetadata[projectId] : projectsMetadata['PROJ-001'];
+  const projectId = searchParams.get('id');
+  const { getProjectById } = useProjects();
+  const project = getProjectById(projectId);
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryWithSpent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!project.googleSheetId || project.googleSheetId.includes('YOUR_SHEET_ID_HERE')) {
-      setError("Aún necesitas conectar este proyecto a tu hoja de cálculo. Reemplaza el ID de ejemplo por tu ID real en el archivo: src/app/(main)/project-detail/page.tsx, dentro del objeto 'projectsMetadata'.");
+    if (!project) {
+      setIsLoading(false);
+      return;
+    }
+    
+    if (!project.googleSheetId || project.googleSheetId.includes('YOUR_SHEET_ID_HERE') || project.googleSheetId.includes('12345_your_sheet_id_here')) {
+      setError("Aún necesitas conectar este proyecto a una hoja de cálculo. Edita el proyecto para añadir un ID de Google Sheet válido.");
       setIsLoading(false);
       return;
     }
@@ -94,7 +76,6 @@ export default function ProjectDetailPage() {
         }
         const data = await response.json();
         
-        // Process transactions and calculate spent amounts for categories
         const transactionsWithUSD = data.transactions.map((t: any, index: number) => ({
           ...t,
           id: `T${index}`,
@@ -105,7 +86,7 @@ export default function ProjectDetailPage() {
           const spent = transactionsWithUSD
             .filter((t: Transaction) => t.category === cat.name)
             .reduce((sum: number, t: Transaction) => sum + t.amountUSD, 0);
-          return { ...cat, spent };
+          return { name: cat.name, budget: cat.budget, spent };
         });
 
         setTransactions(transactionsWithUSD);
@@ -119,12 +100,28 @@ export default function ProjectDetailPage() {
     };
 
     fetchData();
-  }, [project.googleSheetId]);
+  }, [project]);
+
+  if (!project) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Proyecto no encontrado</CardTitle>
+          <CardDescription>El proyecto que buscas no existe o el ID es incorrecto.</CardDescription>
+        </CardHeader>
+         <CardContent>
+          <Button asChild variant="outline">
+            <Link href="/projects">Volver a Proyectos</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const totalSpent = categories.reduce((sum, cat) => sum + cat.spent, 0);
   const totalBudget = categories.reduce((sum, cat) => sum + cat.budget, 0);
   const remainingBudget = totalBudget - totalSpent;
-  const totalContribution = project.participants.reduce((sum, p) => sum + p.contribution, 0);
+  const totalContribution = project.participants.reduce((sum, p) => sum + (p.contribution || 0), 0);
 
   const spendingData = categories.map(cat => ({
     category: cat.name,
@@ -140,17 +137,6 @@ export default function ProjectDetailPage() {
     return acc;
   }, { amount: { label: "Monto" } } as ChartConfig);
 
-
-  if (!project) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Proyecto no encontrado</CardTitle>
-          <CardDescription>El proyecto que buscas no existe o no tienes acceso.</CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
 
   const renderContent = () => {
     if (isLoading) {
@@ -247,14 +233,14 @@ export default function ProjectDetailPage() {
                                   <TableCell>
                                       <div className="flex items-center gap-3">
                                           <Avatar>
-                                              <AvatarImage src={p.avatar} />
+                                              <AvatarImage src={p.src} />
                                               <AvatarFallback>{p.fallback}</AvatarFallback>
                                           </Avatar>
                                           <span className="font-medium">{p.name}</span>
                                       </div>
                                   </TableCell>
-                                  <TableCell className="text-right font-mono">${p.contribution.toLocaleString()}</TableCell>
-                                  <TableCell className="text-right font-mono">{p.share}%</TableCell>
+                                  <TableCell className="text-right font-mono">${(p.contribution || 0).toLocaleString()}</TableCell>
+                                  <TableCell className="text-right font-mono">{p.share || 0}%</TableCell>
                               </TableRow>
                           ))}
                       </TableBody>
@@ -388,7 +374,7 @@ export default function ProjectDetailPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="font-headline text-3xl">{project.name}</CardTitle>
-              <CardDescription>Detalles del emprendimiento y su estado financiero.</CardDescription>
+              <CardDescription>{project.description}</CardDescription>
             </div>
             <Badge className="text-base">{project.status}</Badge>
           </div>
