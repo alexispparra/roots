@@ -68,8 +68,10 @@ export default function LoginPage() {
         if (err.code !== 'auth/popup-closed-by-user') {
             if (err.code === 'auth/configuration-not-found') {
               setError("Error de configuración de Firebase. Asegúrate de haber habilitado el proveedor de inicio de sesión de Google en tu consola de Firebase.");
+            } else if (err.code === 'auth/unauthorized-domain') {
+              setError("Este dominio no está autorizado para operaciones de Firebase. Por favor, añádelo a la lista de dominios autorizados en la configuración de autenticación de tu consola de Firebase.");
             } else {
-              setError("No se pudo iniciar sesión con Google. Por favor, inténtalo de nuevo.")
+              setError("No se pudo iniciar sesión con Google. Por favor, intentalo de nuevo.")
             }
         }
         console.error(err)
