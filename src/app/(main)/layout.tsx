@@ -29,7 +29,15 @@ export default function MainLayout({
   const { toast } = useToast();
 
   const handleLogout = async () => {
-    if (!auth) return;
+    // If Firebase isn't configured, inform the user instead of doing nothing.
+    if (!auth) {
+        toast({
+            variant: "destructive",
+            title: "Modo de Demostración",
+            description: "La función de cerrar sesión requiere la configuración de Firebase.",
+        });
+        return;
+    }
     try {
         await auth.signOut();
         toast({ title: "Has cerrado sesión." });
@@ -68,7 +76,7 @@ export default function MainLayout({
                     </div>
                 </div>
               </div>
-              <Button variant="ghost" className="w-full justify-start p-2" onClick={handleLogout} disabled={!auth}>
+              <Button variant="ghost" className="w-full justify-start p-2" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span className="group-data-[collapsible=icon]:hidden">Cerrar Sesión</span>
               </Button>

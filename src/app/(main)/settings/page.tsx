@@ -67,8 +67,6 @@ export default function SettingsPage() {
     }
   }, [user, profileForm]);
 
-
-  // Update profile handler
   async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
     if (!user) return;
     setIsProfileLoading(true);
@@ -78,7 +76,6 @@ export default function SettingsPage() {
         title: "Perfil Actualizado",
         description: "Tu nombre ha sido actualizado.",
       });
-      // Force a re-render of layout to reflect name change in sidebar
       router.refresh(); 
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -92,7 +89,6 @@ export default function SettingsPage() {
     }
   }
 
-  // Update password handler
   async function onPasswordSubmit(values: z.infer<typeof passwordFormSchema>) {
     if (!user || !user.email) return;
 
@@ -101,10 +97,7 @@ export default function SettingsPage() {
 
     try {
       const credential = EmailAuthProvider.credential(user.email, values.currentPassword);
-      // Re-authenticate user before changing password
       await reauthenticateWithCredential(user, credential);
-      
-      // Now change the password
       await updatePassword(user, values.newPassword);
       
       toast({
@@ -112,11 +105,10 @@ export default function SettingsPage() {
         description: "Tu contraseña ha sido cambiada. Se cerrará tu sesión por seguridad.",
       });
 
-      // Sign out user and redirect to login after password change
       if(auth) {
         await auth.signOut();
+        router.push("/login");
       }
-      router.push("/login");
 
     } catch (error: any) {
       if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
@@ -131,6 +123,35 @@ export default function SettingsPage() {
     }
   }
 
+  // Handle the case where Firebase is not configured (demo mode).
+  if (!auth) {
+    return (
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline">Configuración de la Cuenta</CardTitle>
+            <CardDescription>Gestiona los ajustes de tu perfil y la seguridad de tu cuenta.</CardDescription>
+          </CardHeader>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Función no disponible</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Modo de Demostración Activo</AlertTitle>
+                    <AlertDescription>
+                    Para gestionar la configuración de tu cuenta, necesitas configurar tus credenciales de Firebase en el archivo `.env`. Por favor, revisa las instrucciones, asegúrate de que las variables de entorno están correctamente cargadas y reinicia el servidor de desarrollo.
+                    </AlertDescription>
+                </Alert>
+            </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Handle loading state while waiting for user data.
   if (loading) {
     return (
         <div className="flex items-center justify-center min-h-[400px]">
@@ -139,8 +160,8 @@ export default function SettingsPage() {
     )
   }
 
+  // This should not be reached if AuthGuard is working, but it's a safeguard.
   if (!user) {
-    // This is a fallback, AuthGuard should prevent this.
     return null;
   }
 
@@ -154,7 +175,6 @@ export default function SettingsPage() {
       </Card>
       
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Profile Card */}
         <Card>
           <Form {...profileForm}>
             <form onSubmit={profileForm.handleSubmit(onProfileSubmit)}>
@@ -199,7 +219,6 @@ export default function SettingsPage() {
           </Form>
         </Card>
 
-        {/* Password Card */}
         <Card>
            <Form {...passwordForm}>
             <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}>
