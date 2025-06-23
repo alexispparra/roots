@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -31,7 +32,8 @@ export default function MainLayout({
     if (auth) {
       await auth.signOut();
       toast({ title: "Has cerrado sesión." });
-      // The AuthGuard will handle redirecting to the login page
+      // The AuthGuard will handle redirecting to the login page automatically
+      // after the user state changes to null.
     }
   };
 
