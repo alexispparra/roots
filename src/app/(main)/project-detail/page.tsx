@@ -5,7 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import type { ChartConfig } from "@/components/ui/chart"
@@ -141,7 +141,7 @@ export default function ProjectDetailPage() {
           type: t.amountARS > 0 ? 'expense' : 'income' 
         }));
 
-        const categoriesWithSpent = data.categories.map((cat: any) => {
+        const categoriesWithSpent = data.categories.map((any: any) => {
           const spent = transactionsWithUSD
             .filter((t: Transaction) => t.category === cat.name && t.type === 'expense')
             .reduce((sum: number, t: Transaction) => sum + t.amountUSD, 0);
@@ -198,6 +198,18 @@ export default function ProjectDetailPage() {
       return userMatch && categoryMatch && dateMatch;
     });
   }, [transactions, filters, dateRange]);
+  
+  const transactionTotals = useMemo(() => {
+    return filteredTransactions.reduce(
+      (totals, transaction) => {
+        const sign = transaction.type === 'income' ? 1 : -1;
+        totals.ars += transaction.amountARS * sign;
+        totals.usd += transaction.amountUSD * sign;
+        return totals;
+      },
+      { ars: 0, usd: 0 }
+    );
+  }, [filteredTransactions]);
 
   const filteredCashflowTransactions = useMemo(() => {
     return transactions.filter(t => {
@@ -206,6 +218,14 @@ export default function ProjectDetailPage() {
       return categoryMatch && dateMatch;
     });
   }, [transactions, cashflowCategoryFilter, cashflowDateRange]);
+
+  const cashflowTotal = useMemo(() => {
+    return filteredCashflowTransactions.reduce((total, t) => {
+        const sign = t.type === 'income' ? 1 : -1;
+        return total + t.amountUSD * sign;
+    }, 0);
+  }, [filteredCashflowTransactions]);
+
 
   const cashflowCategoryTotals = useMemo(() => {
     if (!filteredCashflowTransactions.length) return [];
@@ -553,7 +573,8 @@ export default function ProjectDetailPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCashflowTransactions.map(t => (
+                  {filteredCashflowTransactions.length > 0 ? (
+                    filteredCashflowTransactions.map(t => (
                     <TableRow key={t.id}>
                        <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</TableCell>
                        <TableCell className="font-medium">{t.description}</TableCell>
@@ -565,8 +586,26 @@ export default function ProjectDetailPage() {
                         {t.type === 'income' ? '+' : '-'}${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ))
+                  ) : (
+                    <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                            No hay resultados.
+                        </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
+                 <TableFooter>
+                  <TableRow className="font-bold bg-muted/50 hover:bg-muted/80">
+                    <TableCell colSpan={3} className="text-right">Neto del Período</TableCell>
+                    <TableCell className={cn(
+                      "text-right font-mono",
+                      cashflowTotal >= 0 ? 'text-emerald-600' : 'text-destructive'
+                    )}>
+                      {cashflowTotal >= 0 ? '+' : '-'}${Math.abs(cashflowTotal).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </TableCell>
+                  </TableRow>
+                </TableFooter>
               </Table>
             </CardContent>
           </Card>
@@ -666,7 +705,8 @@ export default function ProjectDetailPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTransactions.map(t => (
+                  {filteredTransactions.length > 0 ? (
+                    filteredTransactions.map(t => (
                     <TableRow key={t.id}>
                       <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</TableCell>
                       <TableCell className="font-medium">{t.description}</TableCell>
@@ -689,8 +729,33 @@ export default function ProjectDetailPage() {
                         {t.type === 'income' ? '+' : '-'}${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ))
+                  ) : (
+                     <TableRow>
+                        <TableCell colSpan={8} className="h-24 text-center">
+                            No hay resultados.
+                        </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
+                <TableFooter>
+                  <TableRow className="font-bold bg-muted/50 hover:bg-muted/80">
+                    <TableCell colSpan={5} className="text-right">Total del Período</TableCell>
+                    <TableCell className={cn(
+                      "text-right font-mono",
+                      transactionTotals.ars >= 0 ? 'text-emerald-600' : 'text-destructive'
+                    )}>
+                      {transactionTotals.ars >= 0 ? '+' : '-'}${Math.abs(transactionTotals.ars).toLocaleString('es-AR')}
+                    </TableCell>
+                    <TableCell />
+                    <TableCell className={cn(
+                      "text-right font-mono",
+                      transactionTotals.usd >= 0 ? 'text-emerald-600' : 'text-destructive'
+                    )}>
+                      {transactionTotals.usd >= 0 ? '+' : '-'}${Math.abs(transactionTotals.usd).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </TableCell>
+                  </TableRow>
+                </TableFooter>
               </Table>
             </CardContent>
           </Card>
@@ -741,8 +806,13 @@ export default function ProjectDetailPage() {
 
               const categoryTransactions = transactions.filter(
                 (t) => t.category === selectedCategory && t.type === 'expense'
-              )
-              const categorySpent = categoryTransactions.reduce((sum, t) => sum + t.amountUSD, 0)
+              );
+              const categorySpent = categoryTransactions.reduce((sum, t) => sum + t.amountUSD, 0);
+              const categoryTotals = categoryTransactions.reduce((acc, t) => {
+                  acc.ars += t.amountARS;
+                  acc.usd += t.amountUSD;
+                  return acc;
+              }, {ars: 0, usd: 0});
               const budget = category.budget
               const progress = budget > 0 ? (categorySpent / budget) * 100 : 0
               const remaining = budget - categorySpent;
@@ -852,7 +922,8 @@ export default function ProjectDetailPage() {
                                       </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                      {categoryTransactions.map(t => (
+                                      {categoryTransactions.length > 0 ? (
+                                        categoryTransactions.map(t => (
                                           <TableRow key={t.id}>
                                               <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</TableCell>
                                               <TableCell className="font-medium">{t.description}</TableCell>
@@ -866,8 +937,27 @@ export default function ProjectDetailPage() {
                                                   -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                               </TableCell>
                                           </TableRow>
-                                      ))}
+                                      ))
+                                      ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="h-24 text-center">
+                                                No hay gastos en esta categoría.
+                                            </TableCell>
+                                        </TableRow>
+                                      )}
                                   </TableBody>
+                                  <TableFooter>
+                                    <TableRow className="font-bold bg-muted/50">
+                                        <TableCell colSpan={2} className="text-right">Total Gastado</TableCell>
+                                        <TableCell className="text-right font-mono text-destructive">
+                                            -${categoryTotals.ars.toLocaleString('es-AR')}
+                                        </TableCell>
+                                        <TableCell className="text-right" />
+                                        <TableCell className="text-right font-mono text-destructive">
+                                            -${categoryTotals.usd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                        </TableCell>
+                                    </TableRow>
+                                  </TableFooter>
                               </Table>
                           </CardContent>
                       </Card>
