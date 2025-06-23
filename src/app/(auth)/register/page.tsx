@@ -58,6 +58,8 @@ export default function RegisterPage() {
     } catch (err: any) {
         if (err.code === 'auth/email-already-in-use') {
             setError("Este correo electrónico ya está en uso. Por favor, inicia sesión o usa otro correo.");
+        } else if (err.code === 'auth/configuration-not-found') {
+            setError("Error de configuración de Firebase. Asegúrate de haber habilitado el proveedor de inicio de sesión (Email/Contraseña) en tu consola de Firebase.");
         } else {
             setError("Ocurrió un error inesperado al crear tu cuenta.");
         }

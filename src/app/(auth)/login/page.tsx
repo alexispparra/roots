@@ -43,6 +43,8 @@ export default function LoginPage() {
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
+      } else if (err.code === 'auth/configuration-not-found') {
+        setError("Error de configuración de Firebase. Asegúrate de haber habilitado los proveedores de inicio de sesión (Email/Contraseña y Google) en tu consola de Firebase.");
       } else {
         setError("Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.");
       }
@@ -64,7 +66,11 @@ export default function LoginPage() {
       router.push("/")
     } catch (err: any) {
         if (err.code !== 'auth/popup-closed-by-user') {
-            setError("No se pudo iniciar sesión con Google. Por favor, inténtalo de nuevo.")
+            if (err.code === 'auth/configuration-not-found') {
+              setError("Error de configuración de Firebase. Asegúrate de haber habilitado el proveedor de inicio de sesión de Google en tu consola de Firebase.");
+            } else {
+              setError("No se pudo iniciar sesión con Google. Por favor, inténtalo de nuevo.")
+            }
         }
         console.error(err)
     } finally {
