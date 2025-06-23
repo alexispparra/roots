@@ -46,9 +46,9 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {loading ? <Skeleton className="h-7 w-12" /> : <div className="text-2xl font-bold font-headline">{activeProjects.length}</div>}
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               {loading ? <Skeleton className="h-4 w-24 mt-1" /> : `de ${projects.length} proyectos totales`}
-            </p>
+            </div>
           </CardContent>
         </Card>
         <Card>
