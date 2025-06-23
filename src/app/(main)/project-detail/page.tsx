@@ -56,9 +56,12 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!project) {
-      setIsLoading(false);
-      return;
+    if (!project || !project.googleSheetId) {
+        setIsLoading(false);
+        setError(null);
+        setTransactions([]);
+        setCategories([]);
+        return;
     }
 
     const fetchData = async () => {
@@ -135,6 +138,18 @@ export default function ProjectDetailPage() {
 
 
   const renderContent = () => {
+    if (!project.googleSheetId) {
+        return (
+            <Alert className="mt-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Sin conexión a Google Sheets</AlertTitle>
+                <AlertDescription>
+                    Este proyecto no tiene un ID de Google Sheets asociado. Para ver los datos financieros, edita el proyecto y añade un ID válido.
+                </AlertDescription>
+            </Alert>
+        );
+    }
+      
     if (isLoading) {
       return (
         <div className="flex items-center justify-center h-64">
@@ -150,7 +165,7 @@ export default function ProjectDetailPage() {
            <AlertCircle className="h-4 w-4" />
            <AlertTitle>Error al cargar los datos</AlertTitle>
            <AlertDescription>
-             No se pudieron obtener los datos de Google Sheets. Verifica la configuración.
+             No se pudieron obtener los datos de Google Sheets. Verifica que el ID sea correcto y que hayas compartido la hoja con el correo de servicio.
              <p className="font-mono text-xs mt-2 bg-destructive-foreground/10 p-2 rounded">
                 {error}
              </p>
