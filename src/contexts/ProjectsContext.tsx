@@ -13,6 +13,7 @@ export type Participant = {
 
 export type Category = {
     name: string;
+    budget: number;
 };
 
 export type ProjectStatus = 'En Curso' | 'Completado' | 'Próximo';
@@ -42,6 +43,7 @@ type ProjectsContextType = {
     addProject: (project: AddProjectData) => void;
     getProjectById: (id: string | null) => Project | undefined;
     updateProjectStatus: (projectId: string, newStatus: ProjectStatus) => void;
+    addCategoryToProject: (projectId: string, category: Category) => void;
 };
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -63,9 +65,9 @@ const PROJECTS_MOCK_DATA: Project[] = [
             { name: 'Carlos Ruiz', contribution: 2000, share: 20, src: 'https://placehold.co/40x40.png', fallback: 'CR' },
         ],
         categories: [
-            { name: "Desarrollo" },
-            { name: "Diseño UI/UX" },
-            { name: "Marketing" },
+            { name: "Desarrollo", budget: 5000 },
+            { name: "Diseño UI/UX", budget: 2000 },
+            { name: "Marketing", budget: 3000 },
         ]
     },
     { 
@@ -97,8 +99,8 @@ const PROJECTS_MOCK_DATA: Project[] = [
             { name: 'Julia Ponce', contribution: 1500, share: 20, src: 'https://placehold.co/40x40.png', fallback: 'JP' },
         ],
         categories: [
-            { name: "Publicidad" },
-            { name: "Contenido" },
+            { name: "Publicidad", budget: 5000 },
+            { name: "Contenido", budget: 2500 },
         ]
     },
     { 
@@ -147,8 +149,18 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         );
     };
 
+    const addCategoryToProject = (projectId: string, category: Category) => {
+        setProjects(prevProjects => 
+            prevProjects.map(p => 
+                p.id === projectId 
+                    ? { ...p, categories: [...p.categories, category] } 
+                    : p
+            )
+        );
+    };
+
     return (
-        <ProjectsContext.Provider value={{ projects, addProject, getProjectById, updateProjectStatus }}>
+        <ProjectsContext.Provider value={{ projects, addProject, getProjectById, updateProjectStatus, addCategoryToProject }}>
             {children}
         </ProjectsContext.Provider>
     );

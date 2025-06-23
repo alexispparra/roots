@@ -31,7 +31,11 @@ const formSchema = z.object({
   budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
 })
 
-export function CreateCategoryDialog() {
+type CreateCategoryDialogProps = {
+  onAddCategory: (data: z.infer<typeof formSchema>) => void;
+}
+
+export function CreateCategoryDialog({ onAddCategory }: CreateCategoryDialogProps) {
   const [open, setOpen] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,7 +46,7 @@ export function CreateCategoryDialog() {
   })
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Nueva categoría:", values)
+    onAddCategory(values)
     setOpen(false)
     form.reset()
   }

@@ -1,14 +1,14 @@
 "use client"
 
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import type { ChartConfig } from "@/components/ui/chart"
-import { Pie, PieChart, Cell } from "recharts"
+import { Pie, PieChart, Cell, Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link";
@@ -20,6 +20,9 @@ import { useProjects } from "@/contexts/ProjectsContext";
 import type { Category as ProjectCategory, ProjectStatus } from "@/contexts/ProjectsContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { format } from 'date-fns';
 
 
 // --- TYPES ---
@@ -37,15 +40,14 @@ type Transaction = {
 
 type CategoryWithSpent = ProjectCategory & {
   spent: number;
-  budget: number;
 }
 
 // --- MOCK DATA for projects without a real Google Sheet ---
 const MOCK_TRANSACTIONS: Transaction[] = [
   { id: 'MT-1', date: '2024-07-20', description: 'Licencia de software', category: 'Desarrollo', user: 'Ana García', paymentMethod: 'Banco', amountARS: 150000, exchangeRate: 1000, amountUSD: 150 },
   { id: 'MT-2', date: '2024-07-21', description: 'Diseño de logo', category: 'Diseño UI/UX', user: 'Luis Torres', paymentMethod: 'Factura', amountARS: 80000, exchangeRate: 1000, amountUSD: 80 },
-  { id: 'MT-3', date: '2024-07-22', description: 'Campaña en redes', category: 'Marketing', user: 'Carlos Ruiz', paymentMethod: 'Efectivo', amountARS: 120000, exchangeRate: 1050, amountUSD: 114.28 },
-  { id: 'MT-4', date: '2024-07-23', description: 'Servidor de pruebas', category: 'Desarrollo', user: 'Ana García', paymentMethod: 'Banco', amountARS: 50000, exchangeRate: 1050, amountUSD: 47.62 },
+  { id: 'MT-3', date: '2024-06-22', description: 'Campaña en redes', category: 'Marketing', user: 'Carlos Ruiz', paymentMethod: 'Efectivo', amountARS: 120000, exchangeRate: 1050, amountUSD: 114.28 },
+  { id: 'MT-4', date: '2024-06-23', description: 'Servidor de pruebas', category: 'Desarrollo', user: 'Ana García', paymentMethod: 'Banco', amountARS: 50000, exchangeRate: 1050, amountUSD: 47.62 },
 ];
 
 const MOCK_CATEGORIES = [
@@ -61,7 +63,7 @@ const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--c
 export default function ProjectDetailPage() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get('id');
-  const { getProjectById, updateProjectStatus } = useProjects();
+  const { getProjectById, updateProjectStatus, addCategoryToProject } = useProjects();
   const project = getProjectById(projectId);
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -69,13 +71,14 @@ export default function ProjectDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [filters, setFilters] = useState({ user: "Todos", category: "Todas" });
+
   useEffect(() => {
      if (!project) {
         setIsLoading(false);
         return;
     }
 
-    // If there's no sheet ID, use mock data to populate the UI.
     if (!project.googleSheetId) {
         const categoriesWithSpent = MOCK_CATEGORIES.map(cat => {
             const spent = MOCK_TRANSACTIONS
@@ -91,7 +94,6 @@ export default function ProjectDetailPage() {
         return;
     }
 
-    // If there is a sheet ID, fetch real data.
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
@@ -128,6 +130,21 @@ export default function ProjectDetailPage() {
 
     fetchData();
   }, [project]);
+  
+  const handleAddCategory = (data: { name: string; budget: number }) => {
+      if (project) {
+        addCategoryToProject(project.id, data);
+        // Here you could add a toast notification
+      }
+  };
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      const userMatch = filters.user === 'Todos' || t.user === filters.user;
+      const categoryMatch = filters.category === 'Todas' || t.category === filters.category;
+      return userMatch && categoryMatch;
+    });
+  }, [transactions, filters]);
 
   if (!project) {
     return (
@@ -144,19 +161,21 @@ export default function ProjectDetailPage() {
       </Card>
     );
   }
+  
+  const projectCategories = project.googleSheetId ? categories : project.categories.map(c => ({...c, spent: 0}));
 
-  const totalSpent = categories.reduce((sum, cat) => sum + cat.spent, 0);
-  const totalBudget = categories.reduce((sum, cat) => sum + cat.budget, 0);
+  const totalSpent = useMemo(() => transactions.reduce((sum, t) => sum + t.amountUSD, 0), [transactions]);
+  const totalBudget = useMemo(() => projectCategories.reduce((sum, cat) => sum + cat.budget, 0), [projectCategories]);
   const remainingBudget = totalBudget - totalSpent;
   const totalContribution = project.participants.reduce((sum, p) => sum + (p.contribution || 0), 0);
 
-  const spendingData = categories.map(cat => ({
+  const spendingByCategoryData = projectCategories.map(cat => ({
     category: cat.name,
-    amount: cat.spent,
+    amount: transactions.filter(t => t.category === cat.name).reduce((acc, t) => acc + t.amountUSD, 0),
     fill: `var(--color-${cat.name.toLowerCase().replace(/ /g, '-')})`
-  }));
+  })).filter(d => d.amount > 0);
   
-  const spendingConfig = categories.reduce((acc, category, index) => {
+  const spendingConfig = projectCategories.reduce((acc, category, index) => {
     acc[category.name.toLowerCase().replace(/ /g, '-')] = {
       label: category.name,
       color: CHART_COLORS[index % CHART_COLORS.length]
@@ -164,6 +183,36 @@ export default function ProjectDetailPage() {
     return acc;
   }, { amount: { label: "Monto" } } as ChartConfig);
 
+  const monthlySpendingData = useMemo(() => {
+    const monthlyTotals: {[key: string]: { month: string, Gastos: number }} = {};
+    const currentYear = new Date().getFullYear().toString();
+    
+    transactions.forEach(t => {
+        const transactionDate = new Date(t.date);
+        if (transactionDate.getFullYear().toString() === currentYear) {
+            const monthKey = format(transactionDate, 'yyyy-MM');
+            const monthName = format(transactionDate, 'MMM');
+            if (!monthlyTotals[monthKey]) {
+                monthlyTotals[monthKey] = { month: monthName, Gastos: 0 };
+            }
+            monthlyTotals[monthKey].Gastos += t.amountUSD;
+        }
+    });
+
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const yearData = months.map((monthName, index) => {
+      const monthKey = `${currentYear}-${String(index + 1).padStart(2, '0')}`;
+      return monthlyTotals[monthKey] || { month: monthName, Gastos: 0 };
+    })
+    return yearData;
+  }, [transactions]);
+  
+  const barChartConfig = {
+    Gastos: {
+      label: "Gastos",
+      color: "hsl(var(--chart-1))",
+    },
+  } satisfies ChartConfig
 
   const renderContent = () => {
     if (isLoading) {
@@ -181,24 +230,22 @@ export default function ProjectDetailPage() {
            <AlertCircle className="h-4 w-4" />
            <AlertTitle>Error al cargar los datos</AlertTitle>
            <AlertDescription>
-             No se pudieron obtener los datos de Google Sheets. Verifica que el ID sea correcto y que hayas compartido la hoja con el correo de servicio.
-             <p className="font-mono text-xs mt-2 bg-destructive-foreground/10 p-2 rounded">
-                {error}
-             </p>
+             {error}
            </AlertDescription>
          </Alert>
        )
     }
     
     return (
-      <Tabs defaultValue="summary" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="summary">Resumen</TabsTrigger>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Visión General</TabsTrigger>
+          <TabsTrigger value="cashflow">Resumen Financiero</TabsTrigger>
           <TabsTrigger value="transactions">Transacciones</TabsTrigger>
           <TabsTrigger value="categories">Categorías</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="summary" className="mt-6">
+        <TabsContent value="overview" className="mt-6">
           <div className="grid gap-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                <Card>
@@ -283,8 +330,8 @@ export default function ProjectDetailPage() {
                       <ChartContainer config={spendingConfig} className="mx-auto aspect-square max-h-[250px]">
                           <PieChart>
                               <ChartTooltip content={<ChartTooltipContent nameKey="category" hideLabel />} />
-                              <Pie data={spendingData} dataKey="amount" nameKey="category" innerRadius={50}>
-                                {spendingData.map((entry, index) => (
+                              <Pie data={spendingByCategoryData} dataKey="amount" nameKey="category" innerRadius={50}>
+                                {spendingByCategoryData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                                 ))}
                               </Pie>
@@ -310,16 +357,105 @@ export default function ProjectDetailPage() {
           </div>
         </TabsContent>
 
+        <TabsContent value="cashflow" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">Resumen Financiero Anual</CardTitle>
+              <CardDescription>Análisis de gastos e ingresos del proyecto a lo largo del tiempo.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Gastos Mensuales ({new Date().getFullYear()})</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ChartContainer config={barChartConfig} className="h-[250px] w-full">
+                                <BarChart data={monthlySpendingData}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis
+                                    dataKey="month"
+                                    tickLine={false}
+                                    tickMargin={10}
+                                    axisLine={false}
+                                />
+                                <YAxis />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Bar dataKey="Gastos" fill="var(--color-Gastos)" radius={4} />
+                                </BarChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Gastos por Participante</CardTitle>
+                            <CardDescription>Comparativa de gastos realizados por cada miembro.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Usuario</TableHead>
+                                        <TableHead className="text-right">Monto Gastado (U$S)</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {project.participants.map(p => {
+                                        const userSpent = transactions.filter(t => t.user === p.name).reduce((sum, t) => sum + t.amountUSD, 0);
+                                        return (
+                                            <TableRow key={p.name}>
+                                                <TableCell>{p.name}</TableCell>
+                                                <TableCell className="text-right font-mono">${userSpent.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
+                                            </TableRow>
+                                        )
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="transactions" className="mt-6">
           <Card>
-            <CardHeader className="flex flex-row items-center">
-              <div className="grid gap-2">
-                <CardTitle className="font-headline">Transacciones del Proyecto</CardTitle>
-                <CardDescription>
-                  Historial de ingresos y gastos del proyecto desde Google Sheets.
-                </CardDescription>
+            <CardHeader className="flex flex-col gap-4">
+              <div className="flex flex-row items-center">
+                  <div className="grid gap-2">
+                    <CardTitle className="font-headline">Transacciones del Proyecto</CardTitle>
+                    <CardDescription>
+                      Historial de ingresos y gastos del proyecto.
+                    </CardDescription>
+                  </div>
+                  <CreateExpenseDialog categories={projectCategories} participants={project.participants} />
               </div>
-              <CreateExpenseDialog categories={categories} participants={project.participants} />
+              <div className="flex items-center gap-4">
+                  <div className="grid gap-1.5">
+                    <Label>Usuario</Label>
+                    <Select value={filters.user} onValueChange={(value) => setFilters(prev => ({ ...prev, user: value }))}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filtrar por usuario" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Todos">Todos los usuarios</SelectItem>
+                            {project.participants.map(p => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Categoría</Label>
+                     <Select value={filters.category} onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filtrar por categoría" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Todas">Todas las categorías</SelectItem>
+                            {projectCategories.map(c => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                  </div>
+              </div>
             </CardHeader>
             <CardContent>
               <Table>
@@ -336,7 +472,7 @@ export default function ProjectDetailPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions.map(t => (
+                  {filteredTransactions.map(t => (
                     <TableRow key={t.id}>
                       <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</TableCell>
                       <TableCell className="font-medium">{t.description}</TableCell>
@@ -368,25 +504,29 @@ export default function ProjectDetailPage() {
                   <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
                   <CardDescription>Gestiona y visualiza los gastos por categoría.</CardDescription>
                 </div>
-                <CreateCategoryDialog />
+                <CreateCategoryDialog onAddCategory={handleAddCategory}/>
               </CardHeader>
             </Card>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {categories.map((category) => (
-                <Card key={category.name}>
-                    <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                            <span>{category.name}</span>
-                            <Link href="#" className="text-sm font-medium text-primary hover:underline">Ver detalle</Link>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid gap-2">
-                        <div className="text-3xl font-bold">${category.spent.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                        <p className="text-xs text-muted-foreground">de ${category.budget.toLocaleString()} presupuestados</p>
-                        <Progress value={(category.spent / category.budget) * 100} className="h-2 mt-2" />
-                    </CardContent>
-                </Card>
-              ))}
+              {projectCategories.map((category) => {
+                const categorySpent = transactions.filter(t => t.category === category.name).reduce((sum, t) => sum + t.amountUSD, 0);
+                const progress = category.budget > 0 ? (categorySpent / category.budget) * 100 : 0;
+                return (
+                    <Card key={category.name}>
+                        <CardHeader>
+                            <CardTitle className="flex items-center justify-between">
+                                <span>{category.name}</span>
+                                <Link href="#" className="text-sm font-medium text-primary hover:underline">Ver detalle</Link>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid gap-2">
+                            <div className="text-3xl font-bold">${categorySpent.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <p className="text-xs text-muted-foreground">de ${category.budget.toLocaleString()} presupuestados</p>
+                            <Progress value={progress} className="h-2 mt-2" />
+                        </CardContent>
+                    </Card>
+                )
+              })}
             </div>
            </div>
         </TabsContent>
