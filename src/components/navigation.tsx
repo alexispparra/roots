@@ -17,12 +17,12 @@ import {
 import Link from "next/link";
 
 const menuItems = [
-  { href: "/", label: "Dashboard", icon: Home },
-  { href: "/transactions", label: "Transactions", icon: ArrowRightLeft },
-  { href: "/accounts", label: "Accounts", icon: Wallet },
-  { href: "/categories", label: "Categories", icon: LayoutGrid },
-  { href: "/charts", label: "Reports", icon: BarChart2 },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/", label: "Panel", icon: Home },
+  { href: "/transactions", label: "Transacciones", icon: ArrowRightLeft },
+  { href: "/accounts", label: "Cuentas", icon: Wallet },
+  { href: "/categories", label: "Categorías", icon: LayoutGrid },
+  { href: "/charts", label: "Reportes", icon: BarChart2 },
+  { href: "/settings", label: "Configuración", icon: Settings },
 ];
 
 export function Navigation() {

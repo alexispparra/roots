@@ -4,10 +4,10 @@ export default function SettingsPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Settings</CardTitle>
+        <CardTitle className="font-headline">Configuración</CardTitle>
       </CardHeader>
       <CardContent>
-        <p>This section is under construction. Check back later for application settings.</p>
+        <p>Esta sección está en construcción. Vuelve más tarde para ver la configuración de la aplicación.</p>
       </CardContent>
     </Card>
   );

@@ -13,15 +13,15 @@ import {
 } from "lucide-react";
 
 const categories = [
-  { name: "Food & Drink", icon: <Utensils /> },
-  { name: "Transport", icon: <Car /> },
-  { name: "Shopping", icon: <ShoppingBag /> },
-  { name: "Housing", icon: <Home /> },
-  { name: "Health", icon: <Heart /> },
-  { name: "Gifts", icon: <Gift /> },
-  { name: "Entertainment", icon: <Film /> },
-  { name: "Education", icon: <GraduationCap /> },
-  { name: "Work", icon: <Briefcase /> },
+  { name: "Comida y Bebida", icon: <Utensils /> },
+  { name: "Transporte", icon: <Car /> },
+  { name: "Compras", icon: <ShoppingBag /> },
+  { name: "Vivienda", icon: <Home /> },
+  { name: "Salud", icon: <Heart /> },
+  { name: "Regalos", icon: <Gift /> },
+  { name: "Entretenimiento", icon: <Film /> },
+  { name: "Educación", icon: <GraduationCap /> },
+  { name: "Trabajo", icon: <Briefcase /> },
 ];
 
 export default function CategoriesPage() {
@@ -29,8 +29,8 @@ export default function CategoriesPage() {
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Categories</CardTitle>
-          <CardDescription>Organize your transactions by assigning them to different categories.</CardDescription>
+          <CardTitle className="font-headline">Categorías</CardTitle>
+          <CardDescription>Organiza tus transacciones asignándolas a diferentes categorías.</CardDescription>
         </CardHeader>
       </Card>
 
@@ -47,7 +47,7 @@ export default function CategoriesPage() {
           <div className="mb-4 [&>svg]:h-10 [&>svg]:w-10">
             <PlusCircle />
           </div>
-          <p className="font-semibold">Add New</p>
+          <p className="font-semibold">Añadir Nueva</p>
         </Card>
       </div>
     </div>

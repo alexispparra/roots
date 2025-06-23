@@ -12,7 +12,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: 'FinanceFlow',
-  description: 'Track your expenses and manage your finances effortlessly.',
+  description: 'Realiza un seguimiento de tus gastos y gestiona tus finanzas sin esfuerzo.',
 };
 
 export default function RootLayout({
@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <body className={`${inter.variable} ${poppins.variable} font-body antialiased`}>
         {children}
         <Toaster />

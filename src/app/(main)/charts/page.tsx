@@ -19,36 +19,36 @@ import type { ChartConfig } from "@/components/ui/chart"
 import React from "react"
 
 const spendingData = [
-  { category: "Food & Drink", amount: 850, fill: "var(--color-food)" },
-  { category: "Shopping", amount: 600, fill: "var(--color-shopping)" },
-  { category: "Transport", amount: 350, fill: "var(--color-transport)" },
-  { category: "Housing", amount: 1200, fill: "var(--color-housing)" },
-  { category: "Other", amount: 400, fill: "var(--color-other)" },
+  { key: "food", category: "Comida y Bebida", amount: 850, fill: "var(--color-food)" },
+  { key: "shopping", category: "Compras", amount: 600, fill: "var(--color-shopping)" },
+  { key: "transport", category: "Transporte", amount: 350, fill: "var(--color-transport)" },
+  { key: "housing", category: "Vivienda", amount: 1200, fill: "var(--color-housing)" },
+  { key: "other", category: "Otros", amount: 400, fill: "var(--color-other)" },
 ]
 
 const spendingConfig = {
   amount: {
-    label: "Amount",
+    label: "Monto",
   },
-  food: { label: "Food & Drink", color: "hsl(var(--chart-1))" },
-  shopping: { label: "Shopping", color: "hsl(var(--chart-2))" },
-  transport: { label: "Transport", color: "hsl(var(--chart-3))" },
-  housing: { label: "Housing", color: "hsl(var(--chart-4))" },
-  other: { label: "Other", color: "hsl(var(--chart-5))" },
+  food: { label: "Comida y Bebida", color: "hsl(var(--chart-1))" },
+  shopping: { label: "Compras", color: "hsl(var(--chart-2))" },
+  transport: { label: "Transporte", color: "hsl(var(--chart-3))" },
+  housing: { label: "Vivienda", color: "hsl(var(--chart-4))" },
+  other: { label: "Otros", color: "hsl(var(--chart-5))" },
 } satisfies ChartConfig
 
 const cashflowData = [
-  { month: "Jan", income: 2500, expenses: 1800 },
+  { month: "Ene", income: 2500, expenses: 1800 },
   { month: "Feb", income: 2800, expenses: 2000 },
   { month: "Mar", income: 3200, expenses: 2400 },
-  { month: "Apr", income: 2900, expenses: 2100 },
+  { month: "Abr", income: 2900, expenses: 2100 },
   { month: "May", income: 3500, expenses: 2600 },
   { month: "Jun", income: 3100, expenses: 2300 },
 ];
 
 const cashflowConfig = {
-  income: { label: "Income", color: "hsl(var(--chart-1))" },
-  expenses: { label: "Expenses", color: "hsl(var(--destructive))" },
+  income: { label: "Ingresos", color: "hsl(var(--chart-1))" },
+  expenses: { label: "Gastos", color: "hsl(var(--destructive))" },
 } satisfies ChartConfig;
 
 const netWorthData = [
@@ -62,7 +62,7 @@ const netWorthData = [
 
 const netWorthConfig = {
   value: {
-    label: "Net Worth",
+    label: "Patrimonio Neto",
     color: "hsl(var(--chart-2))",
   },
 } satisfies ChartConfig
@@ -74,24 +74,24 @@ export default function ReportsPage() {
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Financial Reports</CardTitle>
+          <CardTitle className="font-headline">Reportes Financieros</CardTitle>
           <CardDescription>
-            Visualization of your key financial indicators.
+            Visualización de tus indicadores financieros clave.
           </CardDescription>
         </CardHeader>
       </Card>
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Spending by Category</CardTitle>
-            <CardDescription>Distribution of your expenses for the current month.</CardDescription>
+            <CardTitle className="font-headline">Gastos por Categoría</CardTitle>
+            <CardDescription>Distribución de tus gastos del mes actual.</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={spendingConfig} className="mx-auto aspect-square max-h-[300px]">
                <PieChart>
                 <ChartTooltip
                   cursor={false}
-                  content={<ChartTooltipContent hideLabel />}
+                  content={<ChartTooltipContent hideLabel nameKey="category" />}
                 />
                 <Pie
                   data={spendingData}
@@ -106,7 +106,7 @@ export default function ReportsPage() {
                   onMouseOver={(_, index) => setActiveIndex(index)}
                 />
                  <ChartLegend
-                  content={<ChartLegendContent nameKey="category" />}
+                  content={<ChartLegendContent nameKey="key" />}
                   className="-translate-y-[2rem] flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
                 />
               </PieChart>
@@ -115,8 +115,8 @@ export default function ReportsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Income vs. Expenses</CardTitle>
-            <CardDescription>Comparison of income vs. spending per month.</CardDescription>
+            <CardTitle className="font-headline">Ingresos vs. Gastos</CardTitle>
+            <CardDescription>Comparación de ingresos vs. gastos por mes.</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={cashflowConfig} className="h-[300px] w-full">
@@ -140,8 +140,8 @@ export default function ReportsPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Net Worth Trend</CardTitle>
-          <CardDescription>Monthly trend of your total net worth.</CardDescription>
+          <CardTitle className="font-headline">Tendencia del Patrimonio Neto</CardTitle>
+          <CardDescription>Tendencia mensual de tu patrimonio neto total.</CardDescription>
         </CardHeader>
         <CardContent>
             <ChartContainer config={netWorthConfig} className="h-[300px] w-full">
@@ -150,7 +150,7 @@ export default function ReportsPage() {
                     margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
                 >
                     <CartesianGrid strokeDasharray="3 3" vertical={false}/>
-                    <XAxis dataKey="date" tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short' })}/>
+                    <XAxis dataKey="date" tickFormatter={(val) => new Date(val).toLocaleDateString('es-ES', { month: 'short' })}/>
                     <YAxis unit="$" tickFormatter={(value) => (value / 1000) + 'k'}/>
                     <ChartTooltip content={<ChartTooltipContent indicator="line"/>} />
                     <ChartLegend />
