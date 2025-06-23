@@ -1,5 +1,9 @@
 "use client"
 
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -12,8 +16,57 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
+import { useToast } from "@/hooks/use-toast"
+import { Loader2, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function RegisterPage() {
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+  const { toast } = useToast()
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!auth) return;
+    
+    if (password.length < 6) {
+        setError("La contraseña debe tener al menos 6 caracteres.");
+        return;
+    }
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      
+      if (userCredential.user) {
+          await updateProfile(userCredential.user, {
+              displayName: `${firstName} ${lastName}`.trim()
+          });
+      }
+
+      toast({
+        title: "¡Cuenta Creada!",
+        description: "Tu cuenta ha sido creada exitosamente.",
+      })
+      router.push("/")
+    } catch (err: any) {
+        if (err.code === 'auth/email-already-in-use') {
+            setError("Este correo electrónico ya está en uso. Por favor, inicia sesión o usa otro correo.");
+        } else {
+            setError("Ocurrió un error inesperado al crear tu cuenta.");
+        }
+        console.error(err);
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="mx-auto max-w-sm">
@@ -27,14 +80,35 @@ export default function RegisterPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
+          <form onSubmit={handleRegister} className="grid gap-4">
+             {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error de Registro</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <div className="grid gap-2">
                 <Label htmlFor="first-name">Nombre</Label>
-                <Input id="first-name" placeholder="Juan" required />
+                <Input 
+                    id="first-name" 
+                    placeholder="Juan" 
+                    required 
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    disabled={isLoading}
+                />
             </div>
              <div className="grid gap-2">
                 <Label htmlFor="last-name">Apellido</Label>
-                <Input id="last-name" placeholder="Pérez" required />
+                <Input 
+                    id="last-name" 
+                    placeholder="Pérez" 
+                    required 
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    disabled={isLoading}
+                />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Correo Electrónico</Label>
@@ -43,16 +117,26 @@ export default function RegisterPage() {
                 type="email"
                 placeholder="usuario@ejemplo.com"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="password">Contraseña</Label>
-                <Input id="password" type="password" />
+                <Input 
+                    id="password" 
+                    type="password" 
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                />
             </div>
-            <Button type="submit" className="w-full">
-              Crear Cuenta
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? <Loader2 className="animate-spin" /> : "Crear Cuenta"}
             </Button>
-          </div>
+          </form>
           <div className="mt-4 text-center text-sm">
             ¿Ya tienes una cuenta?{" "}
             <Link href="/login" className="underline">

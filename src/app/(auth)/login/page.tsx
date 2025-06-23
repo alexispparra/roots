@@ -1,5 +1,9 @@
 "use client"
 
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -12,8 +16,62 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
+import { useToast } from "@/hooks/use-toast"
+import { Loader2, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const router = useRouter()
+  const { toast } = useToast()
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!auth) return;
+
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
+      toast({ title: "¡Bienvenido de nuevo!" })
+      router.push("/")
+    } catch (err: any) {
+      if (err.code === 'auth/invalid-credential') {
+        setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
+      } else {
+        setError("Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.");
+      }
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    if (!auth) return;
+
+    setError(null)
+    setIsGoogleLoading(true)
+    const provider = new GoogleAuthProvider()
+    try {
+      await signInWithPopup(auth, provider)
+      toast({ title: "¡Bienvenido!" })
+      router.push("/")
+    } catch (err: any) {
+        if (err.code !== 'auth/popup-closed-by-user') {
+            setError("No se pudo iniciar sesión con Google. Por favor, inténtalo de nuevo.")
+        }
+        console.error(err)
+    } finally {
+        setIsGoogleLoading(false)
+    }
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="mx-auto max-w-sm">
@@ -27,7 +85,14 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
+          <form onSubmit={handleLogin} className="grid gap-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error de Inicio de Sesión</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <div className="grid gap-2">
               <Label htmlFor="email">Correo Electrónico</Label>
               <Input
@@ -35,24 +100,35 @@ export default function LoginPage() {
                 type="email"
                 placeholder="usuario@ejemplo.com"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading || isGoogleLoading}
               />
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Contraseña</Label>
-                <Link href="#" className="ml-auto inline-block text-sm underline">
-                  ¿Olvidaste tu contraseña?
-                </Link>
               </div>
-              <Input id="password" type="password" required />
+              <Input id="password" 
+                type="password" 
+                required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading || isGoogleLoading}
+              />
             </div>
-            <Button type="submit" className="w-full">
-              Ingresar
+            <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
+              {isLoading ? <Loader2 className="animate-spin" /> : "Ingresar"}
             </Button>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" type="button" className="w-full" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading}>
+              {isGoogleLoading ? <Loader2 className="animate-spin mr-2" /> : 
+                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                  <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 21.2 172.9 56.6l-69.8 69.8C322.2 106.3 287.9 96 248 96c-88.8 0-160.1 71.1-160.1 160.1s71.3 160.1 160.1 160.1c98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+                </svg>
+              }
               Ingresar con Google
             </Button>
-          </div>
+          </form>
           <div className="mt-4 text-center text-sm">
             ¿No tienes una cuenta?{" "}
             <Link href="/register" className="underline">
