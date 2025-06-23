@@ -93,7 +93,7 @@ export default function ProjectsPage() {
                 </div>
               </div>
               <Button asChild variant="outline">
-                <Link href="/project-detail">Ver Detalles</Link>
+                <Link href={`/project-detail?id=${project.id}`}>Ver Detalles</Link>
               </Button>
             </CardContent>
           </Card>

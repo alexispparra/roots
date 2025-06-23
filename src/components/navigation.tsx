@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   SidebarMenu,
@@ -16,39 +16,60 @@ import {
   Briefcase,
   Home,
   Settings,
-  FolderKanban,
   Tag,
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const activeProjectsData = [
+const allProjectsData = [
     { 
         id: 'PROJ-001', 
         name: 'Lanzamiento App Móvil', 
-        href: '/project-detail',
+        status: 'En Curso',
         categories: [
-            { name: "Desarrollo", href: "/project-detail#categories" },
-            { name: "Diseño UI/UX", href: "/project-detail#categories" },
-            { name: "Marketing", href: "/project-detail#categories" },
+            { name: "Desarrollo" },
+            { name: "Diseño UI/UX" },
+            { name: "Marketing" },
         ]
+    },
+    { 
+        id: 'PROJ-002', 
+        name: 'Rediseño Web Corporativa', 
+        status: 'Completado',
+        categories: []
     },
     { 
         id: 'PROJ-003', 
         name: 'Campaña Marketing Q3', 
-        href: '/project-detail',
+        status: 'En Curso',
         categories: [
-            { name: "Publicidad", href: "/project-detail#categories" },
-            { name: "Contenido", href: "/project-detail#categories" },
+            { name: "Publicidad" },
+            { name: "Contenido" },
         ]
+    },
+    { 
+        id: 'PROJ-004', 
+        name: 'Investigación de Mercado', 
+        status: 'Próximo',
+        categories: []
     },
 ];
 
+const activeProjectsData = allProjectsData.filter(p => p.status === 'En Curso');
+
+
 export function Navigation() {
   const pathname = usePathname();
-  // We can't know which project is active from the path, so we'll default to closed.
-  // A real implementation would fetch project data and match the path.
+  const searchParams = useSearchParams();
+  const currentProjectId = searchParams.get('id');
+
   const [openProjects, setOpenProjects] = React.useState<Record<string, boolean>>({});
+
+  React.useEffect(() => {
+    if (currentProjectId) {
+      setOpenProjects(prev => ({ ...prev, [currentProjectId]: true }));
+    }
+  }, [currentProjectId]);
 
   const toggleProject = (projectId: string) => {
     setOpenProjects(prev => ({ ...prev, [projectId]: !prev[projectId] }));
@@ -94,7 +115,7 @@ export function Navigation() {
                  >
                     <ChevronRight className={cn("h-4 w-4 transition-transform", openProjects[project.id] && "rotate-90")} />
                  </Button>
-                <Link href={project.href} className="flex-1 text-sm font-normal text-sidebar-foreground hover:text-sidebar-accent-foreground hover:underline truncate">
+                <Link href={`/project-detail?id=${project.id}`} className={cn("flex-1 text-sm font-normal text-sidebar-foreground hover:text-sidebar-accent-foreground hover:underline truncate", currentProjectId === project.id && 'font-semibold text-sidebar-accent-foreground')}>
                   {project.name}
                 </Link>
               </div>
@@ -102,7 +123,7 @@ export function Navigation() {
                 <ul className="pl-10 mt-1 flex flex-col gap-1">
                   {project.categories.map(category => (
                     <li key={category.name}>
-                      <Link href={category.href} className={cn("flex items-center gap-2 p-1.5 text-sm rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", pathname.endsWith(category.href) && "bg-sidebar-accent text-sidebar-accent-foreground")}>
+                      <Link href={`/project-detail?id=${project.id}#categories`} className={cn("flex items-center gap-2 p-1.5 text-sm rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground")}>
                           <Tag className="h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{category.name}</span>
                       </Link>

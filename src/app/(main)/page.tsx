@@ -142,7 +142,7 @@ export default function DashboardPage() {
               {projects.map(proj => (
               <TableRow key={proj.id}>
                 <TableCell className="font-medium">
-                  <Link href="/project-detail" className="hover:underline">
+                  <Link href={`/project-detail?id=${proj.id}`} className="hover:underline">
                     {proj.name}
                   </Link>
                 </TableCell>
