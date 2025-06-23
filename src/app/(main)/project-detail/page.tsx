@@ -270,8 +270,7 @@ export default function ProjectDetailPage() {
 
   const spendingByCategoryData = projectCategories.map(cat => ({
     category: cat.name,
-    amount: transactions.filter(t => t.category === cat.name).reduce((acc, t) => acc + t.amountUSD, 0),
-    fill: `var(--color-${cat.name.toLowerCase().replace(/ /g, '-')})`
+    amount: transactions.filter(t => t.category === cat.name && t.type === 'expense').reduce((acc, t) => acc + t.amountUSD, 0),
   })).filter(d => d.amount > 0);
   
   const spendingConfig = projectCategories.reduce((acc, category, index) => {
@@ -422,22 +421,72 @@ export default function ProjectDetailPage() {
                 </CardContent>
               </Card>
               <Card>
-                  <CardHeader>
-                      <CardTitle className="font-headline">Gastos por Categoría</CardTitle>
-                      <CardDescription>Distribución de los gastos.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                      <ChartContainer config={spendingConfig} className="mx-auto aspect-square max-h-[250px]">
-                          <PieChart>
-                              <ChartTooltip content={<ChartTooltipContent nameKey="category" hideLabel />} />
-                              <Pie data={spendingByCategoryData} dataKey="amount" nameKey="category" innerRadius={50}>
-                                {spendingByCategoryData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                                ))}
-                              </Pie>
-                          </PieChart>
-                      </ChartContainer>
-                  </CardContent>
+                <CardHeader>
+                  <CardTitle className="font-headline">Gastos por Categoría</CardTitle>
+                  <CardDescription>Distribución y desglose de los gastos.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-6">
+                  {spendingByCategoryData.length > 0 ? (
+                    <ChartContainer config={spendingConfig} className="mx-auto aspect-square max-h-[250px]">
+                      <PieChart>
+                        <ChartTooltip content={<ChartTooltipContent nameKey="category" hideLabel />} />
+                        <Pie data={spendingByCategoryData} dataKey="amount" nameKey="category" innerRadius={50}>
+                          {spendingByCategoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ChartContainer>
+                  ) : (
+                    <div className="mx-auto flex h-[250px] w-full items-center justify-center rounded-lg bg-muted/50">
+                      <p className="text-sm text-muted-foreground">No hay datos de gastos para mostrar.</p>
+                    </div>
+                  )}
+                  <div className="grid gap-2">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Categoría</TableHead>
+                          <TableHead className="text-right">Monto Gastado</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {spendingByCategoryData.length > 0 ? (
+                          spendingByCategoryData.map((item, index) => (
+                            <TableRow key={item.category}>
+                              <TableCell>
+                                <div className="flex items-center gap-2 font-medium">
+                                  <span
+                                    className="h-2.5 w-2.5 rounded-full"
+                                    style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                                  />
+                                  {item.category}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right font-mono">
+                                ${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={2} className="h-24 text-center">
+                              No hay gastos registrados.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                      <TableFooter>
+                        <TableRow className="font-bold">
+                          <TableCell>Total</TableCell>
+                          <TableCell className="text-right font-mono">
+                            ${totalSpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </TableCell>
+                        </TableRow>
+                      </TableFooter>
+                    </Table>
+                  </div>
+                </CardContent>
               </Card>
                <Card className="lg:col-span-3">
                 <CardHeader>
@@ -848,51 +897,57 @@ export default function ProjectDetailPage() {
                           <CardHeader>
                               <CardTitle>Gasto vs. Total del Proyecto</CardTitle>
                           </CardHeader>
-                          <CardContent className="grid gap-4 place-content-center text-center">
-                              <ChartContainer
-                                  config={categoryVsTotalChartConfig}
-                                  className="mx-auto aspect-square max-h-[200px]"
-                              >
-                                  <PieChart>
-                                      <ChartTooltip
-                                          cursor={false}
-                                          content={<ChartTooltipContent hideLabel />}
-                                      />
-                                      <Pie
-                                          data={categoryVsTotalData}
-                                          dataKey="value"
-                                          nameKey="name"
-                                          innerRadius={60}
-                                          strokeWidth={2}
-                                      >
-                                          <Label
-                                              content={({ viewBox }) => {
-                                                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                                                      return (
-                                                          <text
-                                                              x={viewBox.cx}
-                                                              y={viewBox.cy}
-                                                              textAnchor="middle"
-                                                              dominantBaseline="middle"
-                                                          >
-                                                              <tspan
+                           <CardContent className="grid gap-4 place-content-center text-center">
+                              {categoryVsTotalData.length > 0 ? (
+                                  <ChartContainer
+                                      config={categoryVsTotalChartConfig}
+                                      className="mx-auto aspect-square max-h-[200px]"
+                                  >
+                                      <PieChart>
+                                          <ChartTooltip
+                                              cursor={false}
+                                              content={<ChartTooltipContent hideLabel />}
+                                          />
+                                          <Pie
+                                              data={categoryVsTotalData}
+                                              dataKey="value"
+                                              nameKey="name"
+                                              innerRadius={60}
+                                              strokeWidth={2}
+                                          >
+                                              <Label
+                                                  content={({ viewBox }) => {
+                                                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                                          return (
+                                                              <text
                                                                   x={viewBox.cx}
                                                                   y={viewBox.cy}
-                                                                  className="fill-foreground text-3xl font-bold"
+                                                                  textAnchor="middle"
+                                                                  dominantBaseline="middle"
                                                               >
-                                                                  {percentageOfTotal.toFixed(0)}%
-                                                              </tspan>
-                                                          </text>
-                                                      )
-                                                  }
-                                              }}
-                                          />
-                                          {categoryVsTotalData.map((entry, index) => (
-                                              <Cell key={`cell-${index}`} fill={entry.fill} />
-                                          ))}
-                                      </Pie>
-                                  </PieChart>
-                              </ChartContainer>
+                                                                  <tspan
+                                                                      x={viewBox.cx}
+                                                                      y={viewBox.cy}
+                                                                      className="fill-foreground text-3xl font-bold"
+                                                                  >
+                                                                      {percentageOfTotal.toFixed(0)}%
+                                                                  </tspan>
+                                                              </text>
+                                                          )
+                                                      }
+                                                  }}
+                                              />
+                                              {categoryVsTotalData.map((entry, index) => (
+                                                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                                              ))}
+                                          </Pie>
+                                      </PieChart>
+                                  </ChartContainer>
+                              ) : (
+                                  <div className="mx-auto flex h-[200px] w-[200px] items-center justify-center rounded-full bg-muted/50">
+                                      <p className="text-sm text-muted-foreground">Sin gastos.</p>
+                                  </div>
+                              )}
                               <div>
                                 <p className="text-2xl font-bold">${categorySpent.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                                 <p className="text-sm text-muted-foreground">de un total de ${totalSpent.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
