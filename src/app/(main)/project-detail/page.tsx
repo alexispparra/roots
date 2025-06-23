@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, addDays } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { DateRange } from "react-day-picker"
 import { cn } from "@/lib/utils";
@@ -85,6 +85,9 @@ export default function ProjectDetailPage() {
 
   const [filters, setFilters] = useState({ user: "Todos", category: "Todas" });
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [cashflowDateRange, setCashflowDateRange] = useState<DateRange | undefined>();
+  const [cashflowCategoryFilter, setCashflowCategoryFilter] = useState<string>("Todas");
+
 
   useEffect(() => {
      if (!project) {
@@ -161,6 +164,32 @@ export default function ProjectDetailPage() {
       return userMatch && categoryMatch && dateMatch;
     });
   }, [transactions, filters, dateRange]);
+
+  const filteredCashflowTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      const categoryMatch = cashflowCategoryFilter === 'Todas' || t.category === cashflowCategoryFilter;
+      const dateMatch = !cashflowDateRange?.from || (new Date(t.date) >= cashflowDateRange.from && new Date(t.date) <= (cashflowDateRange.to || new Date()));
+      return categoryMatch && dateMatch;
+    });
+  }, [transactions, cashflowCategoryFilter, cashflowDateRange]);
+
+  const cashflowCategoryTotals = useMemo(() => {
+    if (!filteredCashflowTransactions.length) return [];
+    
+    const totals = filteredCashflowTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((acc, t) => {
+        if (!acc[t.category]) {
+          acc[t.category] = 0;
+        }
+        acc[t.category] += t.amountUSD;
+        return acc;
+      }, {} as Record<string, number>);
+
+    return Object.entries(totals)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total);
+  }, [filteredCashflowTransactions]);
 
   if (!project) {
     return (
@@ -399,17 +428,87 @@ export default function ProjectDetailPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center">
-              <div className="grid gap-2">
-                <CardTitle className="font-headline">Movimientos del Proyecto</CardTitle>
-                <CardDescription>Historial de todos los ingresos y gastos del proyecto.</CardDescription>
+            <CardHeader className="flex flex-col gap-4">
+              <div className="flex flex-row items-center">
+                <div className="grid gap-2">
+                  <CardTitle className="font-headline">Movimientos del Proyecto</CardTitle>
+                  <CardDescription>Historial de ingresos y gastos. Filtra para ver totales por categoría.</CardDescription>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                  <CreateIncomeDialog />
+                  <CreateExpenseDialog categories={projectCategories} participants={project.participants} />
+                </div>
               </div>
-              <div className="ml-auto flex items-center gap-2">
-                <CreateIncomeDialog />
-                <CreateExpenseDialog categories={projectCategories} participants={project.participants} />
+              <div className="flex items-center gap-4">
+                <div className="grid gap-1.5">
+                  <Label>Rango de Fechas</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                    <Button
+                        id="cashflowDate"
+                        variant={"outline"}
+                        className={cn(
+                        "w-[260px] justify-start text-left font-normal",
+                        !cashflowDateRange && "text-muted-foreground"
+                        )}
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {cashflowDateRange?.from ? (
+                        cashflowDateRange.to ? (
+                            <>
+                            {format(cashflowDateRange.from, "LLL dd, y", { locale: es })} -{" "}
+                            {format(cashflowDateRange.to, "LLL dd, y", { locale: es })}
+                            </>
+                        ) : (
+                            format(cashflowDateRange.from, "LLL dd, y", { locale: es })
+                        )
+                        ) : (
+                        <span>Elige un rango</span>
+                        )}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={cashflowDateRange?.from}
+                        selected={cashflowDateRange}
+                        onSelect={setCashflowDateRange}
+                        numberOfMonths={2}
+                    />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Categoría</Label>
+                  <Select value={cashflowCategoryFilter} onValueChange={setCashflowCategoryFilter}>
+                      <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Filtrar por categoría" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="Todas">Todas las categorías</SelectItem>
+                          {projectCategories.map(c => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
+              {cashflowCategoryTotals.length > 0 && (
+                <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                  <h4 className="mb-2 font-medium text-sm">Resumen de Gastos del Período</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {cashflowCategoryTotals.map(cat => (
+                      <div key={cat.name}>
+                        <p className="text-xs text-muted-foreground">{cat.name}</p>
+                        <p className="font-bold text-lg font-mono">
+                          ${cat.total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -420,7 +519,7 @@ export default function ProjectDetailPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions.map(t => (
+                  {filteredCashflowTransactions.map(t => (
                     <TableRow key={t.id}>
                        <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</TableCell>
                        <TableCell className="font-medium">{t.description}</TableCell>
@@ -469,11 +568,11 @@ export default function ProjectDetailPage() {
                             {dateRange?.from ? (
                             dateRange.to ? (
                                 <>
-                                {format(dateRange.from, "LLL dd, y")} -{" "}
-                                {format(dateRange.to, "LLL dd, y")}
+                                {format(dateRange.from, "LLL dd, y", { locale: es })} -{" "}
+                                {format(dateRange.to, "LLL dd, y", { locale: es })}
                                 </>
                             ) : (
-                                format(dateRange.from, "LLL dd, y")
+                                format(dateRange.from, "LLL dd, y", { locale: es })
                             )
                             ) : (
                             <span>Elige un rango</span>
@@ -645,5 +744,3 @@ export default function ProjectDetailPage() {
     </div>
   );
 }
-
-    
