@@ -10,9 +10,10 @@ import type { ChartConfig } from "@/components/ui/chart"
 import { Pie, PieChart } from "recharts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { Button } from "@/components/ui/button"
 import Link from "next/link";
-import { Users, DollarSign, Target, Landmark, PlusCircle } from "lucide-react";
+import { Users, DollarSign, Target, Landmark } from "lucide-react";
+import { CreateExpenseDialog } from "@/components/create-expense-dialog";
+import { CreateCategoryDialog } from "@/components/create-category-dialog";
 
 // --- MOCK DATA ---
 const projectsData = {
@@ -206,10 +207,7 @@ export default function ProjectDetailPage() {
                   Historial de ingresos y gastos del proyecto.
                 </CardDescription>
               </div>
-              <Button size="sm" className="ml-auto gap-1">
-                <PlusCircle className="h-4 w-4" />
-                Registrar Gasto
-              </Button>
+              <CreateExpenseDialog categories={project.categories} participants={project.participants} />
             </CardHeader>
             <CardContent>
               <Table>
@@ -258,10 +256,7 @@ export default function ProjectDetailPage() {
                   <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
                   <CardDescription>Gestiona y visualiza los gastos por categoría.</CardDescription>
                 </div>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Añadir Categoría
-                </Button>
+                <CreateCategoryDialog />
               </CardHeader>
             </Card>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

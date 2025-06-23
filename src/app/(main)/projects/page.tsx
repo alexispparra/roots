@@ -1,9 +1,12 @@
+"use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { CreateProjectDialog } from "@/components/create-project-dialog";
 
 const projects = [
     { 
@@ -60,10 +63,7 @@ export default function ProjectsPage() {
             <CardTitle className="font-headline">Mis Proyectos</CardTitle>
             <CardDescription>Gestiona todos tus emprendimientos desde un solo lugar.</CardDescription>
           </div>
-          <Button>
-            <PlusCircle className="mr-2" />
-            Crear Proyecto
-          </Button>
+          <CreateProjectDialog />
         </CardHeader>
       </Card>
       <div className="grid gap-6 md:grid-cols-2">
