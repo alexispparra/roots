@@ -5,6 +5,8 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 // --- TYPES ---
 export type Participant = {
     name: string;
+    email: string;
+    role: 'admin' | 'viewer';
     src?: string; // For avatar image
     fallback?: string;
     contribution?: number;
@@ -54,6 +56,7 @@ type ProjectsContextType = {
     updateCategoryInProject: (projectId: string, categoryName: string, newCategoryData: { budget: number }) => void;
     deleteCategoryFromProject: (projectId: string, categoryName: string) => void;
     updateProject: (projectId: string, projectData: UpdateProjectData) => void;
+    updateParticipantRole: (projectId: string, participantEmail: string, newRole: 'admin' | 'viewer') => void;
 };
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -70,9 +73,9 @@ const PROJECTS_MOCK_DATA: Project[] = [
         progress: 75,
         googleSheetId: '',
         participants: [
-            { name: 'Ana García', contribution: 5000, share: 50, src: 'https://placehold.co/40x40.png', fallback: 'AG' },
-            { name: 'Luis Torres', contribution: 3000, share: 30, src: 'https://placehold.co/40x40.png', fallback: 'LT' },
-            { name: 'Carlos Ruiz', contribution: 2000, share: 20, src: 'https://placehold.co/40x40.png', fallback: 'CR' },
+            { name: 'Ana García', email: 'ana.garcia@example.com', role: 'admin', contribution: 5000, share: 50, src: 'https://placehold.co/40x40.png', fallback: 'AG' },
+            { name: 'Luis Torres', email: 'luis.torres@example.com', role: 'viewer', contribution: 3000, share: 30, src: 'https://placehold.co/40x40.png', fallback: 'LT' },
+            { name: 'Carlos Ruiz', email: 'carlos.ruiz@example.com', role: 'viewer', contribution: 2000, share: 20, src: 'https://placehold.co/40x40.png', fallback: 'CR' },
         ],
         categories: [
             { name: "Desarrollo", budget: 5000 },
@@ -91,7 +94,7 @@ const PROJECTS_MOCK_DATA: Project[] = [
         progress: 100,
         googleSheetId: '',
         participants: [
-            { name: 'DE', src: 'https://placehold.co/40x40.png', fallback: 'DE' },
+            { name: 'Daniela Ponce', email: 'daniela.ponce@example.com', role: 'admin', src: 'https://placehold.co/40x40.png', fallback: 'DP' },
         ],
         categories: []
     },
@@ -105,9 +108,9 @@ const PROJECTS_MOCK_DATA: Project[] = [
         progress: 40,
         googleSheetId: '',
         participants: [
-            { name: 'Fernanda Gómez', contribution: 4000, share: 53, src: 'https://placehold.co/40x40.png', fallback: 'FG' },
-            { name: 'Hugo Iglesias', contribution: 2000, share: 27, src: 'https://placehold.co/40x40.png', fallback: 'HI' },
-            { name: 'Julia Ponce', contribution: 1500, share: 20, src: 'https://placehold.co/40x40.png', fallback: 'JP' },
+            { name: 'Fernanda Gómez', email: 'fernanda.gomez@example.com', role: 'admin', contribution: 4000, share: 53, src: 'https://placehold.co/40x40.png', fallback: 'FG' },
+            { name: 'Hugo Iglesias', email: 'hugo.iglesias@example.com', role: 'viewer', contribution: 2000, share: 27, src: 'https://placehold.co/40x40.png', fallback: 'HI' },
+            { name: 'Julia Ponce', email: 'julia.ponce@example.com', role: 'viewer', contribution: 1500, share: 20, src: 'https://placehold.co/40x40.png', fallback: 'JP' },
         ],
         categories: [
             { name: "Publicidad", budget: 5000 },
@@ -124,7 +127,7 @@ const PROJECTS_MOCK_DATA: Project[] = [
         progress: 0,
         googleSheetId: '',
         participants: [
-            { name: 'LM', src: 'https://placehold.co/40x40.png', fallback: 'LM' },
+            { name: 'Laura Méndez', email: 'laura.mendez@example.com', role: 'admin', src: 'https://placehold.co/40x40.png', fallback: 'LM' },
         ],
         categories: []
     },
@@ -205,8 +208,22 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         );
     };
 
+    const updateParticipantRole = (projectId: string, participantEmail: string, newRole: 'admin' | 'viewer') => {
+        setProjects(prevProjects =>
+            prevProjects.map(p => {
+                if (p.id === projectId) {
+                    const updatedParticipants = p.participants.map(participant =>
+                        participant.email === participantEmail ? { ...participant, role: newRole } : participant
+                    );
+                    return { ...p, participants: updatedParticipants };
+                }
+                return p;
+            })
+        );
+    };
+
     return (
-        <ProjectsContext.Provider value={{ projects, addProject, getProjectById, updateProjectStatus, addCategoryToProject, updateCategoryInProject, deleteCategoryFromProject, updateProject }}>
+        <ProjectsContext.Provider value={{ projects, addProject, getProjectById, updateProjectStatus, addCategoryToProject, updateCategoryInProject, deleteCategoryFromProject, updateProject, updateParticipantRole }}>
             {children}
         </ProjectsContext.Provider>
     );

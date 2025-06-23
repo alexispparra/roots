@@ -23,7 +23,7 @@ import { EditProjectDialog } from "@/components/edit-project-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useProjects } from "@/contexts/ProjectsContext";
-import type { Category as ProjectCategory, ProjectStatus, UpdateProjectData } from "@/contexts/ProjectsContext";
+import type { Category as ProjectCategory, ProjectStatus, UpdateProjectData, Participant } from "@/contexts/ProjectsContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -36,6 +36,7 @@ import type { DateRange } from "react-day-picker"
 import { cn } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 // --- TYPES ---
@@ -85,10 +86,17 @@ export default function ProjectDetailPage() {
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const projectId = searchParams.get('id');
   const { getProjectById, updateProjectStatus, addCategoryToProject, updateCategoryInProject, deleteCategoryFromProject, updateProject } = useProjects();
   const project = getProjectById(projectId);
+  
+  const currentUserParticipant = useMemo(() => 
+    project?.participants.find(p => p.email === user?.email), 
+  [project, user]);
+
+  const isAdmin = currentUserParticipant?.role === 'admin';
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
@@ -742,10 +750,12 @@ export default function ProjectDetailPage() {
                   <CardTitle className="font-headline">Movimientos del Proyecto</CardTitle>
                   <CardDescription>Historial de ingresos y gastos. Filtra para ver totales por categoría.</CardDescription>
                 </div>
-                <div className="ml-auto flex items-center gap-2">
-                  <CreateIncomeDialog onAddIncome={handleAddIncome} />
-                  <CreateExpenseDialog categories={projectCategories} participants={project.participants} onAddExpense={handleAddExpense} />
-                </div>
+                {isAdmin && (
+                  <div className="ml-auto flex items-center gap-2">
+                    <CreateIncomeDialog onAddIncome={handleAddIncome} />
+                    <CreateExpenseDialog categories={projectCategories} participants={project.participants} onAddExpense={handleAddExpense} />
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-4">
                 <div className="grid gap-1.5">
@@ -876,7 +886,9 @@ export default function ProjectDetailPage() {
                       Historial detallado de gastos, agrupado por mes.
                     </CardDescription>
                   </div>
-                  <CreateExpenseDialog categories={projectCategories} participants={project.participants} onAddExpense={handleAddExpense}/>
+                  {isAdmin && (
+                    <CreateExpenseDialog categories={projectCategories} participants={project.participants} onAddExpense={handleAddExpense}/>
+                  )}
               </div>
               <div className="flex items-center gap-4">
                   <div className="grid gap-1.5">
@@ -972,7 +984,7 @@ export default function ProjectDetailPage() {
                                                 <TableHead className="text-right">Monto (AR$)</TableHead>
                                                 <TableHead className="text-right">Cambio</TableHead>
                                                 <TableHead className="text-right">Monto (U$S)</TableHead>
-                                                <TableHead className="text-right">Acciones</TableHead>
+                                                {isAdmin && <TableHead className="text-right">Acciones</TableHead>}
                                               </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -992,25 +1004,27 @@ export default function ProjectDetailPage() {
                                                     <TableCell className="text-right font-medium font-mono">
                                                       -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                                     </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <MoreVertical className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
-                                                                <DropdownMenuItem onSelect={() => setEditingExpense(t)}>
-                                                                  <Edit className="mr-2 h-4 w-4" />
-                                                                  Editar
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem onSelect={() => setDeletingExpense(t)} className="text-destructive">
-                                                                  <Trash2 className="mr-2 h-4 w-4" />
-                                                                  Eliminar
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
+                                                    {isAdmin && (
+                                                      <TableCell className="text-right">
+                                                          <DropdownMenu>
+                                                              <DropdownMenuTrigger asChild>
+                                                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                      <MoreVertical className="h-4 w-4" />
+                                                                  </Button>
+                                                              </DropdownMenuTrigger>
+                                                              <DropdownMenuContent align="end">
+                                                                  <DropdownMenuItem onSelect={() => setEditingExpense(t)}>
+                                                                    <Edit className="mr-2 h-4 w-4" />
+                                                                    Editar
+                                                                  </DropdownMenuItem>
+                                                                  <DropdownMenuItem onSelect={() => setDeletingExpense(t)} className="text-destructive">
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    Eliminar
+                                                                  </DropdownMenuItem>
+                                                              </DropdownMenuContent>
+                                                          </DropdownMenu>
+                                                      </TableCell>
+                                                    )}
                                                   </TableRow>
                                                 ))}
                                             </TableBody>
@@ -1035,7 +1049,7 @@ export default function ProjectDetailPage() {
                     <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
                     <CardDescription>Gestiona y visualiza los gastos por categoría.</CardDescription>
                   </div>
-                  <CreateCategoryDialog onAddCategory={handleAddCategory} />
+                  {isAdmin && <CreateCategoryDialog onAddCategory={handleAddCategory} />}
                 </CardHeader>
               </Card>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -1049,24 +1063,26 @@ export default function ProjectDetailPage() {
                       <CardHeader>
                         <CardTitle className="flex items-center justify-between">
                           <span className="truncate pr-2">{category.name}</span>
-                           <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onSelect={() => handleSelectCategory(category.name)}>
-                                  Ver Detalle
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setEditingCategory(category)}>
-                                  Editar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleDeleteCategoryRequest(category)} className="text-destructive">
-                                  Eliminar
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                           {isAdmin && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onSelect={() => handleSelectCategory(category.name)}>
+                                    Ver Detalle
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => setEditingCategory(category)}>
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => handleDeleteCategoryRequest(category)} className="text-destructive">
+                                    Eliminar
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                           )}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="grid gap-2">
@@ -1201,7 +1217,7 @@ export default function ProjectDetailPage() {
                                           <TableHead className="text-right">Monto (AR$)</TableHead>
                                           <TableHead className="text-right">Cambio</TableHead>
                                           <TableHead className="text-right">Monto (U$S)</TableHead>
-                                          <TableHead className="text-right">Acciones</TableHead>
+                                          {isAdmin && <TableHead className="text-right">Acciones</TableHead>}
                                       </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -1219,25 +1235,27 @@ export default function ProjectDetailPage() {
                                               <TableCell className="text-right font-mono text-destructive">
                                                   -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                               </TableCell>
-                                              <TableCell className="text-right">
-                                                  <DropdownMenu>
-                                                      <DropdownMenuTrigger asChild>
-                                                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                              <MoreVertical className="h-4 w-4" />
-                                                          </Button>
-                                                      </DropdownMenuTrigger>
-                                                      <DropdownMenuContent align="end">
-                                                          <DropdownMenuItem onSelect={() => setEditingExpense(t)}>
-                                                            <Edit className="mr-2 h-4 w-4" />
-                                                            Editar
-                                                          </DropdownMenuItem>
-                                                          <DropdownMenuItem onSelect={() => setDeletingExpense(t)} className="text-destructive">
-                                                            <Trash2 className="mr-2 h-4 w-4" />
-                                                            Eliminar
-                                                          </DropdownMenuItem>
-                                                      </DropdownMenuContent>
-                                                  </DropdownMenu>
-                                              </TableCell>
+                                              {isAdmin && (
+                                                <TableCell className="text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onSelect={() => setEditingExpense(t)}>
+                                                              <Edit className="mr-2 h-4 w-4" />
+                                                              Editar
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onSelect={() => setDeletingExpense(t)} className="text-destructive">
+                                                              <Trash2 className="mr-2 h-4 w-4" />
+                                                              Eliminar
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </TableCell>
+                                              )}
                                           </TableRow>
                                       ))
                                       ) : (
@@ -1258,7 +1276,7 @@ export default function ProjectDetailPage() {
                                         <TableCell className="text-right font-mono text-destructive">
                                             -${categoryTotals.usd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                         </TableCell>
-                                        <TableCell />
+                                        {isAdmin && <TableCell />}
                                     </TableRow>
                                   </TableFooter>
                               </Table>
@@ -1282,13 +1300,15 @@ export default function ProjectDetailPage() {
             <div className="flex items-center gap-4">
               <CardTitle className="font-headline text-3xl">{project.name}</CardTitle>
               <CardDescription>{project.description}</CardDescription>
-              <Button variant="ghost" size="icon" className="shrink-0" onClick={() => setIsEditingProject(true)}>
-                <Edit className="h-5 w-5 text-muted-foreground" />
-              </Button>
+              {isAdmin && (
+                <Button variant="ghost" size="icon" className="shrink-0" onClick={() => setIsEditingProject(true)}>
+                  <Edit className="h-5 w-5 text-muted-foreground" />
+                </Button>
+              )}
             </div>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-base transition-colors hover:bg-muted">
+              <DropdownMenuTrigger asChild disabled={!isAdmin}>
+                <Button variant="ghost" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-base transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50">
                     <Badge 
                       className={
                         "pointer-events-none text-base " + 
@@ -1319,19 +1339,23 @@ export default function ProjectDetailPage() {
       </Card>
       {renderContent()}
 
-      <EditProjectDialog
-        isOpen={isEditingProject}
-        onOpenChange={setIsEditingProject}
-        project={project}
-        onUpdateProject={handleUpdateProject}
-      />
+      {isAdmin && (
+        <EditProjectDialog
+          isOpen={isEditingProject}
+          onOpenChange={setIsEditingProject}
+          project={project}
+          onUpdateProject={handleUpdateProject}
+        />
+      )}
 
-      <EditCategoryDialog
-        isOpen={!!editingCategory}
-        onOpenChange={(isOpen) => !isOpen && setEditingCategory(null)}
-        category={editingCategory}
-        onUpdateCategory={handleUpdateCategory}
-      />
+      {isAdmin && (
+        <EditCategoryDialog
+          isOpen={!!editingCategory}
+          onOpenChange={(isOpen) => !isOpen && setEditingCategory(null)}
+          category={editingCategory}
+          onUpdateCategory={handleUpdateCategory}
+        />
+      )}
       
       <AlertDialog open={!!deletingCategory} onOpenChange={(isOpen) => !isOpen && setDeletingCategory(null)}>
         <AlertDialogContent>
@@ -1348,14 +1372,16 @@ export default function ProjectDetailPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <EditExpenseDialog
-        isOpen={!!editingExpense}
-        onOpenChange={(isOpen) => !isOpen && setEditingExpense(null)}
-        expense={editingExpense}
-        onUpdateExpense={handleUpdateExpense}
-        categories={projectCategories}
-        participants={project.participants}
-      />
+      {isAdmin && (
+        <EditExpenseDialog
+          isOpen={!!editingExpense}
+          onOpenChange={(isOpen) => !isOpen && setEditingExpense(null)}
+          expense={editingExpense}
+          onUpdateExpense={handleUpdateExpense}
+          categories={projectCategories}
+          participants={project.participants}
+        />
+      )}
 
        <AlertDialog open={!!deletingExpense} onOpenChange={(isOpen) => !isOpen && setDeletingExpense(null)}>
         <AlertDialogContent>

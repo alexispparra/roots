@@ -21,6 +21,7 @@ import {
   FolderKanban,
   WandSparkles,
   Wallet,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProjects } from "@/contexts/ProjectsContext";
@@ -129,6 +130,19 @@ export function Navigation() {
           <Link href="/accounts">
             <Wallet />
             <span>Cuentas</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          asChild
+          isActive={pathname === "/team"}
+          tooltip="Equipo"
+        >
+          <Link href="/team">
+            <Users />
+            <span>Equipo</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
