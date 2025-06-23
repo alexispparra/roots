@@ -20,6 +20,7 @@ import {
   ChevronRight,
   FolderKanban,
   WandSparkles,
+  Sheet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -142,6 +143,19 @@ export function Navigation() {
             </SidebarMenuSubItem>
           ))}
         </SidebarMenuSub>
+      </SidebarMenuItem>
+
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          asChild
+          isActive={pathname === "/sheets"}
+          tooltip="Google Sheets"
+        >
+          <Link href="/sheets">
+            <Sheet />
+            <span>Google Sheets</span>
+          </Link>
+        </SidebarMenuButton>
       </SidebarMenuItem>
       
       <SidebarMenuItem>
