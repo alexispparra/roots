@@ -11,8 +11,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'ProjectFlow',
-  description: 'Manage tasks, accounts, and projects seamlessly.',
+  title: 'FinanceFlow',
+  description: 'Track your expenses and manage your finances effortlessly.',
 };
 
 export default function RootLayout({

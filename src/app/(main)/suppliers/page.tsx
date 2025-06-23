@@ -7,7 +7,7 @@ export default function SuppliersPage() {
         <CardTitle className="font-headline">Suppliers</CardTitle>
       </CardHeader>
       <CardContent>
-        <p>This section is under construction. Check back later for supplier management features.</p>
+        <p>This section is under construction.</p>
       </CardContent>
     </Card>
   );

@@ -18,103 +18,85 @@ import {
 import type { ChartConfig } from "@/components/ui/chart"
 import React from "react"
 
-const projectStatusData = [
-  { status: "Completed", value: 45, fill: "var(--color-completed)" },
-  { status: "In Progress", value: 30, fill: "var(--color-inProgress)" },
-  { status: "Overdue", value: 10, fill: "var(--color-overdue)" },
-  { status: "Not Started", value: 15, fill: "var(--color-notStarted)" },
+const spendingData = [
+  { category: "Food & Drink", amount: 850, fill: "var(--color-food)" },
+  { category: "Shopping", amount: 600, fill: "var(--color-shopping)" },
+  { category: "Transport", amount: 350, fill: "var(--color-transport)" },
+  { category: "Housing", amount: 1200, fill: "var(--color-housing)" },
+  { category: "Other", amount: 400, fill: "var(--color-other)" },
 ]
 
-const projectStatusConfig = {
-  value: {
-    label: "Projects",
+const spendingConfig = {
+  amount: {
+    label: "Amount",
   },
-  completed: {
-    label: "Completed",
-    color: "hsl(var(--chart-1))",
-  },
-  inProgress: {
-    label: "In Progress",
-    color: "hsl(var(--chart-2))",
-  },
-  overdue: {
-    label: "Overdue",
-    color: "hsl(var(--destructive))",
-  },
-  notStarted: {
-    label: "Not Started",
-    color: "hsl(var(--chart-5))",
-  },
+  food: { label: "Food & Drink", color: "hsl(var(--chart-1))" },
+  shopping: { label: "Shopping", color: "hsl(var(--chart-2))" },
+  transport: { label: "Transport", color: "hsl(var(--chart-3))" },
+  housing: { label: "Housing", color: "hsl(var(--chart-4))" },
+  other: { label: "Other", color: "hsl(var(--chart-5))" },
 } satisfies ChartConfig
 
-const financialsChartData = [
-  { month: "Jan", budget: 50000, actual: 45000 },
-  { month: "Feb", budget: 55000, actual: 52000 },
-  { month: "Mar", budget: 60000, actual: 65000 },
-  { month: "Apr", budget: 58000, actual: 54000 },
-  { month: "May", budget: 62000, actual: 59000 },
-  { month: "Jun", budget: 65000, actual: 68000 },
+const cashflowData = [
+  { month: "Jan", income: 2500, expenses: 1800 },
+  { month: "Feb", income: 2800, expenses: 2000 },
+  { month: "Mar", income: 3200, expenses: 2400 },
+  { month: "Apr", income: 2900, expenses: 2100 },
+  { month: "May", income: 3500, expenses: 2600 },
+  { month: "Jun", income: 3100, expenses: 2300 },
 ];
 
-const financialsConfig = {
-  budget: {
-    label: "Budget",
-    color: "hsl(var(--chart-5))",
-  },
-  actual: {
-    label: "Actual",
-    color: "hsl(var(--chart-1))",
-  },
+const cashflowConfig = {
+  income: { label: "Income", color: "hsl(var(--chart-1))" },
+  expenses: { label: "Expenses", color: "hsl(var(--destructive))" },
 } satisfies ChartConfig;
 
-const taskCompletionData = [
-  { date: "2024-01-01", rate: 65 },
-  { date: "2024-02-01", rate: 70 },
-  { date: "2024-03-01", rate: 72 },
-  { date: "2024-04-01", rate: 78 },
-  { date: "2024-05-01", rate: 85 },
-  { date: "2024-06-01", rate: 92 },
+const netWorthData = [
+  { date: "2024-01-01", value: 10500 },
+  { date: "2024-02-01", value: 11200 },
+  { date: "2024-03-01", value: 12000 },
+  { date: "2024-04-01", value: 12800 },
+  { date: "2024-05-01", value: 13700 },
+  { date: "2024-06-01", value: 14500 },
 ];
 
-const taskCompletionConfig = {
-  rate: {
-    label: "Completion Rate",
+const netWorthConfig = {
+  value: {
+    label: "Net Worth",
     color: "hsl(var(--chart-2))",
   },
 } satisfies ChartConfig
 
-export default function ChartsPage() {
+export default function ReportsPage() {
     const [activeIndex, setActiveIndex] = React.useState(0)
-
-    const activeSegment = projectStatusData[activeIndex]
   
   return (
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Dynamic Charts</CardTitle>
+          <CardTitle className="font-headline">Financial Reports</CardTitle>
           <CardDescription>
-            Visualization of key project indicators.
+            Visualization of your key financial indicators.
           </CardDescription>
         </CardHeader>
       </Card>
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Project Status</CardTitle>
-            <CardDescription>Distribution of projects by their current status.</CardDescription>
+            <CardTitle className="font-headline">Spending by Category</CardTitle>
+            <CardDescription>Distribution of your expenses for the current month.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={projectStatusConfig} className="mx-auto aspect-square max-h-[300px]">
+            <ChartContainer config={spendingConfig} className="mx-auto aspect-square max-h-[300px]">
                <PieChart>
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent hideLabel />}
                 />
                 <Pie
-                  data={projectStatusData}
-                  dataKey="value"
-                  nameKey="status"
+                  data={spendingData}
+                  dataKey="amount"
+                  nameKey="category"
                   innerRadius={60}
                   strokeWidth={5}
                   activeIndex={activeIndex}
@@ -124,7 +106,7 @@ export default function ChartsPage() {
                   onMouseOver={(_, index) => setActiveIndex(index)}
                 />
                  <ChartLegend
-                  content={<ChartLegendContent nameKey="status" />}
+                  content={<ChartLegendContent nameKey="category" />}
                   className="-translate-y-[2rem] flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
                 />
               </PieChart>
@@ -133,12 +115,12 @@ export default function ChartsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Budget vs. Actuals</CardTitle>
-            <CardDescription>Comparison of budgeted vs. actual spending per month.</CardDescription>
+            <CardTitle className="font-headline">Income vs. Expenses</CardTitle>
+            <CardDescription>Comparison of income vs. spending per month.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={financialsConfig} className="h-[300px] w-full">
-              <BarChart data={financialsChartData}>
+            <ChartContainer config={cashflowConfig} className="h-[300px] w-full">
+              <BarChart data={cashflowData}>
                 <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="month"
@@ -149,8 +131,8 @@ export default function ChartsPage() {
                 <YAxis />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <ChartLegend />
-                <Bar dataKey="budget" fill="var(--color-budget)" radius={4} />
-                <Bar dataKey="actual" fill="var(--color-actual)" radius={4} />
+                <Bar dataKey="income" fill="var(--color-income)" radius={4} />
+                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
               </BarChart>
             </ChartContainer>
           </CardContent>
@@ -158,21 +140,21 @@ export default function ChartsPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Task Completion Rate</CardTitle>
-          <CardDescription>Monthly trend of task completion percentage.</CardDescription>
+          <CardTitle className="font-headline">Net Worth Trend</CardTitle>
+          <CardDescription>Monthly trend of your total net worth.</CardDescription>
         </CardHeader>
         <CardContent>
-            <ChartContainer config={taskCompletionConfig} className="h-[300px] w-full">
+            <ChartContainer config={netWorthConfig} className="h-[300px] w-full">
                 <LineChart
-                    data={taskCompletionData}
+                    data={netWorthData}
                     margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
                 >
                     <CartesianGrid strokeDasharray="3 3" vertical={false}/>
                     <XAxis dataKey="date" tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short' })}/>
-                    <YAxis domain={[60, 100]} unit="%"/>
+                    <YAxis unit="$" tickFormatter={(value) => (value / 1000) + 'k'}/>
                     <ChartTooltip content={<ChartTooltipContent indicator="line"/>} />
                     <ChartLegend />
-                    <Line type="monotone" dataKey="rate" stroke="var(--color-rate)" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="value" stroke="var(--color-value)" strokeWidth={2} dot={false} />
                 </LineChart>
             </ChartContainer>
         </CardContent>

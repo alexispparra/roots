@@ -1,14 +1,55 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Utensils,
+  Car,
+  ShoppingBag,
+  Home,
+  Heart,
+  Gift,
+  Film,
+  GraduationCap,
+  Briefcase,
+  PlusCircle,
+} from "lucide-react";
+
+const categories = [
+  { name: "Food & Drink", icon: <Utensils /> },
+  { name: "Transport", icon: <Car /> },
+  { name: "Shopping", icon: <ShoppingBag /> },
+  { name: "Housing", icon: <Home /> },
+  { name: "Health", icon: <Heart /> },
+  { name: "Gifts", icon: <Gift /> },
+  { name: "Entertainment", icon: <Film /> },
+  { name: "Education", icon: <GraduationCap /> },
+  { name: "Work", icon: <Briefcase /> },
+];
 
 export default function CategoriesPage() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-headline">Categories</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p>This section is under construction. Check back later for categorization features.</p>
-      </CardContent>
-    </Card>
+    <div className="grid gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline">Categories</CardTitle>
+          <CardDescription>Organize your transactions by assigning them to different categories.</CardDescription>
+        </CardHeader>
+      </Card>
+
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {categories.map((category) => (
+          <Card key={category.name} className="flex flex-col items-center justify-center p-6 text-center transition-transform hover:scale-105 hover:shadow-lg">
+            <div className="mb-4 text-primary [&>svg]:h-10 [&>svg]:w-10">
+              {category.icon}
+            </div>
+            <p className="font-semibold">{category.name}</p>
+          </Card>
+        ))}
+        <Card className="flex cursor-pointer flex-col items-center justify-center border-2 border-dashed bg-transparent p-6 text-center text-muted-foreground transition-colors hover:border-primary hover:bg-muted hover:text-primary">
+          <div className="mb-4 [&>svg]:h-10 [&>svg]:w-10">
+            <PlusCircle />
+          </div>
+          <p className="font-semibold">Add New</p>
+        </Card>
+      </div>
+    </div>
   );
 }

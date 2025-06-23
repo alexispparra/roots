@@ -7,27 +7,21 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import {
+  ArrowRightLeft,
   BarChart2,
-  Calendar,
   Home,
   LayoutGrid,
-  Map,
   Settings,
-  Sparkles,
-  Truck,
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
 
 const menuItems = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/", label: "Dashboard", icon: Home },
+  { href: "/transactions", label: "Transactions", icon: ArrowRightLeft },
   { href: "/accounts", label: "Accounts", icon: Wallet },
-  { href: "/charts", label: "Charts", icon: BarChart2 },
-  { href: "/map", label: "Projects Map", icon: Map },
-  { href: "/prioritize", label: "AI Priority", icon: Sparkles },
-  { href: "/reminders", label: "Reminders", icon: Calendar },
-  { href: "/suppliers", label: "Suppliers", icon: Truck },
   { href: "/categories", label: "Categories", icon: LayoutGrid },
+  { href: "/charts", label: "Reports", icon: BarChart2 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
