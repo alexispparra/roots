@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import type { ChartConfig } from "@/components/ui/chart"
-import { Pie, PieChart, Cell, Bar, BarChart, XAxis, YAxis, CartesianGrid, Label } from "recharts"
+import { Pie, PieChart, Cell, Bar, BarChart, XAxis, YAxis, CartesianGrid, Label, Legend } from "recharts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link";
@@ -30,6 +30,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { DateRange } from "react-day-picker"
 import { cn } from "@/lib/utils";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import type { z } from "zod";
 
 
 // --- TYPES ---
@@ -167,6 +169,39 @@ export default function ProjectDetailPage() {
       }
   };
 
+  const handleAddExpense = (data: any) => {
+    const newTransaction: Transaction = {
+        id: `TX-${Date.now()}`,
+        date: format(data.date, 'yyyy-MM-dd'),
+        description: data.description,
+        category: data.categoryId,
+        user: data.userId,
+        paymentMethod: data.paymentMethod,
+        amountARS: data.amountARS,
+        exchangeRate: data.exchangeRate,
+        amountUSD: data.amountARS / data.exchangeRate,
+        type: 'expense',
+    };
+    setTransactions(prev => [newTransaction, ...prev]);
+  };
+
+  const handleAddIncome = (data: any) => {
+    const newTransaction: Transaction = {
+        id: `TX-${Date.now()}`,
+        date: format(data.date, 'yyyy-MM-dd'),
+        description: data.description,
+        category: 'Ingreso',
+        user: 'N/A',
+        paymentMethod: 'N/A',
+        amountARS: data.amountARS,
+        exchangeRate: data.exchangeRate,
+        amountUSD: data.amountARS / data.exchangeRate,
+        type: 'income',
+    };
+    setTransactions(prev => [newTransaction, ...prev]);
+  };
+
+
   const handleTabChange = (tab: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tab);
@@ -199,17 +234,39 @@ export default function ProjectDetailPage() {
     });
   }, [transactions, filters, dateRange]);
   
-  const transactionTotals = useMemo(() => {
-    return filteredTransactions.reduce(
-      (totals, transaction) => {
-        const sign = transaction.type === 'income' ? -1 : 1; // Note: Incomes are positive contributions, expenses are negative
-        totals.ars += transaction.amountARS * sign;
-        totals.usd += transaction.amountUSD * sign;
-        return totals;
-      },
-      { ars: 0, usd: 0 }
-    );
-  }, [filteredTransactions]);
+  const monthlyGroupedTransactions = useMemo(() => {
+    const grouped: Record<string, {
+        transactions: Transaction[];
+        userTotals: Record<string, number>;
+        monthTotal: number;
+    }> = {};
+
+    filteredTransactions
+      .filter(t => t.type === 'expense')
+      .forEach(t => {
+        const monthYear = format(new Date(t.date), 'MMMM yyyy', { locale: es });
+        if (!grouped[monthYear]) {
+            grouped[monthYear] = { transactions: [], userTotals: {}, monthTotal: 0 };
+        }
+        grouped[monthYear].transactions.push(t);
+        
+        if (!grouped[monthYear].userTotals[t.user]) {
+            grouped[monthYear].userTotals[t.user] = 0;
+        }
+        grouped[monthYear].userTotals[t.user] += t.amountUSD;
+        grouped[monthYear].monthTotal += t.amountUSD;
+    });
+
+    Object.keys(grouped).forEach(month => {
+        const sortedUserTotals = Object.entries(grouped[month].userTotals)
+            .sort(([, a], [, b]) => b - a)
+            .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
+        grouped[month].userTotals = sortedUserTotals;
+    });
+
+    return grouped;
+}, [filteredTransactions]);
+
 
   const filteredCashflowTransactions = useMemo(() => {
     return transactions.filter(t => {
@@ -268,23 +325,23 @@ export default function ProjectDetailPage() {
   const remainingBudget = totalBudget - totalSpent;
   const totalContribution = project.participants.reduce((sum, p) => sum + (p.contribution || 0), 0);
 
-  const spendingByCategoryData = projectCategories.map(cat => ({
-    category: cat.name,
-    amount: transactions.filter(t => t.category === cat.name && t.type === 'expense').reduce((acc, t) => acc + t.amountUSD, 0),
-  })).filter(d => d.amount > 0);
+  const spendingByCategoryData = useMemo(() => projectCategories.map(cat => ({
+    name: cat.name,
+    value: transactions.filter(t => t.category === cat.name && t.type === 'expense').reduce((acc, t) => acc + t.amountUSD, 0),
+  })).filter(d => d.value > 0), [transactions, projectCategories]);
   
-  const spendingConfig: ChartConfig = {
-    ...projectCategories.reduce((acc, category, index) => {
-      acc[category.name] = {
-        label: category.name,
+  const spendingConfig: ChartConfig = useMemo(() => ({
+    ...spendingByCategoryData.reduce((acc, entry, index) => {
+      acc[entry.name] = {
+        label: entry.name,
         color: CHART_COLORS[index % CHART_COLORS.length],
       };
       return acc;
     }, {} as ChartConfig),
-    amount: {
+    value: {
       label: 'Monto',
     },
-  };
+  }), [spendingByCategoryData]);
   
   const monthlyFlowData = useMemo(() => {
       const monthlyTotals: {[key: string]: { month: string, Gastos: number, Ingresos: number }} = {};
@@ -398,16 +455,18 @@ export default function ProjectDetailPage() {
                 </CardHeader>
                 <CardContent className="grid gap-6">
                   {spendingByCategoryData.length > 0 ? (
-                    <ChartContainer config={spendingConfig} className="h-[250px] w-full">
-                      <PieChart>
-                        <ChartTooltip content={<ChartTooltipContent nameKey="category" hideLabel />} />
-                        <Pie data={spendingByCategoryData} dataKey="amount" nameKey="category" innerRadius={50}>
-                          {spendingByCategoryData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ChartContainer>
+                    <div className="h-[250px] w-full">
+                      <ChartContainer config={spendingConfig} className="h-full w-full">
+                        <PieChart>
+                          <ChartTooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
+                          <Pie data={spendingByCategoryData} dataKey="value" nameKey="name" innerRadius={50}>
+                            {spendingByCategoryData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ChartContainer>
+                    </div>
                   ) : (
                     <div className="flex h-[250px] w-full items-center justify-center rounded-lg bg-muted/50">
                       <p className="text-sm text-muted-foreground">No hay datos de gastos para mostrar.</p>
@@ -424,18 +483,18 @@ export default function ProjectDetailPage() {
                       <TableBody>
                         {spendingByCategoryData.length > 0 ? (
                           spendingByCategoryData.map((item, index) => (
-                            <TableRow key={item.category}>
+                            <TableRow key={item.name}>
                               <TableCell>
                                 <div className="flex items-center gap-2 font-medium">
                                   <span
                                     className="h-2.5 w-2.5 rounded-full"
                                     style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                                   />
-                                  {item.category}
+                                  {item.name}
                                 </div>
                               </TableCell>
                               <TableCell className="text-right font-mono">
-                                ${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                ${item.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </TableCell>
                             </TableRow>
                           ))
@@ -529,6 +588,7 @@ export default function ProjectDetailPage() {
                     />
                     <YAxis tickFormatter={(value) => `$${value/1000}k`} />
                     <ChartTooltip content={<ChartTooltipContent />} />
+                    <Legend />
                     <Bar dataKey="Ingresos" fill="var(--color-Ingresos)" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="Gastos" fill="var(--color-Gastos)" radius={[4, 4, 0, 0]} />
                     </BarChart>
@@ -543,8 +603,8 @@ export default function ProjectDetailPage() {
                   <CardDescription>Historial de ingresos y gastos. Filtra para ver totales por categoría.</CardDescription>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                  <CreateIncomeDialog />
-                  <CreateExpenseDialog categories={projectCategories} participants={project.participants} />
+                  <CreateIncomeDialog onAddIncome={handleAddIncome} />
+                  <CreateExpenseDialog categories={projectCategories} participants={project.participants} onAddExpense={handleAddExpense} />
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -673,10 +733,10 @@ export default function ProjectDetailPage() {
                   <div className="grid gap-2">
                     <CardTitle className="font-headline">Transacciones del Proyecto</CardTitle>
                     <CardDescription>
-                      Historial de ingresos y gastos del proyecto.
+                      Historial detallado de gastos, agrupado por mes.
                     </CardDescription>
                   </div>
-                  <CreateExpenseDialog categories={projectCategories} participants={project.participants} />
+                  <CreateExpenseDialog categories={projectCategories} participants={project.participants} onAddExpense={handleAddExpense}/>
               </div>
               <div className="flex items-center gap-4">
                   <div className="grid gap-1.5">
@@ -745,72 +805,78 @@ export default function ProjectDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead>Usuario</TableHead>
-                    <TableHead>Medio de Pago</TableHead>
-                    <TableHead className="text-right">Monto (AR$)</TableHead>
-                    <TableHead className="text-right">Cambio</TableHead>
-                    <TableHead className="text-right">Monto (U$S)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTransactions.length > 0 ? (
-                    filteredTransactions.map(t => (
-                    <TableRow key={t.id}>
-                      <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</TableCell>
-                      <TableCell className="font-medium">{t.description}</TableCell>
-                      <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
-                      <TableCell>{t.user}</TableCell>
-                      <TableCell><Badge variant="secondary">{t.paymentMethod}</Badge></TableCell>
-                       <TableCell className={cn(
-                          "text-right font-medium font-mono",
-                          t.type === 'income' ? 'text-emerald-600' : ''
-                        )}>
-                        {t.type === 'income' ? `+${t.amountARS.toLocaleString('es-AR')}` : `-${t.amountARS.toLocaleString('es-AR')}`}
-                      </TableCell>
-                       <TableCell className="text-right font-mono text-muted-foreground text-sm">
-                        {t.exchangeRate.toLocaleString('es-AR')}
-                       </TableCell>
-                       <TableCell className={cn(
-                          "text-right font-medium font-mono",
-                          t.type === 'income' ? 'text-emerald-600' : ''
-                        )}>
-                        {t.type === 'income' ? `+${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : `-${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                  ) : (
-                     <TableRow>
-                        <TableCell colSpan={8} className="h-24 text-center">
-                            No hay resultados.
-                        </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-                <TableFooter>
-                  <TableRow className="font-bold bg-muted/50 hover:bg-muted/80">
-                    <TableCell colSpan={5} className="text-right">Neto del Período</TableCell>
-                    <TableCell className={cn(
-                      "text-right font-mono",
-                      transactionTotals.ars >= 0 ? 'text-emerald-600' : 'text-destructive'
-                    )}>
-                      {transactionTotals.ars >= 0 ? '+' : '-'}${Math.abs(transactionTotals.ars).toLocaleString('es-AR')}
-                    </TableCell>
-                    <TableCell />
-                    <TableCell className={cn(
-                      "text-right font-mono",
-                      transactionTotals.usd >= 0 ? 'text-emerald-600' : 'text-destructive'
-                    )}>
-                      {transactionTotals.usd >= 0 ? '+' : '-'}${Math.abs(transactionTotals.usd).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                    </TableCell>
-                  </TableRow>
-                </TableFooter>
-              </Table>
+             {Object.keys(monthlyGroupedTransactions).length > 0 ? (
+                <Accordion type="single" collapsible className="w-full" defaultValue={Object.keys(monthlyGroupedTransactions)[0]}>
+                    {Object.entries(monthlyGroupedTransactions).map(([monthYear, data]) => (
+                        <AccordionItem value={monthYear} key={monthYear}>
+                            <AccordionTrigger>
+                                <div className="flex justify-between w-full pr-4 items-center">
+                                    <span className="font-headline text-lg capitalize">{monthYear}</span>
+                                    <div className="text-right">
+                                        <p className="text-sm text-muted-foreground">Gasto Total del Mes</p>
+                                        <p className="font-bold text-lg font-mono text-destructive">
+                                            -${data.monthTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="space-y-4">
+                                <div className="p-4 border rounded-lg bg-muted/50">
+                                    <h4 className="font-semibold mb-2 text-sm">Gastos por Usuario (U$S)</h4>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {Object.entries(data.userTotals).map(([user, total]) => (
+                                            <div key={user}>
+                                                <p className="text-xs text-muted-foreground">{user}</p>
+                                                <p className="font-bold font-mono text-base">
+                                                    ${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <Table>
+                                    <TableHeader>
+                                      <TableRow>
+                                        <TableHead>Fecha</TableHead>
+                                        <TableHead>Descripción</TableHead>
+                                        <TableHead>Categoría</TableHead>
+                                        <TableHead>Usuario</TableHead>
+                                        <TableHead>Medio de Pago</TableHead>
+                                        <TableHead className="text-right">Monto (AR$)</TableHead>
+                                        <TableHead className="text-right">Cambio</TableHead>
+                                        <TableHead className="text-right">Monto (U$S)</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {data.transactions.map(t => (
+                                          <TableRow key={t.id}>
+                                            <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</TableCell>
+                                            <TableCell className="font-medium">{t.description}</TableCell>
+                                            <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
+                                            <TableCell>{t.user}</TableCell>
+                                            <TableCell><Badge variant="secondary">{t.paymentMethod}</Badge></TableCell>
+                                            <TableCell className="text-right font-mono">
+                                              -${t.amountARS.toLocaleString('es-AR')}
+                                            </TableCell>
+                                            <TableCell className="text-right font-mono text-muted-foreground text-sm">
+                                              {t.exchangeRate.toLocaleString('es-AR')}
+                                            </TableCell>
+                                            <TableCell className="text-right font-medium font-mono">
+                                              -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                            </TableCell>
+                                          </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+              ) : (
+                <div className="h-48 flex items-center justify-center text-center text-muted-foreground">
+                    <p>No hay transacciones de gastos que coincidan con los filtros seleccionados.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -904,10 +970,11 @@ export default function ProjectDetailPage() {
                           </CardHeader>
                            <CardContent className="grid gap-4 place-content-center text-center">
                               {categoryVsTotalData.length > 0 ? (
-                                  <ChartContainer
-                                      config={categoryVsTotalChartConfig}
-                                      className="h-[200px] w-full"
-                                  >
+                                  <div className="h-[200px] w-full">
+                                    <ChartContainer
+                                        config={categoryVsTotalChartConfig}
+                                        className="h-full w-full"
+                                    >
                                       <PieChart>
                                           <ChartTooltip
                                               cursor={false}
@@ -947,7 +1014,8 @@ export default function ProjectDetailPage() {
                                               ))}
                                           </Pie>
                                       </PieChart>
-                                  </ChartContainer>
+                                    </ChartContainer>
+                                  </div>
                               ) : (
                                   <div className="flex h-[200px] w-[200px] items-center justify-center rounded-full bg-muted/50 mx-auto">
                                       <p className="text-sm text-muted-foreground">Sin gastos.</p>

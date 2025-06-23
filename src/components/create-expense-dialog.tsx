@@ -57,9 +57,10 @@ const formSchema = z.object({
 type CreateExpenseDialogProps = {
   categories: { name: string }[]
   participants: { name: string }[]
+  onAddExpense: (data: z.infer<typeof formSchema>) => void;
 }
 
-export function CreateExpenseDialog({ categories, participants }: CreateExpenseDialogProps) {
+export function CreateExpenseDialog({ categories, participants, onAddExpense }: CreateExpenseDialogProps) {
   const [open, setOpen] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -71,9 +72,13 @@ export function CreateExpenseDialog({ categories, participants }: CreateExpenseD
   })
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Nuevo gasto:", values)
+    onAddExpense(values);
     setOpen(false)
-    form.reset()
+    form.reset({
+      date: new Date(),
+      description: "",
+      exchangeRate: 1,
+    })
   }
 
   return (

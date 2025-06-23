@@ -45,7 +45,11 @@ const formSchema = z.object({
   exchangeRate: z.coerce.number().positive("El cambio debe ser positivo."),
 })
 
-export function CreateIncomeDialog() {
+type CreateIncomeDialogProps = {
+  onAddIncome: (data: z.infer<typeof formSchema>) => void;
+}
+
+export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
   const [open, setOpen] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,10 +61,13 @@ export function CreateIncomeDialog() {
   })
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Nuevo ingreso:", values)
-    // Here you would typically call a function to add the income to your state/API
+    onAddIncome(values)
     setOpen(false)
-    form.reset()
+    form.reset({
+      date: new Date(),
+      description: "",
+      exchangeRate: 1,
+    })
   }
 
   return (
@@ -172,5 +179,3 @@ export function CreateIncomeDialog() {
     </Dialog>
   )
 }
-
-    
