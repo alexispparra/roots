@@ -168,14 +168,18 @@ export default function ProjectDetailPage() {
         }
         const data = await response.json();
         
+        if (!data.transactions || !Array.isArray(data.transactions)) {
+          throw new Error("Formato de transacciones inválido en la respuesta de la API.");
+        }
+        
         const transactionsWithUSD = data.transactions.map((t: any, index: number) => ({
           ...t,
           id: `T${index}`,
-          amountUSD: t.amountARS / t.exchangeRate,
+          amountUSD: t.exchangeRate > 0 ? t.amountARS / t.exchangeRate : 0,
           type: t.amountARS > 0 ? 'expense' : 'income' 
         }));
 
-        processDataAndSetYears(transactionsWithUSD, data.categories);
+        processDataAndSetYears(transactionsWithUSD, data.categories || []);
 
       } catch (err: any) {
         setError(err.message);
@@ -254,9 +258,13 @@ export default function ProjectDetailPage() {
         paymentMethod: data.paymentMethod,
         amountARS: data.amountARS,
         exchangeRate: data.exchangeRate,
-        amountUSD: data.amountARS / data.exchangeRate,
+        amountUSD: data.exchangeRate > 0 ? data.amountARS / data.exchangeRate : 0,
         type: 'expense',
     };
+    const newYear = new Date(newTransaction.date).getFullYear();
+    if (!allYears.includes(newYear)) {
+      setAllYears(prevYears => [...prevYears, newYear].sort((a,b) => b - a));
+    }
     setTransactions(prev => [newTransaction, ...prev]);
     toast({
       title: "Gasto Registrado",
@@ -268,9 +276,13 @@ export default function ProjectDetailPage() {
     const updatedTransaction: Transaction = {
         ...data,
         date: format(data.date, 'yyyy-MM-dd'),
-        amountUSD: data.amountARS / data.exchangeRate,
+        amountUSD: data.exchangeRate > 0 ? data.amountARS / data.exchangeRate : 0,
         type: 'expense',
     };
+    const newYear = new Date(updatedTransaction.date).getFullYear();
+    if (!allYears.includes(newYear)) {
+      setAllYears(prevYears => [...prevYears, newYear].sort((a,b) => b - a));
+    }
     setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
     setEditingExpense(null);
     toast({
@@ -300,9 +312,13 @@ export default function ProjectDetailPage() {
         paymentMethod: 'N/A',
         amountARS: data.amountARS,
         exchangeRate: data.exchangeRate,
-        amountUSD: data.amountARS / data.exchangeRate,
+        amountUSD: data.exchangeRate > 0 ? data.amountARS / data.exchangeRate : 0,
         type: 'income',
     };
+    const newYear = new Date(newTransaction.date).getFullYear();
+    if (!allYears.includes(newYear)) {
+      setAllYears(prevYears => [...prevYears, newYear].sort((a, b) => b - a));
+    }
     setTransactions(prev => [newTransaction, ...prev]);
     toast({
       title: "Ingreso Registrado",
