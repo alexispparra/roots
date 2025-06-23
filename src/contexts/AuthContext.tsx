@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
@@ -9,6 +10,7 @@ import { useRouter } from 'next/navigation';
 type AuthContextType = {
   user: User | null;
   loading: boolean;
+  isAppAdmin: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,6 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAppAdmin, setIsAppAdmin] = useState(false);
 
   useEffect(() => {
     // If firebase is not configured, we're not loading and there's no user.
@@ -27,6 +30,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+       if (user && process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL && user.email === process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL) {
+          setIsAppAdmin(true);
+      } else {
+          setIsAppAdmin(false);
+      }
       setLoading(false);
     });
 
@@ -34,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, isAppAdmin }}>
       {children}
     </AuthContext.Provider>
   );

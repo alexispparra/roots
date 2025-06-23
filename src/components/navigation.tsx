@@ -22,9 +22,11 @@ import {
   WandSparkles,
   Wallet,
   Users,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProjects } from "@/contexts/ProjectsContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 export function Navigation() {
@@ -33,6 +35,7 @@ export function Navigation() {
   const currentProjectId = searchParams.get('id');
   const currentCategoryName = searchParams.get('category');
   const { projects } = useProjects();
+  const { isAppAdmin } = useAuth();
   
   const activeProjectsData = projects.filter(p => p.status === 'En Curso');
 
@@ -146,6 +149,21 @@ export function Navigation() {
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
+      
+      {isAppAdmin && (
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            asChild
+            isActive={pathname === "/admin"}
+            tooltip="Administración"
+          >
+            <Link href="/admin">
+              <Shield />
+              <span>Administración</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      )}
 
       <SidebarMenuItem>
         <SidebarMenuButton
