@@ -35,7 +35,7 @@ const passwordFormSchema = z.object({
 });
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -131,8 +131,16 @@ export default function SettingsPage() {
     }
   }
 
+  if (loading) {
+    return (
+        <div className="flex items-center justify-center min-h-[400px]">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    )
+  }
+
   if (!user) {
-    // This should ideally not be reached because of AuthGuard, but it's good practice.
+    // This is a fallback, AuthGuard should prevent this.
     return null;
   }
 

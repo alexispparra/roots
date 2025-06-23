@@ -29,11 +29,18 @@ export default function MainLayout({
   const { toast } = useToast();
 
   const handleLogout = async () => {
-    if (auth) {
-      await auth.signOut();
-      toast({ title: "Has cerrado sesión." });
-      // The AuthGuard will handle redirecting to the login page automatically
-      // after the user state changes to null.
+    if (!auth) return;
+    try {
+        await auth.signOut();
+        toast({ title: "Has cerrado sesión." });
+        router.push('/login'); 
+    } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "No se pudo cerrar la sesión. Por favor, inténtalo de nuevo.",
+        });
     }
   };
 
