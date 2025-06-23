@@ -9,11 +9,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import type { ChartConfig } from "@/components/ui/chart"
-import { Pie, PieChart, Cell, Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts"
+import { Pie, PieChart, Cell, Bar, BarChart, XAxis, YAxis, CartesianGrid, Label } from "recharts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link";
-import { Users, DollarSign, Target, Landmark, MapPin, Loader2, AlertCircle, ChevronDown, Calendar as CalendarIcon } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Target, Landmark, MapPin, Loader2, AlertCircle, ChevronDown, Calendar as CalendarIcon } from "lucide-react";
 import { CreateExpenseDialog } from "@/components/create-expense-dialog";
 import { CreateIncomeDialog } from "@/components/create-income-dialog";
 import { CreateCategoryDialog } from "@/components/create-category-dialog";
@@ -23,7 +23,7 @@ import type { Category as ProjectCategory, ProjectStatus } from "@/contexts/Proj
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { Label as UiLabel } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
@@ -87,6 +87,7 @@ export default function ProjectDetailPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [cashflowDateRange, setCashflowDateRange] = useState<DateRange | undefined>();
   const [cashflowCategoryFilter, setCashflowCategoryFilter] = useState<string>("Todas");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -441,7 +442,7 @@ export default function ProjectDetailPage() {
               </div>
               <div className="flex items-center gap-4">
                 <div className="grid gap-1.5">
-                  <Label>Rango de Fechas</Label>
+                  <UiLabel>Rango de Fechas</UiLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                     <Button
@@ -480,7 +481,7 @@ export default function ProjectDetailPage() {
                   </Popover>
                 </div>
                 <div className="grid gap-1.5">
-                  <Label>Categoría</Label>
+                  <UiLabel>Categoría</UiLabel>
                   <Select value={cashflowCategoryFilter} onValueChange={setCashflowCategoryFilter}>
                       <SelectTrigger className="w-[180px]">
                           <SelectValue placeholder="Filtrar por categoría" />
@@ -553,7 +554,7 @@ export default function ProjectDetailPage() {
               </div>
               <div className="flex items-center gap-4">
                   <div className="grid gap-1.5">
-                    <Label>Rango de Fechas</Label>
+                    <UiLabel>Rango de Fechas</UiLabel>
                      <Popover>
                         <PopoverTrigger asChild>
                         <Button
@@ -592,7 +593,7 @@ export default function ProjectDetailPage() {
                     </Popover>
                   </div>
                   <div className="grid gap-1.5">
-                    <Label>Usuario</Label>
+                    <UiLabel>Usuario</UiLabel>
                     <Select value={filters.user} onValueChange={(value) => setFilters(prev => ({ ...prev, user: value }))}>
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Filtrar por usuario" />
@@ -604,7 +605,7 @@ export default function ProjectDetailPage() {
                     </Select>
                   </div>
                   <div className="grid gap-1.5">
-                    <Label>Categoría</Label>
+                    <UiLabel>Categoría</UiLabel>
                      <Select value={filters.category} onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Filtrar por categoría" />
@@ -663,38 +664,185 @@ export default function ProjectDetailPage() {
         </TabsContent>
 
         <TabsContent value="categories" className="mt-6">
-           <div className="grid gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
-                  <CardDescription>Gestiona y visualiza los gastos por categoría.</CardDescription>
-                </div>
-                <CreateCategoryDialog onAddCategory={handleAddCategory}/>
-              </CardHeader>
-            </Card>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {projectCategories.map((category) => {
-                const categorySpent = transactions.filter(t => t.category === category.name).reduce((sum, t) => sum + t.amountUSD, 0);
-                const progress = category.budget > 0 ? (categorySpent / category.budget) * 100 : 0;
-                return (
+          {!selectedCategory ? (
+            <div className="grid gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
+                    <CardDescription>Gestiona y visualiza los gastos por categoría.</CardDescription>
+                  </div>
+                  <CreateCategoryDialog onAddCategory={handleAddCategory} />
+                </CardHeader>
+              </Card>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {projectCategories.map((category) => {
+                  const categorySpent = transactions
+                    .filter((t) => t.category === category.name && t.type === 'expense')
+                    .reduce((sum, t) => sum + t.amountUSD, 0)
+                  const progress = category.budget > 0 ? (categorySpent / category.budget) * 100 : 0
+                  return (
                     <Card key={category.name}>
-                        <CardHeader>
-                            <CardTitle className="flex items-center justify-between">
-                                <span>{category.name}</span>
-                                <Link href="#" className="text-sm font-medium text-primary hover:underline">Ver detalle</Link>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid gap-2">
-                            <div className="text-3xl font-bold">${categorySpent.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                            <p className="text-xs text-muted-foreground">de ${category.budget.toLocaleString()} presupuestados</p>
-                            <Progress value={progress} className="h-2 mt-2" />
-                        </CardContent>
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          <span>{category.name}</span>
+                          <Button variant="link" className="h-auto p-0 text-sm font-medium" onClick={() => setSelectedCategory(category.name)}>
+                            Ver detalle
+                          </Button>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="grid gap-2">
+                        <div className="text-3xl font-bold">${categorySpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                        <p className="text-xs text-muted-foreground">de ${category.budget.toLocaleString()} presupuestados</p>
+                        <Progress value={progress} className="h-2 mt-2" />
+                      </CardContent>
                     </Card>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
-           </div>
+          ) : (
+            (() => {
+              const category = projectCategories.find((c) => c.name === selectedCategory)
+              if (!category) return null
+
+              const categoryTransactions = transactions.filter(
+                (t) => t.category === selectedCategory && t.type === 'expense'
+              )
+              const categorySpent = categoryTransactions.reduce((sum, t) => sum + t.amountUSD, 0)
+              const budget = category.budget
+              const progress = budget > 0 ? (categorySpent / budget) * 100 : 0
+              const remaining = budget - categorySpent;
+              const categoryBudgetData = [
+                { name: 'Gastado', value: categorySpent, fill: 'hsl(var(--destructive))' },
+                { name: 'Restante', value: Math.max(0, remaining), fill: 'hsl(var(--chart-1))' }
+              ].filter(d => d.value > 0);
+
+              const budgetChartConfig: ChartConfig = {
+                  value: { label: "Monto" },
+                  Gastado: { label: "Gastado", color: "hsl(var(--destructive))" },
+                  Restante: { label: "Restante", color: "hsl(var(--chart-1))" }
+              };
+
+              return (
+                <div className="grid gap-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex flex-col items-start">
+                          <Button variant="ghost" size="sm" className="mb-2 -ml-3" onClick={() => setSelectedCategory(null)}>
+                              <ArrowLeft className="mr-2 h-4 w-4" />
+                              Volver a Categorías
+                          </Button>
+                          <CardTitle className="font-headline text-3xl">{category.name}</CardTitle>
+                          <CardDescription>Análisis detallado de los gastos en esta categoría.</CardDescription>
+                      </div>
+                    </CardHeader>
+                  </Card>
+
+                  <div className="grid gap-6 lg:grid-cols-3">
+                      <Card className="lg:col-span-1">
+                          <CardHeader>
+                              <CardTitle>Resumen de Presupuesto</CardTitle>
+                          </CardHeader>
+                          <CardContent className="grid gap-4 place-content-center text-center">
+                              <ChartContainer
+                                  config={budgetChartConfig}
+                                  className="mx-auto aspect-square max-h-[200px]"
+                              >
+                                  <PieChart>
+                                      <ChartTooltip
+                                          cursor={false}
+                                          content={<ChartTooltipContent hideLabel />}
+                                      />
+                                      <Pie
+                                          data={categoryBudgetData}
+                                          dataKey="value"
+                                          nameKey="name"
+                                          innerRadius={60}
+                                          strokeWidth={2}
+                                      >
+                                          <Label
+                                              content={({ viewBox }) => {
+                                                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                                      return (
+                                                          <text
+                                                              x={viewBox.cx}
+                                                              y={viewBox.cy}
+                                                              textAnchor="middle"
+                                                              dominantBaseline="middle"
+                                                          >
+                                                              <tspan
+                                                                  x={viewBox.cx}
+                                                                  y={viewBox.cy - 10}
+                                                                  className="fill-foreground text-2xl font-bold"
+                                                              >
+                                                                  ${categorySpent.toLocaleString('en-US', {maximumFractionDigits: 0})}
+                                                              </tspan>
+                                                              <tspan
+                                                                  x={viewBox.cx}
+                                                                  y={viewBox.cy + 12}
+                                                                  className="fill-muted-foreground text-sm"
+                                                              >
+                                                                  Gastado
+                                                              </tspan>
+                                                          </text>
+                                                      )
+                                                  }
+                                              }}
+                                          />
+                                          {categoryBudgetData.map((entry, index) => (
+                                              <Cell key={`cell-${index}`} fill={entry.fill} />
+                                          ))}
+                                      </Pie>
+                                  </PieChart>
+                              </ChartContainer>
+                              <div>
+                                  <p className="text-sm text-muted-foreground">de ${budget.toLocaleString()} presupuestados</p>
+                                  <Progress value={progress} className="h-2 mt-2" />
+                              </div>
+                          </CardContent>
+                      </Card>
+                      <Card className="lg:col-span-2">
+                          <CardHeader>
+                              <CardTitle>Movimientos en {category.name}</CardTitle>
+                              <CardDescription>Todos los gastos registrados para esta categoría.</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                              <Table>
+                                  <TableHeader>
+                                      <TableRow>
+                                          <TableHead>Fecha</TableHead>
+                                          <TableHead>Descripción</TableHead>
+                                          <TableHead className="text-right">Monto (AR$)</TableHead>
+                                          <TableHead className="text-right">Cambio</TableHead>
+                                          <TableHead className="text-right">Monto (U$S)</TableHead>
+                                      </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                      {categoryTransactions.map(t => (
+                                          <TableRow key={t.id}>
+                                              <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</TableCell>
+                                              <TableCell className="font-medium">{t.description}</TableCell>
+                                              <TableCell className="text-right font-mono text-destructive">
+                                                  -${t.amountARS.toLocaleString('es-AR')}
+                                              </TableCell>
+                                              <TableCell className="text-right font-mono text-muted-foreground text-sm">
+                                                  {t.exchangeRate.toLocaleString('es-AR')}
+                                              </TableCell>
+                                              <TableCell className="text-right font-mono text-destructive">
+                                                  -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                              </TableCell>
+                                          </TableRow>
+                                      ))}
+                                  </TableBody>
+                              </Table>
+                          </CardContent>
+                      </Card>
+                  </div>
+                </div>
+              )
+            })()
+          )}
         </TabsContent>
       </Tabs>
     )
