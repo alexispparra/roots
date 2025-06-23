@@ -63,6 +63,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   { id: 'MI-2', date: '2024-06-10', description: 'Aporte inicial', category: 'Inversión', user: 'Luis Torres', paymentMethod: 'Banco', amountARS: 3000000, exchangeRate: 1050, amountUSD: 2857.14, type: 'income' },
   { id: 'MT-3', date: '2024-06-22', description: 'Campaña en redes', category: 'Marketing', user: 'Carlos Ruiz', paymentMethod: 'Efectivo', amountARS: 120000, exchangeRate: 1050, amountUSD: 114.28, type: 'expense' },
   { id: 'MT-4', date: '2024-06-23', description: 'Servidor de pruebas', category: 'Desarrollo', user: 'Ana García', paymentMethod: 'Banco', amountARS: 50000, exchangeRate: 1050, amountUSD: 47.62, type: 'expense' },
+  { id: 'MT-5', date: '2023-12-15', description: 'Compra de dominio', category: 'Desarrollo', user: 'Ana García', paymentMethod: 'Banco', amountARS: 25000, exchangeRate: 900, amountUSD: 27.78, type: 'expense' },
 ];
 
 
@@ -94,9 +95,12 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [filters, setFilters] = useState({ user: "Todos", category: "Todas" });
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [transactionsYear, setTransactionsYear] = useState<number>(new Date().getFullYear());
+
   const [cashflowDateRange, setCashflowDateRange] = useState<DateRange | undefined>();
   const [cashflowCategoryFilter, setCashflowCategoryFilter] = useState<string>("Todas");
+  const [cashflowYear, setCashflowYear] = useState<number>(new Date().getFullYear());
+  const [allYears, setAllYears] = useState<number[]>([]);
   
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(searchParams.get('category') ? decodeURIComponent(searchParams.get('category')!) : null);
@@ -120,18 +124,35 @@ export default function ProjectDetailPage() {
         return;
     }
 
-    if (!project.googleSheetId) {
-        const categoriesWithSpent = MOCK_CATEGORIES.map(cat => {
-            const spent = MOCK_TRANSACTIONS
+    const processDataAndSetYears = (txns: Transaction[], allCategories: ProjectCategory[]) => {
+        const categoriesWithSpent = allCategories.map(cat => {
+            const spent = txns
                 .filter(t => t.category === cat.name)
                 .reduce((sum, t) => sum + t.amountUSD, 0);
             return { ...cat, spent };
         });
         
-        setTransactions(MOCK_TRANSACTIONS);
+        setTransactions(txns);
         setCategories(categoriesWithSpent);
+
+        const years = [...new Set(txns.map(t => new Date(t.date).getFullYear()))].sort((a, b) => b - a);
+        if (years.length > 0) {
+            setAllYears(years);
+            setCashflowYear(years[0]);
+            setTransactionsYear(years[0]);
+        } else {
+            const currentYear = new Date().getFullYear();
+            setAllYears([currentYear]);
+            setCashflowYear(currentYear);
+            setTransactionsYear(currentYear);
+        }
+
         setIsLoading(false);
         setError(null);
+    }
+
+    if (!project.googleSheetId) {
+        processDataAndSetYears(MOCK_TRANSACTIONS, MOCK_CATEGORIES);
         return;
     }
 
@@ -153,15 +174,7 @@ export default function ProjectDetailPage() {
           type: t.amountARS > 0 ? 'expense' : 'income' 
         }));
 
-        const categoriesWithSpent = data.categories.map((cat: any) => {
-          const spent = transactionsWithUSD
-            .filter((t: Transaction) => t.category === cat.name && t.type === 'expense')
-            .reduce((sum: number, t: Transaction) => sum + t.amountUSD, 0);
-          return { name: cat.name, budget: cat.budget, spent };
-        });
-
-        setTransactions(transactionsWithUSD);
-        setCategories(categoriesWithSpent);
+        processDataAndSetYears(transactionsWithUSD, data.categories);
 
       } catch (err: any) {
         setError(err.message);
@@ -299,12 +312,12 @@ export default function ProjectDetailPage() {
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
+      const yearMatch = new Date(t.date).getFullYear() === transactionsYear;
       const userMatch = filters.user === 'Todos' || t.user === filters.user;
       const categoryMatch = filters.category === 'Todas' || t.category === filters.category;
-      const dateMatch = !dateRange?.from || (new Date(t.date) >= dateRange.from && new Date(t.date) <= (dateRange.to || dateRange.from));
-      return userMatch && categoryMatch && dateMatch;
+      return yearMatch && userMatch && categoryMatch;
     });
-  }, [transactions, filters, dateRange]);
+  }, [transactions, filters, transactionsYear]);
   
   const monthlyGroupedTransactions = useMemo(() => {
     const grouped: Record<string, {
@@ -316,17 +329,17 @@ export default function ProjectDetailPage() {
     filteredTransactions
       .filter(t => t.type === 'expense')
       .forEach(t => {
-        const monthYear = format(new Date(t.date), 'MMMM yyyy', { locale: es });
-        if (!grouped[monthYear]) {
-            grouped[monthYear] = { transactions: [], userTotals: {}, monthTotal: 0 };
+        const monthKey = format(new Date(t.date), 'yyyy-MM');
+        if (!grouped[monthKey]) {
+            grouped[monthKey] = { transactions: [], userTotals: {}, monthTotal: 0 };
         }
-        grouped[monthYear].transactions.push(t);
+        grouped[monthKey].transactions.push(t);
         
-        if (!grouped[monthYear].userTotals[t.user]) {
-            grouped[monthYear].userTotals[t.user] = 0;
+        if (!grouped[monthKey].userTotals[t.user]) {
+            grouped[monthKey].userTotals[t.user] = 0;
         }
-        grouped[monthYear].userTotals[t.user] += t.amountUSD;
-        grouped[monthYear].monthTotal += t.amountUSD;
+        grouped[monthKey].userTotals[t.user] += t.amountUSD;
+        grouped[monthKey].monthTotal += t.amountUSD;
     });
 
     Object.keys(grouped).forEach(month => {
@@ -417,11 +430,11 @@ export default function ProjectDetailPage() {
   
   const monthlyFlowData = useMemo(() => {
       const monthlyTotals: {[key: string]: { month: string, Gastos: number, Ingresos: number }} = {};
-      const currentYear = new Date().getFullYear().toString();
+      const selectedYear = cashflowYear.toString();
       
       transactions.forEach(t => {
           const transactionDate = new Date(t.date);
-          if (transactionDate.getFullYear().toString() === currentYear) {
+          if (transactionDate.getFullYear().toString() === selectedYear) {
               const monthKey = format(transactionDate, 'yyyy-MM');
               const monthName = format(transactionDate, 'MMM', { locale: es });
               if (!monthlyTotals[monthKey]) {
@@ -437,10 +450,10 @@ export default function ProjectDetailPage() {
 
       const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
       return months.map((monthName, index) => {
-        const monthKey = `${currentYear}-${String(index + 1).padStart(2, '0')}`;
+        const monthKey = `${selectedYear}-${String(index + 1).padStart(2, '0')}`;
         return monthlyTotals[monthKey] || { month: monthName, Gastos: 0, Ingresos: 0 };
       });
-  }, [transactions]);
+  }, [transactions, cashflowYear]);
   
   const barChartConfig = {
     Gastos: { label: "Gastos", color: "hsl(var(--chart-2))" },
@@ -645,8 +658,23 @@ export default function ProjectDetailPage() {
         <TabsContent value="cashflow" className="mt-6 grid gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="font-headline">Resumen de Flujo de Caja Anual ({new Date().getFullYear()})</CardTitle>
-              <CardDescription>Análisis de gastos e ingresos (U$S) del proyecto a lo largo del tiempo.</CardDescription>
+              <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <CardTitle className="font-headline">Resumen de Flujo de Caja Anual ({cashflowYear})</CardTitle>
+                    <CardDescription>Análisis de gastos e ingresos (U$S) del proyecto a lo largo del tiempo.</CardDescription>
+                  </div>
+                   <div className="grid gap-1.5 w-32">
+                        <UiLabel htmlFor="cashflow-year">Año</UiLabel>
+                        <Select value={String(cashflowYear)} onValueChange={(val) => setCashflowYear(Number(val))}>
+                            <SelectTrigger id="cashflow-year">
+                                <SelectValue placeholder="Año" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {allYears.map(year => <SelectItem key={year} value={String(year)}>{year}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+              </div>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={barChartConfig} className="h-[250px] w-full">
@@ -812,43 +840,15 @@ export default function ProjectDetailPage() {
               </div>
               <div className="flex items-center gap-4">
                   <div className="grid gap-1.5">
-                    <UiLabel>Rango de Fechas</UiLabel>
-                     <Popover>
-                        <PopoverTrigger asChild>
-                        <Button
-                            id="date"
-                            variant={"outline"}
-                            className={cn(
-                            "w-[260px] justify-start text-left font-normal",
-                            !dateRange && "text-muted-foreground"
-                            )}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dateRange?.from ? (
-                            dateRange.to ? (
-                                <>
-                                {format(dateRange.from, "LLL dd, y", { locale: es })} -{" "}
-                                {format(dateRange.to, "LLL dd, y", { locale: es })}
-                                </>
-                            ) : (
-                                format(dateRange.from, "LLL dd, y", { locale: es })
-                            )
-                            ) : (
-                            <span>Elige un rango</span>
-                            )}
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            initialFocus
-                            mode="range"
-                            defaultMonth={dateRange?.from}
-                            selected={dateRange}
-                            onSelect={setDateRange}
-                            numberOfMonths={2}
-                        />
-                        </PopoverContent>
-                    </Popover>
+                    <UiLabel>Año</UiLabel>
+                     <Select value={String(transactionsYear)} onValueChange={(val) => setTransactionsYear(Number(val))}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Seleccionar año" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {allYears.map(year => <SelectItem key={year} value={String(year)}>{year}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
                   </div>
                   <div className="grid gap-1.5">
                     <UiLabel>Usuario</UiLabel>
@@ -877,98 +877,111 @@ export default function ProjectDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
-             {Object.keys(monthlyGroupedTransactions).length > 0 ? (
-                <Accordion type="single" collapsible className="w-full" defaultValue={Object.keys(monthlyGroupedTransactions)[0]}>
-                    {Object.entries(monthlyGroupedTransactions).map(([monthYear, data]) => (
-                        <AccordionItem value={monthYear} key={monthYear}>
-                            <AccordionTrigger>
-                                <div className="flex justify-between w-full pr-4 items-center">
-                                    <span className="font-headline text-lg capitalize">{monthYear}</span>
-                                    <div className="text-right">
-                                        <p className="text-sm text-muted-foreground">Gasto Total del Mes</p>
-                                        <p className="font-bold text-lg font-mono text-destructive">
-                                            -${data.monthTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </p>
-                                    </div>
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="space-y-4">
-                                <div className="p-4 border rounded-lg bg-muted/50">
-                                    <h4 className="font-semibold mb-2 text-sm">Gastos por Usuario (U$S)</h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {Object.entries(data.userTotals).map(([user, total]) => (
-                                            <div key={user}>
-                                                <p className="text-xs text-muted-foreground">{user}</p>
-                                                <p className="font-bold font-mono text-base">
-                                                    ${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+             {(() => {
+                const sortedMonths = Object.keys(monthlyGroupedTransactions).sort().reverse();
+                if (sortedMonths.length === 0) {
+                    return (
+                        <div className="h-48 flex items-center justify-center text-center text-muted-foreground">
+                            <p>No hay transacciones de gastos que coincidan con los filtros seleccionados.</p>
+                        </div>
+                    );
+                }
+                return (
+                    <Accordion type="single" collapsible className="w-full" defaultValue={sortedMonths[0]}>
+                        {sortedMonths.map((monthKey) => {
+                            const data = monthlyGroupedTransactions[monthKey];
+                            const [year, month] = monthKey.split('-').map(Number);
+                            const monthDate = new Date(year, month - 1);
+                            const monthYearDisplay = format(monthDate, 'MMMM yyyy', { locale: es });
+
+                            return (
+                                <AccordionItem value={monthKey} key={monthKey}>
+                                    <AccordionTrigger>
+                                        <div className="flex justify-between w-full pr-4 items-center">
+                                            <span className="font-headline text-lg capitalize">{monthYearDisplay}</span>
+                                            <div className="text-right">
+                                                <p className="text-sm text-muted-foreground">Gasto Total del Mes</p>
+                                                <p className="font-bold text-lg font-mono text-destructive">
+                                                    -${data.monthTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </p>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Fecha</TableHead>
-                                        <TableHead>Descripción</TableHead>
-                                        <TableHead>Categoría</TableHead>
-                                        <TableHead>Usuario</TableHead>
-                                        <TableHead>Medio de Pago</TableHead>
-                                        <TableHead className="text-right">Monto (AR$)</TableHead>
-                                        <TableHead className="text-right">Cambio</TableHead>
-                                        <TableHead className="text-right">Monto (U$S)</TableHead>
-                                        <TableHead className="text-right">Acciones</TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {data.transactions.map(t => (
-                                          <TableRow key={t.id}>
-                                            <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</TableCell>
-                                            <TableCell className="font-medium">{t.description}</TableCell>
-                                            <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
-                                            <TableCell>{t.user}</TableCell>
-                                            <TableCell><Badge variant="secondary">{t.paymentMethod}</Badge></TableCell>
-                                            <TableCell className="text-right font-mono">
-                                              -${t.amountARS.toLocaleString('es-AR')}
-                                            </TableCell>
-                                            <TableCell className="text-right font-mono text-muted-foreground text-sm">
-                                              {t.exchangeRate.toLocaleString('es-AR')}
-                                            </TableCell>
-                                            <TableCell className="text-right font-medium font-mono">
-                                              -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                            <MoreVertical className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onSelect={() => setEditingExpense(t)}>
-                                                          <Edit className="mr-2 h-4 w-4" />
-                                                          Editar
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onSelect={() => setDeletingExpense(t)} className="text-destructive">
-                                                          <Trash2 className="mr-2 h-4 w-4" />
-                                                          Eliminar
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </TableCell>
-                                          </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
-              ) : (
-                <div className="h-48 flex items-center justify-center text-center text-muted-foreground">
-                    <p>No hay transacciones de gastos que coincidan con los filtros seleccionados.</p>
-                </div>
-              )}
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="space-y-4">
+                                        <div className="p-4 border rounded-lg bg-muted/50">
+                                            <h4 className="font-semibold mb-2 text-sm">Gastos por Usuario (U$S)</h4>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                {Object.entries(data.userTotals).map(([user, total]) => (
+                                                    <div key={user}>
+                                                        <p className="text-xs text-muted-foreground">{user}</p>
+                                                        <p className="font-bold font-mono text-base">
+                                                            ${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <Table>
+                                            <TableHeader>
+                                              <TableRow>
+                                                <TableHead>Fecha</TableHead>
+                                                <TableHead>Descripción</TableHead>
+                                                <TableHead>Categoría</TableHead>
+                                                <TableHead>Usuario</TableHead>
+                                                <TableHead>Medio de Pago</TableHead>
+                                                <TableHead className="text-right">Monto (AR$)</TableHead>
+                                                <TableHead className="text-right">Cambio</TableHead>
+                                                <TableHead className="text-right">Monto (U$S)</TableHead>
+                                                <TableHead className="text-right">Acciones</TableHead>
+                                              </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {data.transactions.map(t => (
+                                                  <TableRow key={t.id}>
+                                                    <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</TableCell>
+                                                    <TableCell className="font-medium">{t.description}</TableCell>
+                                                    <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
+                                                    <TableCell>{t.user}</TableCell>
+                                                    <TableCell><Badge variant="secondary">{t.paymentMethod}</Badge></TableCell>
+                                                    <TableCell className="text-right font-mono">
+                                                      -${t.amountARS.toLocaleString('es-AR')}
+                                                    </TableCell>
+                                                    <TableCell className="text-right font-mono text-muted-foreground text-sm">
+                                                      {t.exchangeRate.toLocaleString('es-AR')}
+                                                    </TableCell>
+                                                    <TableCell className="text-right font-medium font-mono">
+                                                      -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                    <MoreVertical className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuItem onSelect={() => setEditingExpense(t)}>
+                                                                  <Edit className="mr-2 h-4 w-4" />
+                                                                  Editar
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onSelect={() => setDeletingExpense(t)} className="text-destructive">
+                                                                  <Trash2 className="mr-2 h-4 w-4" />
+                                                                  Eliminar
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                  </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            )
+                        })}
+                    </Accordion>
+                );
+             })()}
             </CardContent>
           </Card>
         </TabsContent>
@@ -1311,3 +1324,5 @@ export default function ProjectDetailPage() {
     </div>
   );
 }
+
+    
