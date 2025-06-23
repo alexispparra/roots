@@ -4,7 +4,7 @@
       {
         "source": "**",
         "apphosting": {
-          "backendId": "TU_BACKEND_ID"
+          "backendId": "ROOTS"
         }
       }
     ]
