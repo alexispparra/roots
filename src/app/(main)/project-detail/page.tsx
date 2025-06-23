@@ -24,7 +24,7 @@ const projectsMetadata = {
     name: "Lanzamiento App Móvil",
     address: "Av. Libertador 498, Buenos Aires",
     status: "En Curso",
-    googleSheetId: '12345_your_sheet_id_here_1', // Replace with your actual sheet ID
+    googleSheetId: 'YOUR_SHEET_ID_HERE_1', // Reemplaza esto con el ID real de tu hoja de cálculo
     participants: [
         { name: "Ana García", contribution: 5000, share: 50, avatar: 'https://placehold.co/40x40.png', fallback: 'AG' },
         { name: "Luis Torres", contribution: 3000, share: 30, avatar: 'https://placehold.co/40x40.png', fallback: 'LT' },
@@ -35,7 +35,7 @@ const projectsMetadata = {
     name: "Campaña Marketing Q3",
     address: "Av. Siempre Viva 742, Springfield",
     status: "En Curso",
-    googleSheetId: '12345_your_sheet_id_here_3', // Replace with your actual sheet ID
+    googleSheetId: 'YOUR_SHEET_ID_HERE_3', // Reemplaza esto con el ID real de tu hoja de cálculo
     participants: [
         { name: "Fernanda Gómez", contribution: 4000, share: 53, avatar: 'https://placehold.co/40x40.png', fallback: 'FG' },
         { name: "Hugo Iglesias", contribution: 2000, share: 27, avatar: 'https://placehold.co/40x40.png', fallback: 'HI' },
@@ -77,8 +77,8 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!project.googleSheetId) {
-      setError("Este proyecto no tiene un ID de Google Sheet configurado.");
+    if (!project.googleSheetId || project.googleSheetId.includes('YOUR_SHEET_ID_HERE')) {
+      setError("Aún necesitas conectar este proyecto a tu hoja de cálculo. Reemplaza el ID de ejemplo por tu ID real en el archivo: src/app/(main)/project-detail/page.tsx, dentro del objeto 'projectsMetadata'.");
       setIsLoading(false);
       return;
     }
