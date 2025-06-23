@@ -813,18 +813,19 @@ export default function ProjectDetailPage() {
                   acc.usd += t.amountUSD;
                   return acc;
               }, {ars: 0, usd: 0});
-              const budget = category.budget
-              const progress = budget > 0 ? (categorySpent / budget) * 100 : 0
-              const remaining = budget - categorySpent;
-              const categoryBudgetData = [
-                { name: 'Gastado', value: categorySpent, fill: 'hsl(var(--destructive))' },
-                { name: 'Restante', value: Math.max(0, remaining), fill: 'hsl(var(--chart-1))' }
+              
+              const otherSpent = totalSpent - categorySpent;
+              const percentageOfTotal = totalSpent > 0 ? (categorySpent / totalSpent) * 100 : 0;
+              
+              const categoryVsTotalData = [
+                  { name: category.name, value: categorySpent, fill: 'hsl(var(--chart-1))' },
+                  { name: 'Otros Gastos', value: otherSpent, fill: 'hsl(var(--muted))' }
               ].filter(d => d.value > 0);
-
-              const budgetChartConfig: ChartConfig = {
+          
+              const categoryVsTotalChartConfig: ChartConfig = {
                   value: { label: "Monto" },
-                  Gastado: { label: "Gastado", color: "hsl(var(--destructive))" },
-                  Restante: { label: "Restante", color: "hsl(var(--chart-1))" }
+                  [category.name]: { label: category.name, color: "hsl(var(--chart-1))" },
+                  "Otros Gastos": { label: "Otros Gastos", color: "hsl(var(--muted))" }
               };
 
               return (
@@ -845,11 +846,11 @@ export default function ProjectDetailPage() {
                   <div className="grid gap-6 lg:grid-cols-3">
                       <Card className="lg:col-span-1">
                           <CardHeader>
-                              <CardTitle>Resumen de Presupuesto</CardTitle>
+                              <CardTitle>Gasto vs. Total del Proyecto</CardTitle>
                           </CardHeader>
                           <CardContent className="grid gap-4 place-content-center text-center">
                               <ChartContainer
-                                  config={budgetChartConfig}
+                                  config={categoryVsTotalChartConfig}
                                   className="mx-auto aspect-square max-h-[200px]"
                               >
                                   <PieChart>
@@ -858,7 +859,7 @@ export default function ProjectDetailPage() {
                                           content={<ChartTooltipContent hideLabel />}
                                       />
                                       <Pie
-                                          data={categoryBudgetData}
+                                          data={categoryVsTotalData}
                                           dataKey="value"
                                           nameKey="name"
                                           innerRadius={60}
@@ -876,32 +877,25 @@ export default function ProjectDetailPage() {
                                                           >
                                                               <tspan
                                                                   x={viewBox.cx}
-                                                                  y={viewBox.cy - 10}
-                                                                  className="fill-foreground text-2xl font-bold"
+                                                                  y={viewBox.cy}
+                                                                  className="fill-foreground text-3xl font-bold"
                                                               >
-                                                                  ${categorySpent.toLocaleString('en-US', {maximumFractionDigits: 0})}
-                                                              </tspan>
-                                                              <tspan
-                                                                  x={viewBox.cx}
-                                                                  y={viewBox.cy + 12}
-                                                                  className="fill-muted-foreground text-sm"
-                                                              >
-                                                                  Gastado
+                                                                  {percentageOfTotal.toFixed(0)}%
                                                               </tspan>
                                                           </text>
                                                       )
                                                   }
                                               }}
                                           />
-                                          {categoryBudgetData.map((entry, index) => (
+                                          {categoryVsTotalData.map((entry, index) => (
                                               <Cell key={`cell-${index}`} fill={entry.fill} />
                                           ))}
                                       </Pie>
                                   </PieChart>
                               </ChartContainer>
                               <div>
-                                  <p className="text-sm text-muted-foreground">de ${budget.toLocaleString()} presupuestados</p>
-                                  <Progress value={progress} className="h-2 mt-2" />
+                                <p className="text-2xl font-bold">${categorySpent.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                <p className="text-sm text-muted-foreground">de un total de ${totalSpent.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                               </div>
                           </CardContent>
                       </Card>
