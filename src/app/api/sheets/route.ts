@@ -1,24 +1,25 @@
 import { google } from "googleapis";
+import { NextResponse } from "next/server";
 
-// Define el rango de celdas que quieres leer. Por ejemplo: 'A1:D10'
-// Si lo dejas vacío, intentará leer toda la primera hoja.
 const SHEET_RANGE = "A1:Z1000";
 
-export async function getSheetData() {
+export async function GET() {
   try {
     const client_email = process.env.GOOGLE_SHEETS_CLIENT_EMAIL;
     const private_key = process.env.GOOGLE_SHEETS_PRIVATE_KEY;
     const sheet_id = process.env.GOOGLE_SHEETS_SHEET_ID;
 
     if (!client_email || !private_key || !sheet_id) {
-      console.log("Faltan variables de entorno de Google Sheets.");
-      return null;
+      return NextResponse.json(
+        { error: "Missing Google Sheets environment variables" },
+        { status: 500 }
+      );
     }
 
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: client_email,
-        private_key: private_key.replace(/\\n/g, '\n'),
+        private_key: private_key.replace(/\\n/g, "\n"),
       },
       scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
     });
@@ -34,11 +35,17 @@ export async function getSheetData() {
     if (rows && rows.length) {
       const header = rows[0];
       const dataRows = rows.slice(1);
-      return { header, rows: dataRows };
+      return NextResponse.json({ header, rows: dataRows });
     }
-    return { header: [], rows: [] };
+
+    return NextResponse.json({ header: [], rows: [] });
   } catch (err) {
-    console.error("Error al leer la hoja de cálculo:", err);
-    return null;
+    console.error("Error reading spreadsheet:", err);
+    const errorMessage =
+      err instanceof Error ? err.message : "An unknown error occurred";
+    return NextResponse.json(
+      { error: "Failed to fetch sheet data", details: errorMessage },
+      { status: 500 }
+    );
   }
 }
