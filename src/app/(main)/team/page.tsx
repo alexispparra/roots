@@ -52,7 +52,7 @@ export default function TeamPage() {
                         {isCurrentUserAdmin ? (
                           <Select
                             value={participant.role}
-                            onValueChange={(newRole: 'admin' | 'viewer') => updateParticipantRole(project.id, participant.email, newRole)}
+                            onValueChange={(newRole: 'admin' | 'editor' | 'viewer') => updateParticipantRole(project.id, participant.email, newRole)}
                             // Disable selector for the admin editing their own role
                             disabled={participant.email === user?.email}
                           >
@@ -61,6 +61,7 @@ export default function TeamPage() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="admin">Administrador</SelectItem>
+                              <SelectItem value="editor">Editor</SelectItem>
                               <SelectItem value="viewer">Lector</SelectItem>
                             </SelectContent>
                           </Select>

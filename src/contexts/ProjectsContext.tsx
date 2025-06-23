@@ -1,12 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
 
 // --- TYPES ---
 export type Participant = {
     name: string;
     email: string;
-    role: 'admin' | 'viewer';
+    role: 'admin' | 'editor' | 'viewer';
     src?: string; // For avatar image
     fallback?: string;
     contribution?: number;
@@ -56,7 +57,7 @@ type ProjectsContextType = {
     updateCategoryInProject: (projectId: string, categoryName: string, newCategoryData: { budget: number }) => void;
     deleteCategoryFromProject: (projectId: string, categoryName: string) => void;
     updateProject: (projectId: string, projectData: UpdateProjectData) => void;
-    updateParticipantRole: (projectId: string, participantEmail: string, newRole: 'admin' | 'viewer') => void;
+    updateParticipantRole: (projectId: string, participantEmail: string, newRole: 'admin' | 'editor' | 'viewer') => void;
 };
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -74,7 +75,7 @@ const PROJECTS_MOCK_DATA: Project[] = [
         googleSheetId: '',
         participants: [
             { name: 'Ana García', email: 'ana.garcia@example.com', role: 'admin', contribution: 5000, share: 50, src: 'https://placehold.co/40x40.png', fallback: 'AG' },
-            { name: 'Luis Torres', email: 'luis.torres@example.com', role: 'viewer', contribution: 3000, share: 30, src: 'https://placehold.co/40x40.png', fallback: 'LT' },
+            { name: 'Luis Torres', email: 'luis.torres@example.com', role: 'editor', contribution: 3000, share: 30, src: 'https://placehold.co/40x40.png', fallback: 'LT' },
             { name: 'Carlos Ruiz', email: 'carlos.ruiz@example.com', role: 'viewer', contribution: 2000, share: 20, src: 'https://placehold.co/40x40.png', fallback: 'CR' },
         ],
         categories: [
@@ -135,14 +136,25 @@ const PROJECTS_MOCK_DATA: Project[] = [
 
 export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     const [projects, setProjects] = useState<Project[]>(PROJECTS_MOCK_DATA);
+    const { user } = useAuth();
 
     const addProject = (projectData: AddProjectData) => {
+        if (!user || !user.email) return;
+
         const newProject: Project = {
             ...projectData,
             id: `PROJ-${String(projects.length + 1).padStart(3, '0')}`,
             status: 'Próximo',
             progress: 0,
-            participants: [],
+            participants: [
+                {
+                    name: user.displayName || user.email,
+                    email: user.email,
+                    role: 'admin',
+                    src: user.photoURL || undefined,
+                    fallback: user.displayName?.split(' ').map(n => n[0]).join('') || user.email[0].toUpperCase(),
+                }
+            ],
             categories: [],
             investment: '0',
             description: projectData.description || "Sin descripción.",
@@ -208,7 +220,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         );
     };
 
-    const updateParticipantRole = (projectId: string, participantEmail: string, newRole: 'admin' | 'viewer') => {
+    const updateParticipantRole = (projectId: string, participantEmail: string, newRole: 'admin' | 'editor' | 'viewer') => {
         setProjects(prevProjects =>
             prevProjects.map(p => {
                 if (p.id === projectId) {

@@ -40,7 +40,7 @@ export default function ProjectsPage() {
       <div className="grid gap-6 md:grid-cols-2">
         {projects.map((project) => {
           const participant = project.participants.find(p => p.email === user?.email);
-          const isAdmin = participant?.role === 'admin';
+          const canEdit = participant?.role === 'admin' || participant?.role === 'editor';
 
           return (
             <Card key={project.id}>
@@ -49,7 +49,7 @@ export default function ProjectsPage() {
                   <CardTitle className="font-headline text-xl">{project.name}</CardTitle>
                   <div className="flex items-center gap-2">
                       <Badge variant={project.status === 'Completado' ? 'secondary' : 'default'} className={project.status === 'En Curso' ? 'bg-blue-500/20 text-blue-700' : project.status === 'Próximo' ? 'bg-amber-500/20 text-amber-700' : ''}>{project.status}</Badge>
-                      {isAdmin && (
+                      {canEdit && (
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingProject(project)}>
                             <Edit className="h-4 w-4" />
                         </Button>

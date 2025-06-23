@@ -96,7 +96,7 @@ export default function ProjectDetailPage() {
     project?.participants.find(p => p.email === user?.email), 
   [project, user]);
 
-  const isAdmin = currentUserParticipant?.role === 'admin';
+  const canEdit = currentUserParticipant?.role === 'admin' || currentUserParticipant?.role === 'editor';
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
@@ -750,7 +750,7 @@ export default function ProjectDetailPage() {
                   <CardTitle className="font-headline">Movimientos del Proyecto</CardTitle>
                   <CardDescription>Historial de ingresos y gastos. Filtra para ver totales por categoría.</CardDescription>
                 </div>
-                {isAdmin && (
+                {canEdit && (
                   <div className="ml-auto flex items-center gap-2">
                     <CreateIncomeDialog onAddIncome={handleAddIncome} />
                     <CreateExpenseDialog categories={projectCategories} participants={project.participants} onAddExpense={handleAddExpense} />
@@ -886,7 +886,7 @@ export default function ProjectDetailPage() {
                       Historial detallado de gastos, agrupado por mes.
                     </CardDescription>
                   </div>
-                  {isAdmin && (
+                  {canEdit && (
                     <CreateExpenseDialog categories={projectCategories} participants={project.participants} onAddExpense={handleAddExpense}/>
                   )}
               </div>
@@ -984,7 +984,7 @@ export default function ProjectDetailPage() {
                                                 <TableHead className="text-right">Monto (AR$)</TableHead>
                                                 <TableHead className="text-right">Cambio</TableHead>
                                                 <TableHead className="text-right">Monto (U$S)</TableHead>
-                                                {isAdmin && <TableHead className="text-right">Acciones</TableHead>}
+                                                {canEdit && <TableHead className="text-right">Acciones</TableHead>}
                                               </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -1004,7 +1004,7 @@ export default function ProjectDetailPage() {
                                                     <TableCell className="text-right font-medium font-mono">
                                                       -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                                     </TableCell>
-                                                    {isAdmin && (
+                                                    {canEdit && (
                                                       <TableCell className="text-right">
                                                           <DropdownMenu>
                                                               <DropdownMenuTrigger asChild>
@@ -1049,7 +1049,7 @@ export default function ProjectDetailPage() {
                     <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
                     <CardDescription>Gestiona y visualiza los gastos por categoría.</CardDescription>
                   </div>
-                  {isAdmin && <CreateCategoryDialog onAddCategory={handleAddCategory} />}
+                  {canEdit && <CreateCategoryDialog onAddCategory={handleAddCategory} />}
                 </CardHeader>
               </Card>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -1063,7 +1063,7 @@ export default function ProjectDetailPage() {
                       <CardHeader>
                         <CardTitle className="flex items-center justify-between">
                           <span className="truncate pr-2">{category.name}</span>
-                           {isAdmin && (
+                           {canEdit && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
@@ -1217,7 +1217,7 @@ export default function ProjectDetailPage() {
                                           <TableHead className="text-right">Monto (AR$)</TableHead>
                                           <TableHead className="text-right">Cambio</TableHead>
                                           <TableHead className="text-right">Monto (U$S)</TableHead>
-                                          {isAdmin && <TableHead className="text-right">Acciones</TableHead>}
+                                          {canEdit && <TableHead className="text-right">Acciones</TableHead>}
                                       </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -1235,7 +1235,7 @@ export default function ProjectDetailPage() {
                                               <TableCell className="text-right font-mono text-destructive">
                                                   -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                               </TableCell>
-                                              {isAdmin && (
+                                              {canEdit && (
                                                 <TableCell className="text-right">
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
@@ -1276,7 +1276,7 @@ export default function ProjectDetailPage() {
                                         <TableCell className="text-right font-mono text-destructive">
                                             -${categoryTotals.usd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                         </TableCell>
-                                        {isAdmin && <TableCell />}
+                                        {canEdit && <TableCell />}
                                     </TableRow>
                                   </TableFooter>
                               </Table>
@@ -1300,14 +1300,14 @@ export default function ProjectDetailPage() {
             <div className="flex items-center gap-4">
               <CardTitle className="font-headline text-3xl">{project.name}</CardTitle>
               <CardDescription>{project.description}</CardDescription>
-              {isAdmin && (
+              {canEdit && (
                 <Button variant="ghost" size="icon" className="shrink-0" onClick={() => setIsEditingProject(true)}>
                   <Edit className="h-5 w-5 text-muted-foreground" />
                 </Button>
               )}
             </div>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild disabled={!isAdmin}>
+              <DropdownMenuTrigger asChild disabled={!canEdit}>
                 <Button variant="ghost" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-base transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50">
                     <Badge 
                       className={
@@ -1339,7 +1339,7 @@ export default function ProjectDetailPage() {
       </Card>
       {renderContent()}
 
-      {isAdmin && (
+      {canEdit && (
         <EditProjectDialog
           isOpen={isEditingProject}
           onOpenChange={setIsEditingProject}
@@ -1348,7 +1348,7 @@ export default function ProjectDetailPage() {
         />
       )}
 
-      {isAdmin && (
+      {canEdit && (
         <EditCategoryDialog
           isOpen={!!editingCategory}
           onOpenChange={(isOpen) => !isOpen && setEditingCategory(null)}
@@ -1372,7 +1372,7 @@ export default function ProjectDetailPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {isAdmin && (
+      {canEdit && (
         <EditExpenseDialog
           isOpen={!!editingExpense}
           onOpenChange={(isOpen) => !isOpen && setEditingExpense(null)}
