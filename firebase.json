@@ -1,0 +1,12 @@
+{
+  "hosting": {
+    "rewrites": [
+      {
+        "source": "**",
+        "apphosting": {
+          "backendId": "TU_BACKEND_ID"
+        }
+      }
+    ]
+  }
+}
