@@ -44,6 +44,8 @@ type ProjectsContextType = {
     getProjectById: (id: string | null) => Project | undefined;
     updateProjectStatus: (projectId: string, newStatus: ProjectStatus) => void;
     addCategoryToProject: (projectId: string, category: Category) => void;
+    updateCategoryInProject: (projectId: string, categoryName: string, newCategoryData: { budget: number }) => void;
+    deleteCategoryFromProject: (projectId: string, categoryName: string) => void;
 };
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -68,6 +70,7 @@ const PROJECTS_MOCK_DATA: Project[] = [
             { name: "Desarrollo", budget: 5000 },
             { name: "Diseño UI/UX", budget: 2000 },
             { name: "Marketing", budget: 3000 },
+            { name: "Albañilería", budget: 10000 },
         ]
     },
     { 
@@ -159,8 +162,32 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         );
     };
 
+    const updateCategoryInProject = (projectId: string, categoryName: string, newCategoryData: { budget: number }) => {
+        setProjects(prevProjects =>
+            prevProjects.map(p => {
+                if (p.id === projectId) {
+                    const updatedCategories = p.categories.map(c =>
+                        c.name === categoryName ? { ...c, budget: newCategoryData.budget } : c
+                    );
+                    return { ...p, categories: updatedCategories };
+                }
+                return p;
+            })
+        );
+    };
+
+    const deleteCategoryFromProject = (projectId: string, categoryName: string) => {
+        setProjects(prevProjects =>
+            prevProjects.map(p =>
+                p.id === projectId
+                    ? { ...p, categories: p.categories.filter(c => c.name !== categoryName) }
+                    : p
+            )
+        );
+    };
+
     return (
-        <ProjectsContext.Provider value={{ projects, addProject, getProjectById, updateProjectStatus, addCategoryToProject }}>
+        <ProjectsContext.Provider value={{ projects, addProject, getProjectById, updateProjectStatus, addCategoryToProject, updateCategoryInProject, deleteCategoryFromProject }}>
             {children}
         </ProjectsContext.Provider>
     );

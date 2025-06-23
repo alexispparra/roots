@@ -13,11 +13,14 @@ import { Pie, PieChart, Cell, Bar, BarChart, XAxis, YAxis, CartesianGrid, Label,
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link";
-import { ArrowLeft, Users, DollarSign, Target, Landmark, MapPin, Loader2, AlertCircle, ChevronDown, Calendar as CalendarIcon } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Target, Landmark, MapPin, Loader2, AlertCircle, ChevronDown, Calendar as CalendarIcon, MoreVertical, Edit, Trash2 } from "lucide-react";
 import { CreateExpenseDialog } from "@/components/create-expense-dialog";
 import { CreateIncomeDialog } from "@/components/create-income-dialog";
 import { CreateCategoryDialog } from "@/components/create-category-dialog";
+import { EditCategoryDialog } from "@/components/edit-category-dialog";
+import { EditExpenseDialog } from "@/components/edit-expense-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useProjects } from "@/contexts/ProjectsContext";
 import type { Category as ProjectCategory, ProjectStatus } from "@/contexts/ProjectsContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -31,7 +34,7 @@ import { es } from 'date-fns/locale';
 import type { DateRange } from "react-day-picker"
 import { cn } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import type { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
 
 
 // --- TYPES ---
@@ -68,6 +71,7 @@ const MOCK_CATEGORIES = [
     { name: "Diseño UI/UX", budget: 2000 },
     { name: "Marketing", budget: 3000 },
     { name: "Inversión", budget: 0 },
+    { name: "Albañilería", budget: 10000 },
 ];
 
 
@@ -78,9 +82,10 @@ export default function ProjectDetailPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
 
   const projectId = searchParams.get('id');
-  const { getProjectById, updateProjectStatus, addCategoryToProject } = useProjects();
+  const { getProjectById, updateProjectStatus, addCategoryToProject, updateCategoryInProject, deleteCategoryFromProject } = useProjects();
   const project = getProjectById(projectId);
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -96,6 +101,11 @@ export default function ProjectDetailPage() {
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(searchParams.get('category') ? decodeURIComponent(searchParams.get('category')!) : null);
   
+  const [editingCategory, setEditingCategory] = useState<ProjectCategory | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<ProjectCategory | null>(null);
+  const [editingExpense, setEditingExpense] = useState<Transaction | null>(null);
+  const [deletingExpense, setDeletingExpense] = useState<Transaction | null>(null);
+
   useEffect(() => {
     const tab = searchParams.get('tab') || 'overview';
     const category = searchParams.get('category');
@@ -169,6 +179,42 @@ export default function ProjectDetailPage() {
       }
   };
 
+  const handleUpdateCategory = (data: { name: string; budget: number }) => {
+    if (project) {
+      updateCategoryInProject(project.id, data.name, { budget: data.budget });
+      toast({
+          title: "Categoría actualizada",
+          description: `La categoría "${data.name}" ha sido actualizada.`,
+      });
+    }
+    setEditingCategory(null);
+  }
+
+  const handleDeleteCategoryRequest = (category: ProjectCategory) => {
+    const isCategoryInUse = transactions.some(t => t.category === category.name && t.type === 'expense');
+    if (isCategoryInUse) {
+        toast({
+            variant: "destructive",
+            title: "No se puede eliminar la categoría",
+            description: `La categoría "${category.name}" está siendo utilizada por una o más transacciones.`,
+        });
+    } else {
+        setDeletingCategory(category);
+    }
+  };
+
+  const confirmDeleteCategory = () => {
+      if (project && deletingCategory) {
+          deleteCategoryFromProject(project.id, deletingCategory.name);
+          toast({
+              title: "Categoría eliminada",
+              description: `La categoría "${deletingCategory.name}" ha sido eliminada.`,
+          })
+      }
+      setDeletingCategory(null);
+  }
+
+
   const handleAddExpense = (data: any) => {
     const newTransaction: Transaction = {
         id: `TX-${Date.now()}`,
@@ -184,6 +230,32 @@ export default function ProjectDetailPage() {
     };
     setTransactions(prev => [newTransaction, ...prev]);
   };
+  
+  const handleUpdateExpense = (data: any) => {
+    const updatedTransaction: Transaction = {
+        ...data,
+        date: format(data.date, 'yyyy-MM-dd'),
+        amountUSD: data.amountARS / data.exchangeRate,
+        type: 'expense',
+    };
+    setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
+    setEditingExpense(null);
+    toast({
+        title: "Gasto actualizado",
+        description: "El gasto ha sido modificado correctamente."
+    })
+  };
+
+  const confirmDeleteExpense = () => {
+    if (deletingExpense) {
+        setTransactions(prev => prev.filter(t => t.id !== deletingExpense!.id));
+        toast({
+            title: "Gasto eliminado",
+            description: "El gasto ha sido eliminado correctamente."
+        })
+    }
+    setDeletingExpense(null);
+  }
 
   const handleAddIncome = (data: any) => {
     const newTransaction: Transaction = {
@@ -845,6 +917,7 @@ export default function ProjectDetailPage() {
                                         <TableHead className="text-right">Monto (AR$)</TableHead>
                                         <TableHead className="text-right">Cambio</TableHead>
                                         <TableHead className="text-right">Monto (U$S)</TableHead>
+                                        <TableHead className="text-right">Acciones</TableHead>
                                       </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -863,6 +936,25 @@ export default function ProjectDetailPage() {
                                             </TableCell>
                                             <TableCell className="text-right font-medium font-mono">
                                               -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onSelect={() => setEditingExpense(t)}>
+                                                          <Edit className="mr-2 h-4 w-4" />
+                                                          Editar
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={() => setDeletingExpense(t)} className="text-destructive">
+                                                          <Trash2 className="mr-2 h-4 w-4" />
+                                                          Eliminar
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </TableCell>
                                           </TableRow>
                                         ))}
@@ -903,10 +995,25 @@ export default function ProjectDetailPage() {
                     <Card key={category.name}>
                       <CardHeader>
                         <CardTitle className="flex items-center justify-between">
-                          <span>{category.name}</span>
-                          <Button variant="link" className="h-auto p-0 text-sm font-medium" onClick={() => handleSelectCategory(category.name)}>
-                            Ver detalle
-                          </Button>
+                          <span className="truncate pr-2">{category.name}</span>
+                           <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onSelect={() => handleSelectCategory(category.name)}>
+                                  Ver Detalle
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setEditingCategory(category)}>
+                                  Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleDeleteCategoryRequest(category)} className="text-destructive">
+                                  Eliminar
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="grid gap-2">
@@ -1041,6 +1148,7 @@ export default function ProjectDetailPage() {
                                           <TableHead className="text-right">Monto (AR$)</TableHead>
                                           <TableHead className="text-right">Cambio</TableHead>
                                           <TableHead className="text-right">Monto (U$S)</TableHead>
+                                          <TableHead className="text-right">Acciones</TableHead>
                                       </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -1058,11 +1166,30 @@ export default function ProjectDetailPage() {
                                               <TableCell className="text-right font-mono text-destructive">
                                                   -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                               </TableCell>
+                                              <TableCell className="text-right">
+                                                  <DropdownMenu>
+                                                      <DropdownMenuTrigger asChild>
+                                                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                              <MoreVertical className="h-4 w-4" />
+                                                          </Button>
+                                                      </DropdownMenuTrigger>
+                                                      <DropdownMenuContent align="end">
+                                                          <DropdownMenuItem onSelect={() => setEditingExpense(t)}>
+                                                            <Edit className="mr-2 h-4 w-4" />
+                                                            Editar
+                                                          </DropdownMenuItem>
+                                                          <DropdownMenuItem onSelect={() => setDeletingExpense(t)} className="text-destructive">
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Eliminar
+                                                          </DropdownMenuItem>
+                                                      </DropdownMenuContent>
+                                                  </DropdownMenu>
+                                              </TableCell>
                                           </TableRow>
                                       ))
                                       ) : (
                                         <TableRow>
-                                            <TableCell colSpan={5} className="h-24 text-center">
+                                            <TableCell colSpan={6} className="h-24 text-center">
                                                 No hay gastos en esta categoría.
                                             </TableCell>
                                         </TableRow>
@@ -1078,6 +1205,7 @@ export default function ProjectDetailPage() {
                                         <TableCell className="text-right font-mono text-destructive">
                                             -${categoryTotals.usd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                         </TableCell>
+                                        <TableCell />
                                     </TableRow>
                                   </TableFooter>
                               </Table>
@@ -1134,6 +1262,52 @@ export default function ProjectDetailPage() {
         </CardHeader>
       </Card>
       {renderContent()}
+
+      <EditCategoryDialog
+        isOpen={!!editingCategory}
+        onOpenChange={(isOpen) => !isOpen && setEditingCategory(null)}
+        category={editingCategory}
+        onUpdateCategory={handleUpdateCategory}
+      />
+      
+      <AlertDialog open={!!deletingCategory} onOpenChange={(isOpen) => !isOpen && setDeletingCategory(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro de eliminar esta categoría?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la categoría "{deletingCategory?.name}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteCategory} className="bg-destructive hover:bg-destructive/90">Eliminar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <EditExpenseDialog
+        isOpen={!!editingExpense}
+        onOpenChange={(isOpen) => !isOpen && setEditingExpense(null)}
+        expense={editingExpense}
+        onUpdateExpense={handleUpdateExpense}
+        categories={projectCategories}
+        participants={project.participants}
+      />
+
+       <AlertDialog open={!!deletingExpense} onOpenChange={(isOpen) => !isOpen && setDeletingExpense(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro de eliminar este gasto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el gasto: "{deletingExpense?.description}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteExpense} className="bg-destructive hover:bg-destructive/90">Eliminar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
