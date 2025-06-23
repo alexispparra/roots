@@ -202,7 +202,7 @@ export default function ProjectDetailPage() {
   const transactionTotals = useMemo(() => {
     return filteredTransactions.reduce(
       (totals, transaction) => {
-        const sign = transaction.type === 'income' ? 1 : -1;
+        const sign = transaction.type === 'income' ? -1 : 1; // Note: Incomes are positive contributions, expenses are negative
         totals.ars += transaction.amountARS * sign;
         totals.usd += transaction.amountUSD * sign;
         return totals;
@@ -273,13 +273,18 @@ export default function ProjectDetailPage() {
     amount: transactions.filter(t => t.category === cat.name && t.type === 'expense').reduce((acc, t) => acc + t.amountUSD, 0),
   })).filter(d => d.amount > 0);
   
-  const spendingConfig = projectCategories.reduce((acc, category, index) => {
-    acc[category.name.toLowerCase().replace(/ /g, '-')] = {
-      label: category.name,
-      color: CHART_COLORS[index % CHART_COLORS.length]
-    };
-    return acc;
-  }, { amount: { label: "Monto" } } as ChartConfig);
+  const spendingConfig: ChartConfig = {
+    ...projectCategories.reduce((acc, category, index) => {
+      acc[category.name] = {
+        label: category.name,
+        color: CHART_COLORS[index % CHART_COLORS.length],
+      };
+      return acc;
+    }, {} as ChartConfig),
+    amount: {
+      label: 'Monto',
+    },
+  };
   
   const monthlyFlowData = useMemo(() => {
       const monthlyTotals: {[key: string]: { month: string, Gastos: number, Ingresos: number }} = {};
@@ -349,7 +354,7 @@ export default function ProjectDetailPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Gasto Total</CardTitle>
+                      <CardTitle className="text-sm font-medium">Gasto Total (U$S)</CardTitle>
                       <DollarSign className="text-muted-foreground h-4 w-4" />
                   </CardHeader>
                   <CardContent>
@@ -358,7 +363,7 @@ export default function ProjectDetailPage() {
               </Card>
               <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Presupuesto Restante</CardTitle>
+                      <CardTitle className="text-sm font-medium">Presupuesto Restante (U$S)</CardTitle>
                       <Target className="text-muted-foreground h-4 w-4" />
                   </CardHeader>
                   <CardContent>
@@ -376,7 +381,7 @@ export default function ProjectDetailPage() {
               </Card>
                <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Fondos Totales</CardTitle>
+                      <CardTitle className="text-sm font-medium">Fondos Totales (U$S)</CardTitle>
                       <Landmark className="text-muted-foreground h-4 w-4" />
                   </CardHeader>
                   <CardContent>
@@ -396,7 +401,7 @@ export default function ProjectDetailPage() {
                       <TableHeader>
                           <TableRow>
                               <TableHead>Participante</TableHead>
-                              <TableHead className="text-right">Aporte</TableHead>
+                              <TableHead className="text-right">Aporte (U$S)</TableHead>
                               <TableHead className="text-right">Participación</TableHead>
                           </TableRow>
                       </TableHeader>
@@ -412,7 +417,7 @@ export default function ProjectDetailPage() {
                                           <span className="font-medium">{p.name}</span>
                                       </div>
                                   </TableCell>
-                                  <TableCell className="text-right font-mono">${(p.contribution || 0).toLocaleString()}</TableCell>
+                                  <TableCell className="text-right font-mono">${(p.contribution || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
                                   <TableCell className="text-right font-mono">{p.share || 0}%</TableCell>
                               </TableRow>
                           ))}
@@ -423,7 +428,7 @@ export default function ProjectDetailPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="font-headline">Gastos por Categoría</CardTitle>
-                  <CardDescription>Distribución y desglose de los gastos.</CardDescription>
+                  <CardDescription>Distribución de los gastos en U$S.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-6">
                   {spendingByCategoryData.length > 0 ? (
@@ -447,7 +452,7 @@ export default function ProjectDetailPage() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Categoría</TableHead>
-                          <TableHead className="text-right">Monto Gastado</TableHead>
+                          <TableHead className="text-right">Monto Gastado (U$S)</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -510,7 +515,7 @@ export default function ProjectDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="font-headline">Resumen de Flujo de Caja Anual ({new Date().getFullYear()})</CardTitle>
-              <CardDescription>Análisis de gastos e ingresos del proyecto a lo largo del tiempo.</CardDescription>
+              <CardDescription>Análisis de gastos e ingresos (U$S) del proyecto a lo largo del tiempo.</CardDescription>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={barChartConfig} className="h-[250px] w-full">
@@ -599,7 +604,7 @@ export default function ProjectDetailPage() {
             <CardContent>
               {cashflowCategoryTotals.length > 0 && (
                 <div className="mb-6 p-4 bg-muted/50 rounded-lg">
-                  <h4 className="mb-2 font-medium text-sm">Resumen de Gastos del Período</h4>
+                  <h4 className="mb-2 font-medium text-sm">Resumen de Gastos del Período (U$S)</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {cashflowCategoryTotals.map(cat => (
                       <div key={cat.name}>
@@ -646,7 +651,7 @@ export default function ProjectDetailPage() {
                 </TableBody>
                  <TableFooter>
                   <TableRow className="font-bold bg-muted/50 hover:bg-muted/80">
-                    <TableCell colSpan={3} className="text-right">Neto del Período</TableCell>
+                    <TableCell colSpan={3} className="text-right">Neto del Período (U$S)</TableCell>
                     <TableCell className={cn(
                       "text-right font-mono",
                       cashflowTotal >= 0 ? 'text-emerald-600' : 'text-destructive'
@@ -764,18 +769,18 @@ export default function ProjectDetailPage() {
                       <TableCell><Badge variant="secondary">{t.paymentMethod}</Badge></TableCell>
                        <TableCell className={cn(
                           "text-right font-medium font-mono",
-                          t.type === 'income' ? 'text-emerald-600' : 'text-destructive'
+                          t.type === 'income' ? 'text-emerald-600' : ''
                         )}>
-                        {t.type === 'income' ? '+' : '-'}${t.amountARS.toLocaleString('es-AR')}
+                        {t.type === 'income' ? `+${t.amountARS.toLocaleString('es-AR')}` : `-${t.amountARS.toLocaleString('es-AR')}`}
                       </TableCell>
                        <TableCell className="text-right font-mono text-muted-foreground text-sm">
                         {t.exchangeRate.toLocaleString('es-AR')}
                        </TableCell>
                        <TableCell className={cn(
                           "text-right font-medium font-mono",
-                          t.type === 'income' ? 'text-emerald-600' : 'text-destructive'
+                          t.type === 'income' ? 'text-emerald-600' : ''
                         )}>
-                        {t.type === 'income' ? '+' : '-'}${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        {t.type === 'income' ? `+${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : `-${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
                       </TableCell>
                     </TableRow>
                   ))
@@ -789,7 +794,7 @@ export default function ProjectDetailPage() {
                 </TableBody>
                 <TableFooter>
                   <TableRow className="font-bold bg-muted/50 hover:bg-muted/80">
-                    <TableCell colSpan={5} className="text-right">Total del Período</TableCell>
+                    <TableCell colSpan={5} className="text-right">Neto del Período</TableCell>
                     <TableCell className={cn(
                       "text-right font-mono",
                       transactionTotals.ars >= 0 ? 'text-emerald-600' : 'text-destructive'
