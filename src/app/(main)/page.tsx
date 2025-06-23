@@ -17,152 +17,113 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, Wallet, TrendingUp, TrendingDown, PiggyBank, PlusCircle } from "lucide-react";
+import { ArrowUpRight, Briefcase, Users, Target } from "lucide-react";
 import Link from "next/link";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
-import type { ChartConfig } from "@/components/ui/chart";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const chartData = [
-  { month: "Enero", income: 2500, expenses: 1800 },
-  { month: "Febrero", income: 2800, expenses: 2000 },
-  { month: "Marzo", income: 3200, expenses: 2400 },
-  { month: "Abril", income: 2900, expenses: 2100 },
-  { month: "Mayo", income: 3500, expenses: 2600 },
-  { month: "Junio", income: 3100, expenses: 2300 },
-];
 
-const chartConfig = {
-  income: {
-    label: "Ingresos",
-    color: "hsl(var(--chart-1))",
-  },
-  expenses: {
-    label: "Gastos",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig;
-
-const recentTransactions = [
-    { id: 'TRN-001', description: 'Compras en el mercado', category: 'Comida', type: 'expense', amount: 75.60 },
-    { id: 'TRN-002', description: 'Salario Mensual', category: 'Ingresos', type: 'income', amount: 2500.00 },
-    { id: 'TRN-003', description: 'Gasolina', category: 'Transporte', type: 'expense', amount: 45.30 },
-    { id: 'TRN-004', description: 'Factura de Internet', category: 'Cuentas', type: 'expense', amount: 60.00 },
-    { id: 'TRN-005', description: 'Zapatos Nuevos', category: 'Compras', type: 'expense', amount: 120.00 },
+const projects = [
+    { 
+        id: 'PROJ-001', 
+        name: 'Lanzamiento App Móvil', 
+        status: 'En Curso', 
+        progress: 75,
+        participants: [
+            { name: 'AL', src: 'https://placehold.co/40x40.png' },
+            { name: 'BC', src: 'https://placehold.co/40x40.png' },
+        ]
+    },
+    { 
+        id: 'PROJ-002', 
+        name: 'Rediseño Web Corporativa', 
+        status: 'Completado', 
+        progress: 100,
+        participants: [
+            { name: 'DE', src: 'https://placehold.co/40x40.png' },
+        ]
+    },
+    { 
+        id: 'PROJ-003', 
+        name: 'Campaña Marketing Q3', 
+        status: 'En Curso', 
+        progress: 40,
+        participants: [
+            { name: 'FG', src: 'https://placehold.co/40x40.png' },
+            { name: 'HI', src: 'https://placehold.co/40x40.png' },
+            { name: 'JK', src: 'https://placehold.co/40x40.png' },
+        ]
+    },
+    { 
+        id: 'PROJ-004', 
+        name: 'Investigación de Mercado', 
+        status: 'Próximo', 
+        progress: 0,
+        participants: [
+            { name: 'LM', src: 'https://placehold.co/40x40.png' },
+        ]
+    },
 ]
 
 export default function DashboardPage() {
   return (
     <div className="grid gap-6">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline">Panel Global</CardTitle>
+          <CardDescription>Un resumen de todos tus emprendimientos.</CardDescription>
+        </CardHeader>
+      </Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Balance Actual</CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Proyectos Activos</CardTitle>
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-headline">$12,450.00</div>
+            <div className="text-2xl font-bold font-headline">2</div>
             <p className="text-xs text-muted-foreground">
-              En todas las cuentas
+              de 4 proyectos totales
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ingresos este Mes</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Inversión Total</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-headline text-emerald-600">+$3,100.00</div>
+            <div className="text-2xl font-bold font-headline text-emerald-600">$45,500.00</div>
             <p className="text-xs text-muted-foreground">
-              +5.2% desde el mes pasado
+              en todos los proyectos
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gastos este Mes</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Próxima Meta</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-headline text-destructive">-$2,300.00</div>
+            <div className="text-2xl font-bold font-headline">Campaña Q3</div>
             <p className="text-xs text-muted-foreground">
-              +10.1% desde el mes pasado
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ahorros</CardTitle>
-            <PiggyBank className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold font-headline">$800.00</div>
-            <p className="text-xs text-muted-foreground">
-              Ahorrado este mes
+              Finaliza en 2 semanas
             </p>
           </CardContent>
         </Card>
       </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="font-headline">Ingresos vs. Gastos</CardTitle>
-             <CardDescription>Un resumen de tu flujo de caja de los últimos 6 meses.</CardDescription>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <ChartContainer config={chartConfig} className="h-[300px] w-full">
-              <BarChart accessibilityLayer data={chartData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="month"
-                  tickLine={false}
-                  tickMargin={10}
-                  axisLine={false}
-                  tickFormatter={(value) => value.slice(0, 3)}
-                />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent indicator="dot" />}
-                />
-                <Bar dataKey="income" fill="var(--color-income)" radius={8} />
-                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={8} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-         <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Acciones Rápidas</CardTitle>
-                <CardDescription>
-                    Añade nuevas transacciones fácilmente.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-                <Button size="lg">
-                  <PlusCircle className="mr-2" /> Añadir Gasto
-                </Button>
-                <Button size="lg" variant="secondary">
-                  <PlusCircle className="mr-2" /> Añadir Ingreso
-                </Button>
-            </CardContent>
-        </Card>
-      </div>
+      
       <Card>
         <CardHeader className="flex flex-row items-center">
           <div className="grid gap-2">
-            <CardTitle className="font-headline">Transacciones Recientes</CardTitle>
+            <CardTitle className="font-headline">Resumen de Proyectos</CardTitle>
             <CardDescription>
-              Un resumen de tus últimas actividades financieras.
+              El estado actual de tus emprendimientos.
             </CardDescription>
           </div>
           <Button asChild size="sm" className="ml-auto gap-1">
-            <Link href="/transactions">
-              Ver Todas
+            <Link href="/projects">
+              Ver Todos
               <ArrowUpRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -171,20 +132,37 @@ export default function DashboardPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Descripción</TableHead>
-                <TableHead>Categoría</TableHead>
-                <TableHead className="text-right">Monto</TableHead>
+                <TableHead>Nombre del Proyecto</TableHead>
+                <TableHead>Participantes</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Progreso</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentTransactions.map(trx => (
-              <TableRow key={trx.id}>
-                <TableCell className="font-medium">{trx.description}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{trx.category}</Badge>
+              {projects.map(proj => (
+              <TableRow key={proj.id}>
+                <TableCell className="font-medium">
+                  <Link href="/project-detail" className="hover:underline">
+                    {proj.name}
+                  </Link>
                 </TableCell>
-                <TableCell className={`text-right font-medium ${trx.type === 'income' ? 'text-emerald-600' : 'text-destructive'}`}>
-                  {trx.type === 'income' ? '+' : '-'}${trx.amount.toFixed(2)}
+                <TableCell>
+                  <div className="flex -space-x-2">
+                    {proj.participants.map((p, i) => (
+                      <Avatar key={i} className="border-2 border-card">
+                        <AvatarImage src={p.src} />
+                        <AvatarFallback>{p.name}</AvatarFallback>
+                      </Avatar>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={proj.status === 'Completado' ? 'secondary' : 'default'} className={proj.status === 'En Curso' ? 'bg-blue-500/20 text-blue-700' : proj.status === 'Próximo' ? 'bg-amber-500/20 text-amber-700' : ''}>
+                    {proj.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Progress value={proj.progress} className="h-2" />
                 </TableCell>
               </TableRow>
               ))}

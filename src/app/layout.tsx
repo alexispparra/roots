@@ -11,8 +11,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'FinanceFlow',
-  description: 'Realiza un seguimiento de tus gastos y gestiona tus finanzas sin esfuerzo.',
+  title: 'Emprende',
+  description: 'Gestiona tus proyectos y emprendimientos de forma centralizada.',
 };
 
 export default function RootLayout({
