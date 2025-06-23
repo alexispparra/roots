@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
+import { Users, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -13,6 +13,7 @@ const projects = [
         id: 'PROJ-001', 
         name: 'Lanzamiento App Móvil', 
         description: 'Desarrollo y lanzamiento de una nueva aplicación móvil para iOS y Android.',
+        address: 'Av. Libertador 498, Buenos Aires',
         status: 'En Curso',
         investment: '10,000',
         participants: [
@@ -24,6 +25,7 @@ const projects = [
         id: 'PROJ-002', 
         name: 'Rediseño Web Corporativa', 
         description: 'Actualización completa del sitio web de la empresa con un nuevo diseño y CMS.',
+        address: 'Calle Falsa 123, Springfield',
         status: 'Completado',
         investment: '25,000', 
         participants: [
@@ -34,6 +36,7 @@ const projects = [
         id: 'PROJ-003', 
         name: 'Campaña Marketing Q3', 
         description: 'Campaña publicitaria digital para el tercer trimestre del año.',
+        address: 'Av. Siempre Viva 742, Springfield',
         status: 'En Curso',
         investment: '7,500', 
         participants: [
@@ -46,6 +49,7 @@ const projects = [
         id: 'PROJ-004', 
         name: 'Investigación de Mercado', 
         description: 'Estudio de mercado para identificar nuevas oportunidades de negocio.',
+        address: '1st Street, Washington D.C.',
         status: 'Próximo',
         investment: '3,000', 
         participants: [
@@ -80,6 +84,10 @@ export default function ProjectsPage() {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Inversión</span>
                 <span className="font-semibold">${project.investment}</span>
+              </div>
+               <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground flex items-center gap-2"><MapPin className="h-4 w-4" /> Dirección</span>
+                <span className="font-medium truncate max-w-[150px] text-right">{project.address}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground flex items-center gap-2"><Users className="h-4 w-4" /> Participantes</span>

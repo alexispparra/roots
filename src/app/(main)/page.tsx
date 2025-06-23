@@ -29,6 +29,7 @@ const projects = [
         name: 'Lanzamiento App Móvil', 
         status: 'En Curso', 
         progress: 75,
+        address: 'Av. Libertador 498, Buenos Aires',
         participants: [
             { name: 'AL', src: 'https://placehold.co/40x40.png' },
             { name: 'BC', src: 'https://placehold.co/40x40.png' },
@@ -39,6 +40,7 @@ const projects = [
         name: 'Rediseño Web Corporativa', 
         status: 'Completado', 
         progress: 100,
+        address: 'Calle Falsa 123, Springfield',
         participants: [
             { name: 'DE', src: 'https://placehold.co/40x40.png' },
         ]
@@ -48,6 +50,7 @@ const projects = [
         name: 'Campaña Marketing Q3', 
         status: 'En Curso', 
         progress: 40,
+        address: 'Av. Siempre Viva 742, Springfield',
         participants: [
             { name: 'FG', src: 'https://placehold.co/40x40.png' },
             { name: 'HI', src: 'https://placehold.co/40x40.png' },
@@ -59,6 +62,7 @@ const projects = [
         name: 'Investigación de Mercado', 
         status: 'Próximo', 
         progress: 0,
+        address: '1st Street, Washington D.C.',
         participants: [
             { name: 'LM', src: 'https://placehold.co/40x40.png' },
         ]

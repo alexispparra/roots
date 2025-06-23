@@ -11,7 +11,7 @@ import { Pie, PieChart } from "recharts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link";
-import { Users, DollarSign, Target, Landmark } from "lucide-react";
+import { Users, DollarSign, Target, Landmark, MapPin } from "lucide-react";
 import { CreateExpenseDialog } from "@/components/create-expense-dialog";
 import { CreateCategoryDialog } from "@/components/create-category-dialog";
 
@@ -19,6 +19,7 @@ import { CreateCategoryDialog } from "@/components/create-category-dialog";
 const projectsData = {
   'PROJ-001': {
     name: "Lanzamiento App Móvil",
+    address: "Av. Libertador 498, Buenos Aires",
     status: "En Curso",
     summaryData: [
       { metric: "Gasto Total", value: "$7,000", icon: <DollarSign /> },
@@ -58,6 +59,7 @@ const projectsData = {
   },
   'PROJ-003': {
     name: "Campaña Marketing Q3",
+    address: "Av. Siempre Viva 742, Springfield",
     status: "En Curso",
     summaryData: [
       { metric: "Gasto Total", value: "$4,200", icon: <DollarSign /> },
@@ -145,8 +147,8 @@ export default function ProjectDetailPage() {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-              <Card className="lg:col-span-3">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="font-headline">Participantes y Aportes</CardTitle>
                   <CardDescription>Inversión individual y participación en el proyecto.</CardDescription>
@@ -180,10 +182,10 @@ export default function ProjectDetailPage() {
                   </Table>
                 </CardContent>
               </Card>
-              <Card className="lg:col-span-2">
+              <Card>
                   <CardHeader>
                       <CardTitle className="font-headline">Gastos por Categoría</CardTitle>
-                      <CardDescription>Distribución de los gastos actuales del proyecto.</CardDescription>
+                      <CardDescription>Distribución de los gastos.</CardDescription>
                   </CardHeader>
                   <CardContent>
                       <ChartContainer config={project.spendingConfig} className="mx-auto aspect-square max-h-[250px]">
@@ -194,6 +196,20 @@ export default function ProjectDetailPage() {
                       </ChartContainer>
                   </CardContent>
               </Card>
+               <Card className="lg:col-span-3">
+                <CardHeader>
+                    <CardTitle className="font-headline flex items-center gap-2">
+                        <MapPin className="h-5 w-5" />
+                        Ubicación del Proyecto
+                    </CardTitle>
+                    <CardDescription>{project.address}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="h-64 w-full rounded-lg bg-muted flex items-center justify-center">
+                        <p className="text-muted-foreground">Mapa no disponible</p>
+                    </div>
+                </CardContent>
+            </Card>
             </div>
           </div>
         </TabsContent>

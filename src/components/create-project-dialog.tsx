@@ -29,7 +29,8 @@ import { Textarea } from "@/components/ui/textarea"
 
 const formSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
-  description: z.string().min(1, "La descripción es requerida."),
+  description: z.string().optional(),
+  address: z.string().min(1, "La dirección es requerida."),
 })
 
 export function CreateProjectDialog() {
@@ -39,6 +40,7 @@ export function CreateProjectDialog() {
     defaultValues: {
       name: "",
       description: "",
+      address: "",
     },
   })
 
@@ -86,12 +88,25 @@ export function CreateProjectDialog() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Descripción</FormLabel>
+                    <FormLabel>Descripción (Opcional)</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Describe brevemente tu proyecto."
                         {...field}
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dirección</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Av. Corrientes 123, CABA" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

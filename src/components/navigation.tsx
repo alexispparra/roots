@@ -18,6 +18,7 @@ import {
   Settings,
   Tag,
   ChevronRight,
+  FolderKanban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -105,25 +106,31 @@ export function Navigation() {
         </SidebarMenuButton>
         <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
           {activeProjectsData.map((project) => (
-            <SidebarMenuSubItem key={project.id}>
-              <div className="flex items-center gap-1 pr-2">
-                 <Button 
+            <SidebarMenuSubItem key={project.id} className="flex flex-col items-start">
+               <div className="flex w-full items-center">
+                <Button 
                   variant="ghost" 
                   size="icon" 
                   className="h-8 w-8 shrink-0"
-                  onClick={() => toggleProject(project.id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toggleProject(project.id)
+                  }}
                  >
                     <ChevronRight className={cn("h-4 w-4 transition-transform", openProjects[project.id] && "rotate-90")} />
                  </Button>
-                <Link href={`/project-detail?id=${project.id}`} className={cn("flex-1 text-sm font-normal text-sidebar-foreground hover:text-sidebar-accent-foreground hover:underline truncate", currentProjectId === project.id && 'font-semibold text-sidebar-accent-foreground')}>
-                  {project.name}
+                <Link href={`/project-detail?id=${project.id}`} className={cn("flex-1 text-sm font-normal text-sidebar-foreground hover:text-sidebar-accent-foreground hover:underline truncate py-2 -ml-2 pl-2", currentProjectId === project.id && 'font-semibold text-sidebar-accent-foreground')}>
+                  <div className="flex items-center gap-2">
+                    <FolderKanban className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{project.name}</span>
+                  </div>
                 </Link>
               </div>
-              {openProjects[project.id] && (
-                <ul className="pl-10 mt-1 flex flex-col gap-1">
+              {openProjects[project.id] && project.categories.length > 0 && (
+                <ul className="pl-10 w-full flex flex-col gap-1 pb-1">
                   {project.categories.map(category => (
                     <li key={category.name}>
-                      <Link href={`/project-detail?id=${project.id}#categories`} className={cn("flex items-center gap-2 p-1.5 text-sm rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground")}>
+                      <Link href={`/project-detail?id=${project.id}&tab=categories`} className={cn("flex items-center gap-2 p-1.5 text-sm rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground")}>
                           <Tag className="h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{category.name}</span>
                       </Link>
