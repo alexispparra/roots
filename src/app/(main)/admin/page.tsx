@@ -9,23 +9,25 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from 'next/navigation';
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminPage() {
-  const { projects, updateParticipantRole } = useProjects();
-  const { isAppAdmin, loading } = useAuth();
+  const { projects, updateParticipantRole, loading: projectsLoading } = useProjects();
+  const { isAppAdmin, loading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !isAppAdmin) {
+    if (!authLoading && !isAppAdmin) {
       router.push('/'); // Redirect non-admins to the dashboard
     }
-  }, [isAppAdmin, loading, router]);
+  }, [isAppAdmin, authLoading, router]);
 
-  if (loading || !isAppAdmin) {
+  const isLoading = authLoading || projectsLoading;
+
+  if (!isAppAdmin && !authLoading) {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        <p>Verificando permisos de administrador...</p>
+        <p>No tienes permiso para acceder a esta página.</p>
       </div>
     );
   }
@@ -41,7 +43,32 @@ export default function AdminPage() {
         </CardHeader>
       </Card>
 
-      {projects.length === 0 ? (
+      {isLoading ? (
+         <div className="grid gap-8">
+            {[1, 2].map(i => (
+                <Card key={i}>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-1/2" />
+                        <Skeleton className="h-4 w-3/4" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                       {[1, 2, 3].map(j => (
+                         <div key={j} className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <Skeleton className="h-12 w-12 rounded-full" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-3 w-32" />
+                                </div>
+                            </div>
+                            <Skeleton className="h-10 w-[180px]" />
+                        </div>
+                       ))}
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+      ) : projects.length === 0 ? (
         <Card>
             <CardContent className="pt-6">
                 <p className="text-muted-foreground">No hay proyectos para administrar todavía.</p>

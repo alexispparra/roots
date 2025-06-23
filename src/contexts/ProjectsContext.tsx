@@ -1,14 +1,29 @@
+
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from './AuthContext';
+import { db } from '@/lib/firebase';
+import { 
+    collection, 
+    query, 
+    where, 
+    onSnapshot, 
+    addDoc, 
+    doc, 
+    updateDoc, 
+    Timestamp,
+    serverTimestamp,
+    getDoc
+} from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 // --- TYPES ---
 export type Participant = {
     name: string;
     email: string;
     role: 'admin' | 'editor' | 'viewer';
-    src?: string; // For avatar image
+    src?: string;
     fallback?: string;
     contribution?: number;
     share?: number;
@@ -30,8 +45,10 @@ export type Project = {
     investment: string;
     googleSheetId?: string;
     participants: Participant[];
+    participantEmails: string[];
     progress: number;
     categories: Category[];
+    createdAt: Timestamp;
 };
 
 export type AddProjectData = {
@@ -50,192 +67,210 @@ export type UpdateProjectData = {
 
 type ProjectsContextType = {
     projects: Project[];
-    addProject: (project: AddProjectData) => void;
+    loading: boolean;
+    addProject: (project: AddProjectData) => Promise<void>;
     getProjectById: (id: string | null) => Project | undefined;
-    updateProjectStatus: (projectId: string, newStatus: ProjectStatus) => void;
-    addCategoryToProject: (projectId: string, category: Category) => void;
-    updateCategoryInProject: (projectId: string, categoryName: string, newCategoryData: { budget: number }) => void;
-    deleteCategoryFromProject: (projectId: string, categoryName: string) => void;
-    updateProject: (projectId: string, projectData: UpdateProjectData) => void;
-    updateParticipantRole: (projectId: string, participantEmail: string, newRole: 'admin' | 'editor' | 'viewer') => void;
+    updateProjectStatus: (projectId: string, newStatus: ProjectStatus) => Promise<void>;
+    addCategoryToProject: (projectId: string, category: Category) => Promise<void>;
+    updateCategoryInProject: (projectId: string, categoryName: string, newCategoryData: { budget: number }) => Promise<void>;
+    deleteCategoryFromProject: (projectId: string, categoryName: string) => Promise<void>;
+    updateProject: (projectId: string, projectData: UpdateProjectData) => Promise<void>;
+    updateParticipantRole: (projectId: string, participantEmail: string, newRole: 'admin' | 'editor' | 'viewer') => Promise<void>;
 };
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
 
-// --- MOCK DATA (Single Source of Truth) ---
-const PROJECTS_MOCK_DATA: Project[] = [
-    { 
-        id: 'PROJ-001', 
-        name: 'Lanzamiento App Móvil', 
-        description: 'Desarrollo y lanzamiento de una nueva aplicación móvil para iOS y Android.',
-        address: 'Av. Libertador 498, Buenos Aires',
-        status: 'En Curso',
-        investment: '10,000',
-        progress: 75,
-        googleSheetId: '',
-        participants: [
-            { name: 'Ana García', email: 'ana.garcia@example.com', role: 'admin', contribution: 5000, share: 50, src: 'https://placehold.co/40x40.png', fallback: 'AG' },
-            { name: 'Luis Torres', email: 'luis.torres@example.com', role: 'editor', contribution: 3000, share: 30, src: 'https://placehold.co/40x40.png', fallback: 'LT' },
-            { name: 'Carlos Ruiz', email: 'carlos.ruiz@example.com', role: 'viewer', contribution: 2000, share: 20, src: 'https://placehold.co/40x40.png', fallback: 'CR' },
-        ],
-        categories: [
-            { name: "Desarrollo", budget: 5000 },
-            { name: "Diseño UI/UX", budget: 2000 },
-            { name: "Marketing", budget: 3000 },
-            { name: "Albañilería", budget: 10000 },
-        ]
-    },
-    { 
-        id: 'PROJ-002', 
-        name: 'Rediseño Web Corporativa', 
-        description: 'Actualización completa del sitio web de la empresa con un nuevo diseño y CMS.',
-        address: 'Calle Falsa 123, Springfield',
-        status: 'Completado',
-        investment: '25,000',
-        progress: 100,
-        googleSheetId: '',
-        participants: [
-            { name: 'Daniela Ponce', email: 'daniela.ponce@example.com', role: 'admin', src: 'https://placehold.co/40x40.png', fallback: 'DP' },
-        ],
-        categories: []
-    },
-    { 
-        id: 'PROJ-003', 
-        name: 'Campaña Marketing Q3', 
-        description: 'Campaña publicitaria digital para el tercer trimestre del año.',
-        address: 'Av. Siempre Viva 742, Springfield',
-        status: 'En Curso',
-        investment: '7,500',
-        progress: 40,
-        googleSheetId: '',
-        participants: [
-            { name: 'Fernanda Gómez', email: 'fernanda.gomez@example.com', role: 'admin', contribution: 4000, share: 53, src: 'https://placehold.co/40x40.png', fallback: 'FG' },
-            { name: 'Hugo Iglesias', email: 'hugo.iglesias@example.com', role: 'viewer', contribution: 2000, share: 27, src: 'https://placehold.co/40x40.png', fallback: 'HI' },
-            { name: 'Julia Ponce', email: 'julia.ponce@example.com', role: 'viewer', contribution: 1500, share: 20, src: 'https://placehold.co/40x40.png', fallback: 'JP' },
-        ],
-        categories: [
-            { name: "Publicidad", budget: 5000 },
-            { name: "Contenido", budget: 2500 },
-        ]
-    },
-    { 
-        id: 'PROJ-004', 
-        name: 'Investigación de Mercado', 
-        description: 'Estudio de mercado para identificar nuevas oportunidades de negocio.',
-        address: '1st Street, Washington D.C.',
-        status: 'Próximo',
-        investment: '3,000',
-        progress: 0,
-        googleSheetId: '',
-        participants: [
-            { name: 'Laura Méndez', email: 'laura.mendez@example.com', role: 'admin', src: 'https://placehold.co/40x40.png', fallback: 'LM' },
-        ],
-        categories: []
-    },
-];
-
 export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
-    const [projects, setProjects] = useState<Project[]>(PROJECTS_MOCK_DATA);
-    const { user } = useAuth();
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { user, isAppAdmin } = useAuth();
+    const { toast } = useToast();
 
-    const addProject = (projectData: AddProjectData) => {
-        if (!user || !user.email) return;
+    useEffect(() => {
+        if (!user) {
+            setProjects([]);
+            setLoading(false);
+            return;
+        };
 
-        const newProject: Project = {
+        setLoading(true);
+
+        let q;
+        const projectsCol = collection(db, 'projects');
+
+        if (isAppAdmin) {
+            // App admin can see all projects
+            q = query(projectsCol);
+        } else {
+            // Regular users only see projects they are part of
+            q = query(projectsCol, where("participantEmails", "array-contains", user.email));
+        }
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const projectsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Project));
+            setProjects(projectsData);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching projects:", error);
+            toast({
+                title: "Error al Cargar Proyectos",
+                description: "No se pudieron cargar los datos de los proyectos. Inténtalo de nuevo.",
+                variant: "destructive",
+            });
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user, isAppAdmin, toast]);
+    
+    const addProject = async (projectData: AddProjectData) => {
+        if (!user || !user.email) {
+            toast({ title: "No autenticado", description: "Debes iniciar sesión para crear un proyecto.", variant: "destructive" });
+            return;
+        }
+
+        const newProject = {
             ...projectData,
-            id: `PROJ-${String(projects.length + 1).padStart(3, '0')}`,
-            status: 'Próximo',
+            status: 'Próximo' as ProjectStatus,
             progress: 0,
             participants: [
                 {
                     name: user.displayName || user.email,
                     email: user.email,
-                    role: 'admin',
+                    role: 'admin' as const,
                     src: user.photoURL || undefined,
                     fallback: user.displayName?.split(' ').map(n => n[0]).join('') || user.email[0].toUpperCase(),
                 }
             ],
+            participantEmails: [user.email],
             categories: [],
             investment: '0',
             description: projectData.description || "Sin descripción.",
+            createdAt: serverTimestamp(),
         };
-        setProjects(prevProjects => [...prevProjects, newProject]);
+
+        try {
+            await addDoc(collection(db, 'projects'), newProject);
+            toast({ title: "¡Proyecto Creado!", description: `El proyecto "${projectData.name}" ha sido creado.` });
+        } catch (error) {
+            console.error("Error creating project:", error);
+            toast({ title: "Error", description: "No se pudo crear el proyecto.", variant: "destructive" });
+        }
     };
     
-    const getProjectById = (id: string | null): Project | undefined => {
+    const getProjectById = useCallback((id: string | null): Project | undefined => {
         if (!id) return undefined;
         return projects.find(p => p.id === id);
+    }, [projects]);
+
+    const updateProjectStatus = async (projectId: string, newStatus: ProjectStatus) => {
+        const projectRef = doc(db, 'projects', projectId);
+        try {
+            await updateDoc(projectRef, { status: newStatus });
+            toast({ title: "Estado Actualizado", description: "El estado del proyecto ha sido actualizado." });
+        } catch (error) {
+            console.error("Error updating status:", error);
+            toast({ title: "Error", description: "No se pudo actualizar el estado.", variant: "destructive" });
+        }
+    };
+    
+    const updateProject = async (projectId: string, projectData: UpdateProjectData) => {
+        const projectRef = doc(db, 'projects', projectId);
+        try {
+            await updateDoc(projectRef, projectData);
+            toast({ title: "Proyecto Actualizado", description: "Los datos del proyecto han sido guardados." });
+        } catch (error) {
+            console.error("Error updating project:", error);
+            toast({ title: "Error", description: "No se pudo actualizar el proyecto.", variant: "destructive" });
+        }
     };
 
-    const updateProjectStatus = (projectId: string, newStatus: ProjectStatus) => {
-        setProjects(prevProjects => 
-            prevProjects.map(p => 
-                p.id === projectId ? { ...p, status: newStatus } : p
-            )
-        );
+    const addCategoryToProject = async (projectId: string, category: Category) => {
+        const projectRef = doc(db, 'projects', projectId);
+        try {
+            const projectSnap = await getDoc(projectRef);
+            if(projectSnap.exists()){
+                const projectData = projectSnap.data();
+                const newCategories = [...projectData.categories, category];
+                await updateDoc(projectRef, { categories: newCategories });
+                toast({ title: "Categoría Añadida" });
+            }
+        } catch (error) {
+            console.error("Error adding category:", error);
+            toast({ title: "Error", description: "No se pudo añadir la categoría.", variant: "destructive" });
+        }
     };
 
-    const addCategoryToProject = (projectId: string, category: Category) => {
-        setProjects(prevProjects => 
-            prevProjects.map(p => {
-                if (p.id === projectId) {
-                    const existingCategory = p.categories.find(c => c.name === category.name);
-                    if (existingCategory) return p; // Avoid duplicates
-                    return { ...p, categories: [...p.categories, category] };
-                }
-                return p;
-            })
-        );
+    const updateCategoryInProject = async (projectId: string, categoryName: string, newCategoryData: { budget: number }) => {
+        const projectRef = doc(db, 'projects', projectId);
+        try {
+            const projectSnap = await getDoc(projectRef);
+            if(projectSnap.exists()){
+                const projectData = projectSnap.data();
+                const updatedCategories = projectData.categories.map((c: Category) => 
+                    c.name === categoryName ? { ...c, budget: newCategoryData.budget } : c
+                );
+                await updateDoc(projectRef, { categories: updatedCategories });
+                toast({ title: "Categoría Actualizada" });
+            }
+        } catch (error) {
+            console.error("Error updating category:", error);
+            toast({ title: "Error", description: "No se pudo actualizar la categoría.", variant: "destructive" });
+        }
     };
 
-    const updateCategoryInProject = (projectId: string, categoryName: string, newCategoryData: { budget: number }) => {
-        setProjects(prevProjects =>
-            prevProjects.map(p => {
-                if (p.id === projectId) {
-                    const updatedCategories = p.categories.map(c =>
-                        c.name === categoryName ? { ...c, budget: newCategoryData.budget } : c
-                    );
-                    return { ...p, categories: updatedCategories };
-                }
-                return p;
-            })
-        );
+    const deleteCategoryFromProject = async (projectId: string, categoryName: string) => {
+        const projectRef = doc(db, 'projects', projectId);
+        try {
+            const projectSnap = await getDoc(projectRef);
+            if (projectSnap.exists()) {
+                const projectData = projectSnap.data();
+                const updatedCategories = projectData.categories.filter((c: Category) => c.name !== categoryName);
+                await updateDoc(projectRef, { categories: updatedCategories });
+                toast({ title: "Categoría Eliminada" });
+            }
+        } catch (error) {
+             console.error("Error deleting category:", error);
+            toast({ title: "Error", description: "No se pudo eliminar la categoría.", variant: "destructive" });
+        }
     };
 
-    const deleteCategoryFromProject = (projectId: string, categoryName: string) => {
-        setProjects(prevProjects =>
-            prevProjects.map(p =>
-                p.id === projectId
-                    ? { ...p, categories: p.categories.filter(c => c.name !== categoryName) }
-                    : p
-            )
-        );
+    const updateParticipantRole = async (projectId: string, participantEmail: string, newRole: 'admin' | 'editor' | 'viewer') => {
+        const projectRef = doc(db, 'projects', projectId);
+        try {
+             const projectSnap = await getDoc(projectRef);
+            if (projectSnap.exists()) {
+                const projectData = projectSnap.data();
+                const updatedParticipants = projectData.participants.map((p: Participant) => 
+                    p.email === participantEmail ? { ...p, role: newRole } : p
+                );
+                await updateDoc(projectRef, { participants: updatedParticipants });
+                toast({ title: "Rol Actualizado", description: `El rol de ${participantEmail} ha sido actualizado.` });
+            }
+        } catch (error) {
+            console.error("Error updating role:", error);
+            toast({ title: "Error", description: "No se pudo actualizar el rol del participante.", variant: "destructive" });
+        }
     };
 
-    const updateProject = (projectId: string, projectData: UpdateProjectData) => {
-        setProjects(prevProjects =>
-            prevProjects.map(p =>
-                p.id === projectId ? { ...p, ...projectData } : p
-            )
-        );
-    };
-
-    const updateParticipantRole = (projectId: string, participantEmail: string, newRole: 'admin' | 'editor' | 'viewer') => {
-        setProjects(prevProjects =>
-            prevProjects.map(p => {
-                if (p.id === projectId) {
-                    const updatedParticipants = p.participants.map(participant =>
-                        participant.email === participantEmail ? { ...participant, role: newRole } : participant
-                    );
-                    return { ...p, participants: updatedParticipants };
-                }
-                return p;
-            })
-        );
+    const contextValue = {
+        projects,
+        loading,
+        addProject,
+        getProjectById,
+        updateProjectStatus,
+        addCategoryToProject,
+        updateCategoryInProject,
+        deleteCategoryFromProject,
+        updateProject,
+        updateParticipantRole,
     };
 
     return (
-        <ProjectsContext.Provider value={{ projects, addProject, getProjectById, updateProjectStatus, addCategoryToProject, updateCategoryInProject, deleteCategoryFromProject, updateProject, updateParticipantRole }}>
+        <ProjectsContext.Provider value={contextValue}>
             {children}
         </ProjectsContext.Provider>
     );

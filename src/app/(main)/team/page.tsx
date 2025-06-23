@@ -7,23 +7,54 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useProjects } from "@/contexts/ProjectsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Participant } from "@/contexts/ProjectsContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TeamPage() {
-  const { projects, updateParticipantRole } = useProjects();
+  const { projects, updateParticipantRole, loading } = useProjects();
   const { user } = useAuth();
 
-  return (
-    <div className="grid gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Gestión de Equipo y Permisos</CardTitle>
-          <CardDescription>
-            Asigna roles a los participantes en cada proyecto. Solo los administradores pueden cambiar los permisos.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+  const renderContent = () => {
+    if (loading) {
+       return (
+         <div className="grid gap-8">
+            {[1, 2].map(i => (
+                <Card key={i}>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-1/2" />
+                        <Skeleton className="h-4 w-3/4" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                       {[1, 2, 3].map(j => (
+                         <div key={j} className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <Skeleton className="h-12 w-12 rounded-full" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-3 w-32" />
+                                </div>
+                            </div>
+                            <Skeleton className="h-10 w-[180px]" />
+                        </div>
+                       ))}
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+       )
+    }
 
-      <div className="grid gap-8">
+    if (projects.length === 0) {
+        return (
+            <Card>
+                <CardContent className="pt-6 text-center text-muted-foreground">
+                    Aún no participas en ningún proyecto.
+                </CardContent>
+            </Card>
+        )
+    }
+    
+    return (
+       <div className="grid gap-8">
         {projects.map(project => {
           const currentUserParticipant = project.participants.find(p => p.email === user?.email);
           const isCurrentUserAdmin = currentUserParticipant?.role === 'admin';
@@ -77,6 +108,20 @@ export default function TeamPage() {
           );
         })}
       </div>
+    )
+  }
+
+  return (
+    <div className="grid gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline">Gestión de Equipo y Permisos</CardTitle>
+          <CardDescription>
+            Asigna roles a los participantes en cada proyecto. Solo los administradores pueden cambiar los permisos.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+      {renderContent()}
     </div>
   );
 }
