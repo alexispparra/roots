@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useSearchParams } from "next/navigation";
@@ -12,8 +13,9 @@ import { Pie, PieChart, Cell, Bar, BarChart, XAxis, YAxis, CartesianGrid } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link";
-import { Users, DollarSign, Target, Landmark, MapPin, Loader2, AlertCircle, ChevronDown } from "lucide-react";
+import { Users, DollarSign, Target, Landmark, MapPin, Loader2, AlertCircle, ChevronDown, Calendar as CalendarIcon } from "lucide-react";
 import { CreateExpenseDialog } from "@/components/create-expense-dialog";
+import { CreateIncomeDialog } from "@/components/create-income-dialog";
 import { CreateCategoryDialog } from "@/components/create-category-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useProjects } from "@/contexts/ProjectsContext";
@@ -22,7 +24,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, addDays } from 'date-fns';
+import { es } from 'date-fns/locale';
+import type { DateRange } from "react-day-picker"
+import { cn } from "@/lib/utils";
 
 
 // --- TYPES ---
@@ -36,6 +43,7 @@ type Transaction = {
   amountARS: number;
   exchangeRate: number;
   amountUSD: number;
+  type: 'income' | 'expense';
 };
 
 type CategoryWithSpent = ProjectCategory & {
@@ -44,16 +52,20 @@ type CategoryWithSpent = ProjectCategory & {
 
 // --- MOCK DATA for projects without a real Google Sheet ---
 const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: 'MT-1', date: '2024-07-20', description: 'Licencia de software', category: 'Desarrollo', user: 'Ana García', paymentMethod: 'Banco', amountARS: 150000, exchangeRate: 1000, amountUSD: 150 },
-  { id: 'MT-2', date: '2024-07-21', description: 'Diseño de logo', category: 'Diseño UI/UX', user: 'Luis Torres', paymentMethod: 'Factura', amountARS: 80000, exchangeRate: 1000, amountUSD: 80 },
-  { id: 'MT-3', date: '2024-06-22', description: 'Campaña en redes', category: 'Marketing', user: 'Carlos Ruiz', paymentMethod: 'Efectivo', amountARS: 120000, exchangeRate: 1050, amountUSD: 114.28 },
-  { id: 'MT-4', date: '2024-06-23', description: 'Servidor de pruebas', category: 'Desarrollo', user: 'Ana García', paymentMethod: 'Banco', amountARS: 50000, exchangeRate: 1050, amountUSD: 47.62 },
+  { id: 'MI-1', date: '2024-07-15', description: 'Aporte inicial', category: 'Inversión', user: 'Ana García', paymentMethod: 'Banco', amountARS: 5000000, exchangeRate: 1000, amountUSD: 5000, type: 'income' },
+  { id: 'MT-1', date: '2024-07-20', description: 'Licencia de software', category: 'Desarrollo', user: 'Ana García', paymentMethod: 'Banco', amountARS: 150000, exchangeRate: 1000, amountUSD: 150, type: 'expense' },
+  { id: 'MT-2', date: '2024-07-21', description: 'Diseño de logo', category: 'Diseño UI/UX', user: 'Luis Torres', paymentMethod: 'Factura', amountARS: 80000, exchangeRate: 1000, amountUSD: 80, type: 'expense' },
+  { id: 'MI-2', date: '2024-06-10', description: 'Aporte inicial', category: 'Inversión', user: 'Luis Torres', paymentMethod: 'Banco', amountARS: 3000000, exchangeRate: 1050, amountUSD: 2857.14, type: 'income' },
+  { id: 'MT-3', date: '2024-06-22', description: 'Campaña en redes', category: 'Marketing', user: 'Carlos Ruiz', paymentMethod: 'Efectivo', amountARS: 120000, exchangeRate: 1050, amountUSD: 114.28, type: 'expense' },
+  { id: 'MT-4', date: '2024-06-23', description: 'Servidor de pruebas', category: 'Desarrollo', user: 'Ana García', paymentMethod: 'Banco', amountARS: 50000, exchangeRate: 1050, amountUSD: 47.62, type: 'expense' },
 ];
+
 
 const MOCK_CATEGORIES = [
     { name: "Desarrollo", budget: 5000 },
     { name: "Diseño UI/UX", budget: 2000 },
     { name: "Marketing", budget: 3000 },
+    { name: "Inversión", budget: 0 },
 ];
 
 
@@ -72,6 +84,7 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [filters, setFilters] = useState({ user: "Todos", category: "Todas" });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   useEffect(() => {
      if (!project) {
@@ -105,15 +118,17 @@ export default function ProjectDetailPage() {
         }
         const data = await response.json();
         
+        // This assumes your sheet has a 'type' column now
         const transactionsWithUSD = data.transactions.map((t: any, index: number) => ({
           ...t,
           id: `T${index}`,
-          amountUSD: t.amountARS / t.exchangeRate
+          amountUSD: t.amountARS / t.exchangeRate,
+          type: t.amountARS > 0 ? 'expense' : 'income' // Simple logic, adjust as needed
         }));
 
         const categoriesWithSpent = data.categories.map((cat: any) => {
           const spent = transactionsWithUSD
-            .filter((t: Transaction) => t.category === cat.name)
+            .filter((t: Transaction) => t.category === cat.name && t.type === 'expense')
             .reduce((sum: number, t: Transaction) => sum + t.amountUSD, 0);
           return { name: cat.name, budget: cat.budget, spent };
         });
@@ -142,9 +157,10 @@ export default function ProjectDetailPage() {
     return transactions.filter(t => {
       const userMatch = filters.user === 'Todos' || t.user === filters.user;
       const categoryMatch = filters.category === 'Todas' || t.category === filters.category;
-      return userMatch && categoryMatch;
+      const dateMatch = !dateRange?.from || (new Date(t.date) >= dateRange.from && new Date(t.date) <= (dateRange.to || dateRange.from));
+      return userMatch && categoryMatch && dateMatch;
     });
-  }, [transactions, filters]);
+  }, [transactions, filters, dateRange]);
 
   if (!project) {
     return (
@@ -164,7 +180,7 @@ export default function ProjectDetailPage() {
   
   const projectCategories = project.googleSheetId ? categories : project.categories.map(c => ({...c, spent: 0}));
 
-  const totalSpent = useMemo(() => transactions.reduce((sum, t) => sum + t.amountUSD, 0), [transactions]);
+  const totalSpent = useMemo(() => transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amountUSD, 0), [transactions]);
   const totalBudget = useMemo(() => projectCategories.reduce((sum, cat) => sum + cat.budget, 0), [projectCategories]);
   const remainingBudget = totalBudget - totalSpent;
   const totalContribution = project.participants.reduce((sum, p) => sum + (p.contribution || 0), 0);
@@ -182,36 +198,37 @@ export default function ProjectDetailPage() {
     };
     return acc;
   }, { amount: { label: "Monto" } } as ChartConfig);
+  
+  const monthlyFlowData = useMemo(() => {
+      const monthlyTotals: {[key: string]: { month: string, Gastos: number, Ingresos: number }} = {};
+      const currentYear = new Date().getFullYear().toString();
+      
+      transactions.forEach(t => {
+          const transactionDate = new Date(t.date);
+          if (transactionDate.getFullYear().toString() === currentYear) {
+              const monthKey = format(transactionDate, 'yyyy-MM');
+              const monthName = format(transactionDate, 'MMM');
+              if (!monthlyTotals[monthKey]) {
+                  monthlyTotals[monthKey] = { month: monthName, Gastos: 0, Ingresos: 0 };
+              }
+              if (t.type === 'expense') {
+                  monthlyTotals[monthKey].Gastos += t.amountUSD;
+              } else {
+                  monthlyTotals[monthKey].Ingresos += t.amountUSD;
+              }
+          }
+      });
 
-  const monthlySpendingData = useMemo(() => {
-    const monthlyTotals: {[key: string]: { month: string, Gastos: number }} = {};
-    const currentYear = new Date().getFullYear().toString();
-    
-    transactions.forEach(t => {
-        const transactionDate = new Date(t.date);
-        if (transactionDate.getFullYear().toString() === currentYear) {
-            const monthKey = format(transactionDate, 'yyyy-MM');
-            const monthName = format(transactionDate, 'MMM');
-            if (!monthlyTotals[monthKey]) {
-                monthlyTotals[monthKey] = { month: monthName, Gastos: 0 };
-            }
-            monthlyTotals[monthKey].Gastos += t.amountUSD;
-        }
-    });
-
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const yearData = months.map((monthName, index) => {
-      const monthKey = `${currentYear}-${String(index + 1).padStart(2, '0')}`;
-      return monthlyTotals[monthKey] || { month: monthName, Gastos: 0 };
-    })
-    return yearData;
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return months.map((monthName, index) => {
+        const monthKey = `${currentYear}-${String(index + 1).padStart(2, '0')}`;
+        return monthlyTotals[monthKey] || { month: monthName, Gastos: 0, Ingresos: 0 };
+      });
   }, [transactions]);
   
   const barChartConfig = {
-    Gastos: {
-      label: "Gastos",
-      color: "hsl(var(--chart-1))",
-    },
+    Gastos: { label: "Gastos", color: "hsl(var(--chart-2))" },
+    Ingresos: { label: "Ingresos", color: "hsl(var(--chart-1))" },
   } satisfies ChartConfig
 
   const renderContent = () => {
@@ -357,66 +374,71 @@ export default function ProjectDetailPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="cashflow" className="mt-6">
+        <TabsContent value="cashflow" className="mt-6 grid gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="font-headline">Resumen Financiero Anual</CardTitle>
+              <CardTitle className="font-headline">Resumen de Flujo de Caja Anual ({new Date().getFullYear()})</CardTitle>
               <CardDescription>Análisis de gastos e ingresos del proyecto a lo largo del tiempo.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Gastos Mensuales ({new Date().getFullYear()})</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ChartContainer config={barChartConfig} className="h-[250px] w-full">
-                                <BarChart data={monthlySpendingData}>
-                                <CartesianGrid vertical={false} />
-                                <XAxis
-                                    dataKey="month"
-                                    tickLine={false}
-                                    tickMargin={10}
-                                    axisLine={false}
-                                />
-                                <YAxis />
-                                <ChartTooltip content={<ChartTooltipContent />} />
-                                <Bar dataKey="Gastos" fill="var(--color-Gastos)" radius={4} />
-                                </BarChart>
-                            </ChartContainer>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Gastos por Participante</CardTitle>
-                            <CardDescription>Comparativa de gastos realizados por cada miembro.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                             <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Usuario</TableHead>
-                                        <TableHead className="text-right">Monto Gastado (U$S)</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {project.participants.map(p => {
-                                        const userSpent = transactions.filter(t => t.user === p.name).reduce((sum, t) => sum + t.amountUSD, 0);
-                                        return (
-                                            <TableRow key={p.name}>
-                                                <TableCell>{p.name}</TableCell>
-                                                <TableCell className="text-right font-mono">${userSpent.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</TableCell>
-                                            </TableRow>
-                                        )
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </div>
+            <CardContent>
+                <ChartContainer config={barChartConfig} className="h-[250px] w-full">
+                    <BarChart data={monthlyFlowData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                        dataKey="month"
+                        tickLine={false}
+                        tickMargin={10}
+                        axisLine={false}
+                    />
+                    <YAxis tickFormatter={(value) => `$${value/1000}k`} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="Ingresos" fill="var(--color-Ingresos)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Gastos" fill="var(--color-Gastos)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                </ChartContainer>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center">
+              <div className="grid gap-2">
+                <CardTitle className="font-headline">Movimientos del Proyecto</CardTitle>
+                <CardDescription>Historial de todos los ingresos y gastos del proyecto.</CardDescription>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <CreateIncomeDialog />
+                <CreateExpenseDialog categories={projectCategories} participants={project.participants} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead>Categoría</TableHead>
+                    <TableHead className="text-right">Monto (U$S)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transactions.map(t => (
+                    <TableRow key={t.id}>
+                       <TableCell>{new Date(t.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</TableCell>
+                       <TableCell className="font-medium">{t.description}</TableCell>
+                       <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
+                       <TableCell className={cn(
+                          "text-right font-medium font-mono",
+                          t.type === 'income' ? 'text-emerald-600' : 'text-destructive'
+                        )}>
+                        {t.type === 'income' ? '+' : '-'}${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
+
 
         <TabsContent value="transactions" className="mt-6">
           <Card>
@@ -431,6 +453,45 @@ export default function ProjectDetailPage() {
                   <CreateExpenseDialog categories={projectCategories} participants={project.participants} />
               </div>
               <div className="flex items-center gap-4">
+                  <div className="grid gap-1.5">
+                    <Label>Rango de Fechas</Label>
+                     <Popover>
+                        <PopoverTrigger asChild>
+                        <Button
+                            id="date"
+                            variant={"outline"}
+                            className={cn(
+                            "w-[260px] justify-start text-left font-normal",
+                            !dateRange && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dateRange?.from ? (
+                            dateRange.to ? (
+                                <>
+                                {format(dateRange.from, "LLL dd, y")} -{" "}
+                                {format(dateRange.to, "LLL dd, y")}
+                                </>
+                            ) : (
+                                format(dateRange.from, "LLL dd, y")
+                            )
+                            ) : (
+                            <span>Elige un rango</span>
+                            )}
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            initialFocus
+                            mode="range"
+                            defaultMonth={dateRange?.from}
+                            selected={dateRange}
+                            onSelect={setDateRange}
+                            numberOfMonths={2}
+                        />
+                        </PopoverContent>
+                    </Popover>
+                  </div>
                   <div className="grid gap-1.5">
                     <Label>Usuario</Label>
                     <Select value={filters.user} onValueChange={(value) => setFilters(prev => ({ ...prev, user: value }))}>
@@ -479,14 +540,20 @@ export default function ProjectDetailPage() {
                       <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
                       <TableCell>{t.user}</TableCell>
                       <TableCell><Badge variant="secondary">{t.paymentMethod}</Badge></TableCell>
-                       <TableCell className="text-right font-medium text-destructive font-mono">
-                        -${t.amountARS.toLocaleString('es-AR')}
+                       <TableCell className={cn(
+                          "text-right font-medium font-mono",
+                          t.type === 'income' ? 'text-emerald-600' : 'text-destructive'
+                        )}>
+                        {t.type === 'income' ? '+' : '-'}${t.amountARS.toLocaleString('es-AR')}
                       </TableCell>
                        <TableCell className="text-right font-mono text-muted-foreground text-sm">
                         {t.exchangeRate.toLocaleString('es-AR')}
                        </TableCell>
-                       <TableCell className="text-right font-medium text-destructive font-mono">
-                        -${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                       <TableCell className={cn(
+                          "text-right font-medium font-mono",
+                          t.type === 'income' ? 'text-emerald-600' : 'text-destructive'
+                        )}>
+                        {t.type === 'income' ? '+' : '-'}${t.amountUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -578,3 +645,5 @@ export default function ProjectDetailPage() {
     </div>
   );
 }
+
+    
