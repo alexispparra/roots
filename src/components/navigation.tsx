@@ -19,6 +19,7 @@ import {
   Tag,
   ChevronRight,
   FolderKanban,
+  WandSparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -141,6 +142,19 @@ export function Navigation() {
             </SidebarMenuSubItem>
           ))}
         </SidebarMenuSub>
+      </SidebarMenuItem>
+      
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          asChild
+          isActive={pathname === "/prioritize"}
+          tooltip="Prioridad IA"
+        >
+          <Link href="/prioritize">
+            <WandSparkles />
+            <span>Prioridad IA</span>
+          </Link>
+        </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem>
