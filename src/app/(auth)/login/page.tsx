@@ -69,7 +69,8 @@ export default function LoginPage() {
             if (err.code === 'auth/configuration-not-found') {
               setError("Error de configuración de Firebase. Asegúrate de haber habilitado el proveedor de inicio de sesión de Google en tu consola de Firebase.");
             } else if (err.code === 'auth/unauthorized-domain') {
-              setError("Este dominio no está autorizado para operaciones de Firebase. Por favor, añádelo a la lista de dominios autorizados en la configuración de autenticación de tu consola de Firebase.");
+              const hostname = window.location.hostname;
+              setError(`Este dominio (${hostname}) no está autorizado. Ve a tu Consola de Firebase -> Authentication -> Settings -> Dominios autorizados y añádelo a la lista. A veces, los cambios tardan unos minutos en aplicarse.`);
             } else {
               setError("No se pudo iniciar sesión con Google. Por favor, intentalo de nuevo.")
             }
