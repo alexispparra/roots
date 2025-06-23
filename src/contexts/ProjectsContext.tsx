@@ -103,7 +103,13 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
             // App admin can see all projects
             q = query(projectsCol);
         } else {
-            // Regular users only see projects they are part of
+            // For regular users, we MUST have an email to build the query.
+            // If the user object exists but email is not yet available, we wait.
+            if (!user.email) {
+                setProjects([]);
+                setLoading(false);
+                return;
+            }
             q = query(projectsCol, where("participantEmails", "array-contains", user.email));
         }
 
@@ -312,5 +318,7 @@ export const useProjects = () => {
     }
     return context;
 };
+
+    
 
     
