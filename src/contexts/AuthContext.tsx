@@ -1,10 +1,11 @@
+
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 type AuthContextType = {
   user: User | null;
@@ -62,7 +63,7 @@ export const AuthGuard = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         if (!loading && !user) {
-            router.push('/login');
+            router.replace('/login');
         }
     }, [user, loading, router]);
 

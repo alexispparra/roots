@@ -18,7 +18,7 @@ export default function AuthLayout({
     // If the user is already logged in, redirect them to the projects page.
     // This prevents them from seeing the login/register page again.
     if (!loading && user) {
-      router.push('/projects');
+      router.replace('/projects');
     }
   }, [user, loading, router]);
 
