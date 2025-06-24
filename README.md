@@ -7,5 +7,4 @@ To get started, take a look at src/app/page.tsx.
 ## Deployment
 
 This project is configured for deployment with Firebase App Hosting.
-
-**NOTA: ¡Este es un cambio de prueba para verificar el despliegue automático!**
+This change will trigger a new automatic deployment.
