@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,13 +15,14 @@ export default function AuthLayout({
   const router = useRouter();
 
   useEffect(() => {
-    // If Firebase is configured and user is logged in, redirect to main app page.
+    // If the user is already logged in, redirect them to the projects page.
+    // This prevents them from seeing the login/register page again.
     if (!loading && user) {
       router.push('/projects');
     }
   }, [user, loading, router]);
 
-  // Show a loader while checking auth status or if redirecting.
+  // While checking auth state, or if the user is logged in and we are about to redirect, show a loader.
   if (loading || user) {
     return (
       <div className="flex items-center justify-center min-h-svh bg-background">
@@ -29,6 +31,6 @@ export default function AuthLayout({
     );
   }
 
-  // Render the auth page content (login/register)
+  // If not loading and no user, show the login/register page.
   return <div className="min-h-svh">{children}</div>;
 }
