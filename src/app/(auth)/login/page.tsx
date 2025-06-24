@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
@@ -19,8 +19,6 @@ import { LandingLogo } from "@/components/landing-logo"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useAuth } from "@/contexts/AuthContext"
-import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -29,16 +27,6 @@ export default function LoginPage() {
   const [isFormLoading, setIsFormLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const { toast } = useToast()
-  const { user, loading: authLoading } = useAuth()
-  const router = useRouter()
-
-  useEffect(() => {
-    // If auth state is not being checked and a user exists, redirect.
-    // This handles both redirects after login and prevents a logged-in user from seeing this page.
-    if (!authLoading && user) {
-      router.replace('/projects');
-    }
-  }, [user, authLoading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,7 +44,7 @@ export default function LoginPage() {
         title: "¡Bienvenido de nuevo!",
         description: "Has iniciado sesión correctamente. Redirigiendo...",
       })
-      // The useEffect will handle the redirect once the user state is updated.
+      // The (auth) layout will handle the redirect once the user state is updated.
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
@@ -86,7 +74,7 @@ export default function LoginPage() {
         title: "¡Bienvenido!",
         description: "Has iniciado sesión correctamente. Redirigiendo...",
       })
-       // The useEffect will handle the redirect once the user state is updated.
+       // The (auth) layout will handle the redirect once the user state is updated.
     } catch (err: any) {
         if (err.code !== 'auth/popup-closed-by-user') {
             if (err.code === 'auth/configuration-not-found') {
@@ -104,16 +92,6 @@ export default function LoginPage() {
     }
   }
   
-  // While checking auth state or if a redirect is imminent, show a loader.
-  if (authLoading || user) {
-    return (
-      <div className="flex items-center justify-center min-h-svh bg-background">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-
   return (
     <div className="flex items-center justify-center min-h-svh bg-background">
       <Card className="mx-auto w-full max-w-sm bg-card text-card-foreground border-border">
