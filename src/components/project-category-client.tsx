@@ -43,10 +43,18 @@ export default function ProjectCategoryClient() {
       .sort((a, b) => b.date.toMillis() - a.date.toMillis());
   }, [project, categoryName])
 
-  const totalSpent = useMemo(() => 
+  const categorySpent = useMemo(() => 
     categoryTransactions.reduce((acc, t) => acc + t.amountARS, 0),
     [categoryTransactions]
   );
+  
+  const totalProjectExpenses = useMemo(() => {
+    if (!project) return 0;
+    return project.transactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amountARS, 0);
+  }, [project]);
+
 
   const handleAddExpense = (data: any) => {
     if (!project) return;
@@ -54,7 +62,11 @@ export default function ProjectCategoryClient() {
   }
 
   const handleEditClick = (transaction: Transaction) => {
-    setSelectedTransaction(transaction)
+    setSelectedTransaction({
+      ...transaction,
+      // @ts-ignore
+      date: transaction.date.toDate() // Convert Firestore Timestamp to JS Date for the form
+    })
     setIsEditExpenseDialogOpen(true)
   }
 
@@ -118,8 +130,8 @@ export default function ProjectCategoryClient() {
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-1">
           <CategorySpendingChart 
-            spent={totalSpent} 
-            budget={category.budget} 
+            categorySpent={categorySpent} 
+            totalProjectExpenses={totalProjectExpenses} 
             categoryName={category.name}
           />
         </div>

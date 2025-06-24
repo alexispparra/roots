@@ -1,12 +1,20 @@
 "use client"
 
 import { useProjects } from "@/contexts/ProjectsContext";
+import type { ProjectStatus } from "@/contexts/ProjectsContext";
 import { Loader2, Briefcase } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreateProjectDialog } from "@/components/create-project-dialog";
+
+const statusTranslations: Record<ProjectStatus, string> = {
+    'planning': 'Planeación',
+    'in-progress': 'En Progreso',
+    'completed': 'Completado',
+    'on-hold': 'En Pausa',
+};
 
 export function ProjectsList() {
     const { projects, loading } = useProjects();
@@ -43,7 +51,7 @@ export function ProjectsList() {
                         <CardDescription className="line-clamp-2 h-[40px]">{project.description || "Sin descripción."}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                       <Badge variant="secondary" className="capitalize">{project.status}</Badge>
+                       <Badge variant="secondary">{statusTranslations[project.status] || project.status}</Badge>
                     </CardContent>
                     <CardFooter>
                          <Button asChild className="w-full">
