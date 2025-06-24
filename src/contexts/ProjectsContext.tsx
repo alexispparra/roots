@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -12,9 +11,9 @@ import {
     addDoc, 
     doc, 
     updateDoc, 
-    Timestamp,
     serverTimestamp,
-    getDoc
+    getDoc,
+    type Timestamp 
 } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
@@ -80,12 +79,64 @@ type ProjectsContextType = {
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
 
+// A safe, static timestamp for mock data to avoid Firebase dependencies during recovery mode.
+const MOCK_TIMESTAMP = { seconds: 1672531200, nanoseconds: 0 } as Timestamp;
+
+// --- MOCK DATA FOR RECOVERY MODE ---
+const MOCK_PROJECTS: Project[] = [
+    {
+        id: 'proj_1',
+        name: 'Proyecto de Recuperación',
+        description: 'La app está en modo de recuperación. Los datos en vivo no se están cargando.',
+        address: 'Calle Falsa 123',
+        status: 'En Curso',
+        investment: '10000',
+        googleSheetId: '',
+        participants: [
+            { name: 'Usuario de Demo', email: 'demo@example.com', role: 'admin', contribution: 10000, share: 100, fallback: 'UD' },
+        ],
+        participantEmails: ['demo@example.com'],
+        progress: 75,
+        categories: [
+            { name: 'Desarrollo', budget: 5000 },
+            { name: 'Marketing', budget: 3000 },
+        ],
+        createdAt: MOCK_TIMESTAMP,
+    },
+    {
+        id: 'proj_2',
+        name: 'Emprendimiento Inmobiliario (Demo)',
+        description: 'Un segundo proyecto para visualizar el funcionamiento de la app.',
+        address: 'Av. Siempre Viva 742',
+        status: 'Completado',
+        investment: '50000',
+        participants: [
+            { name: 'Usuario de Demo', email: 'demo@example.com', role: 'admin', contribution: 25000, share: 50, fallback: 'UD' },
+            { name: 'Otro Inversor', email: 'otro@example.com', role: 'viewer', contribution: 25000, share: 50, fallback: 'OI' },
+        ],
+        participantEmails: ['demo@example.com', 'otro@example.com'],
+        progress: 100,
+        categories: [
+            { name: 'Construcción', budget: 40000 },
+            { name: 'Permisos', budget: 5000 },
+        ],
+        createdAt: MOCK_TIMESTAMP,
+    },
+];
+
+
 export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [loading, setLoading] = useState(true);
+    // --- RECOVERY MODE STATE ---
+    // We initialize with mock data to prevent any server crash.
+    const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
+    const [loading, setLoading] = useState(false); // Start with loading false.
     const { user, isAppAdmin } = useAuth();
     const { toast } = useToast();
 
+    // --- FIRESTORE CONNECTION (TEMPORARILY DISABLED) ---
+    // The following useEffect is commented out to prevent the app from crashing.
+    // Once the app is stable, we can re-enable this to debug the live data issue.
+    /*
     useEffect(() => {
         if (!user || !db) {
             setProjects([]);
@@ -115,7 +166,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
                     const data = doc.data();
                     
                     const participants = (data.participants || []).map((p: any) => ({
-                        name: p.name || 'Usuario Anónimo',
+                        name: String(p.name || 'Usuario Anónimo'),
                         email: p.email || '',
                         role: p.role || 'viewer',
                         src: p.src,
@@ -136,67 +187,41 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
                         participantEmails: data.participantEmails || [],
                         progress: data.progress || 0,
                         categories: data.categories || [],
-                        createdAt: data.createdAt || Timestamp.now(),
+                        createdAt: data.createdAt,
                     } as Project;
                 } catch (e) {
                     console.error(`Error processing project document with ID: ${doc.id}`, e);
-                    // Return null for any document that fails to process, so we can filter it out.
                     return null;
                 }
-            }).filter(project => project !== null); // Filter out any malformed projects
+            }).filter((project): project is Project => project !== null);
 
-            setProjects(projectsData as Project[]);
+            setProjects(projectsData);
             setLoading(false);
         }, (error) => {
             console.error("Error fetching projects:", error);
             toast({
                 title: "Error al Cargar Proyectos",
-                description: "No se pudieron cargar los datos de los proyectos. Inténtalo de nuevo.",
+                description: "No se pudieron cargar los datos de los proyectos. Se ha cargado un modo de demostración.",
                 variant: "destructive",
             });
+            setProjects(MOCK_PROJECTS); // Fallback to mock data on error
             setLoading(false);
         });
 
         return () => unsubscribe();
     }, [user, isAppAdmin, toast]);
+    */
+
+    const showRecoveryToast = () => {
+         toast({
+            variant: "destructive",
+            title: "Modo de Recuperación Activo",
+            description: "La aplicación está en modo de solo lectura. Los cambios no se guardarán.",
+        });
+    }
     
     const addProject = async (projectData: AddProjectData) => {
-        if (!user || !user.email) {
-            toast({ title: "No autenticado", description: "Debes iniciar sesión para crear un proyecto.", variant: "destructive" });
-            return;
-        }
-        if (!db) {
-            toast({ title: "Modo Demostración", description: "La creación de proyectos requiere configuración de Firebase.", variant: "destructive" });
-            return;
-        }
-
-        const newProject = {
-            ...projectData,
-            status: 'Próximo' as ProjectStatus,
-            progress: 0,
-            participants: [
-                {
-                    name: user.displayName || user.email,
-                    email: user.email,
-                    role: 'admin' as const,
-                    src: user.photoURL || undefined,
-                    fallback: user.displayName?.split(' ').map(n => n[0]).join('') || user.email[0].toUpperCase(),
-                }
-            ],
-            participantEmails: [user.email],
-            categories: [],
-            investment: '0',
-            description: projectData.description || "Sin descripción.",
-            createdAt: serverTimestamp(),
-        };
-
-        try {
-            await addDoc(collection(db, 'projects'), newProject);
-            toast({ title: "¡Proyecto Creado!", description: `El proyecto "${projectData.name}" ha sido creado.` });
-        } catch (error) {
-            console.error("Error creating project:", error);
-            toast({ title: "Error", description: "No se pudo crear el proyecto.", variant: "destructive" });
-        }
+        showRecoveryToast();
     };
     
     const getProjectById = useCallback((id: string | null): Project | undefined => {
@@ -205,117 +230,27 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     }, [projects]);
 
     const updateProjectStatus = async (projectId: string, newStatus: ProjectStatus) => {
-        if (!db) {
-            toast({ title: "Modo Demostración", description: "Esta función requiere configuración de Firebase.", variant: "destructive" });
-            return;
-        }
-        const projectRef = doc(db, 'projects', projectId);
-        try {
-            await updateDoc(projectRef, { status: newStatus });
-            toast({ title: "Estado Actualizado", description: "El estado del proyecto ha sido actualizado." });
-        } catch (error) {
-            console.error("Error updating status:", error);
-            toast({ title: "Error", description: "No se pudo actualizar el estado.", variant: "destructive" });
-        }
+        showRecoveryToast();
     };
     
     const updateProject = async (projectId: string, projectData: UpdateProjectData) => {
-        if (!db) {
-            toast({ title: "Modo Demostración", description: "Esta función requiere configuración de Firebase.", variant: "destructive" });
-            return;
-        }
-        const projectRef = doc(db, 'projects', projectId);
-        try {
-            await updateDoc(projectRef, projectData);
-            toast({ title: "Proyecto Actualizado", description: "Los datos del proyecto han sido guardados." });
-        } catch (error) {
-            console.error("Error updating project:", error);
-            toast({ title: "Error", description: "No se pudo actualizar el proyecto.", variant: "destructive" });
-        }
+       showRecoveryToast();
     };
 
     const addCategoryToProject = async (projectId: string, category: Category) => {
-        if (!db) {
-            toast({ title: "Modo Demostración", description: "Esta función requiere configuración de Firebase.", variant: "destructive" });
-            return;
-        }
-        const projectRef = doc(db, 'projects', projectId);
-        try {
-            const projectSnap = await getDoc(projectRef);
-            if(projectSnap.exists()){
-                const projectData = projectSnap.data();
-                const newCategories = [...(projectData.categories || []), category];
-                await updateDoc(projectRef, { categories: newCategories });
-                toast({ title: "Categoría Añadida" });
-            }
-        } catch (error) {
-            console.error("Error adding category:", error);
-            toast({ title: "Error", description: "No se pudo añadir la categoría.", variant: "destructive" });
-        }
+        showRecoveryToast();
     };
 
     const updateCategoryInProject = async (projectId: string, categoryName: string, newCategoryData: { budget: number }) => {
-        if (!db) {
-            toast({ title: "Modo Demostración", description: "Esta función requiere configuración de Firebase.", variant: "destructive" });
-            return;
-        }
-        const projectRef = doc(db, 'projects', projectId);
-        try {
-            const projectSnap = await getDoc(projectRef);
-            if(projectSnap.exists()){
-                const projectData = projectSnap.data();
-                const updatedCategories = (projectData.categories || []).map((c: Category) => 
-                    c.name === categoryName ? { ...c, budget: newCategoryData.budget } : c
-                );
-                await updateDoc(projectRef, { categories: updatedCategories });
-                toast({ title: "Categoría Actualizada" });
-            }
-        } catch (error) {
-            console.error("Error updating category:", error);
-            toast({ title: "Error", description: "No se pudo actualizar la categoría.", variant: "destructive" });
-        }
+        showRecoveryToast();
     };
 
     const deleteCategoryFromProject = async (projectId: string, categoryName: string) => {
-        if (!db) {
-            toast({ title: "Modo Demostración", description: "Esta función requiere configuración de Firebase.", variant: "destructive" });
-            return;
-        }
-        const projectRef = doc(db, 'projects', projectId);
-        try {
-            const projectSnap = await getDoc(projectRef);
-            if (projectSnap.exists()) {
-                const projectData = projectSnap.data();
-                const updatedCategories = (projectData.categories || []).filter((c: Category) => c.name !== categoryName);
-                await updateDoc(projectRef, { categories: updatedCategories });
-                toast({ title: "Categoría Eliminada" });
-            }
-        } catch (error) {
-             console.error("Error deleting category:", error);
-            toast({ title: "Error", description: "No se pudo eliminar la categoría.", variant: "destructive" });
-        }
+       showRecoveryToast();
     };
 
     const updateParticipantRole = async (projectId: string, participantEmail: string, newRole: 'admin' | 'editor' | 'viewer') => {
-        if (!db) {
-            toast({ title: "Modo Demostración", description: "Esta función requiere configuración de Firebase.", variant: "destructive" });
-            return;
-        }
-        const projectRef = doc(db, 'projects', projectId);
-        try {
-             const projectSnap = await getDoc(projectRef);
-            if (projectSnap.exists()) {
-                const projectData = projectSnap.data();
-                const updatedParticipants = (projectData.participants || []).map((p: Participant) => 
-                    p.email === participantEmail ? { ...p, role: newRole } : p
-                );
-                await updateDoc(projectRef, { participants: updatedParticipants });
-                toast({ title: "Rol Actualizado", description: `El rol de ${participantEmail} ha sido actualizado.` });
-            }
-        } catch (error) {
-            console.error("Error updating role:", error);
-            toast({ title: "Error", description: "No se pudo actualizar el rol del participante.", variant: "destructive" });
-        }
+        showRecoveryToast();
     };
 
     const contextValue = {
