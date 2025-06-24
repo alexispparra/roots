@@ -3,6 +3,7 @@ import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthRouterGuard } from '@/components/auth-router-guard';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const poppins = Poppins({
@@ -25,7 +26,9 @@ export default function RootLayout({
     <html lang="es" className="dark" suppressHydrationWarning>
       <body className={`${inter.variable} ${poppins.variable} font-body antialiased`}>
         <AuthProvider>
-          {children}
+          <AuthRouterGuard>
+            {children}
+          </AuthRouterGuard>
           <Toaster />
         </AuthProvider>
       </body>

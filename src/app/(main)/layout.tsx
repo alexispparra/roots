@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useEffect } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,7 +16,7 @@ import { ProjectsProvider } from "@/contexts/ProjectsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/firebase";
-import { LogOut, Loader2 } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
@@ -27,16 +26,8 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth(); // No longer need loading here
   const { toast } = useToast();
-
-  useEffect(() => {
-    // If the initial auth check is done and there's still no user,
-    // redirect them to the login page.
-    if (!authLoading && !user) {
-      router.replace('/login');
-    }
-  }, [user, authLoading, router]);
 
   const handleLogout = async () => {
     if (!auth) {
@@ -61,14 +52,13 @@ export default function MainLayout({
     }
   };
 
-  // While the auth state is loading, or if there's no user (and a redirect is imminent),
-  // show a full-screen loader. This prevents a flash of protected content.
-  if (authLoading || !user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+  // The AuthRouterGuard now handles loading states and unauthorized access.
+  // We can assume if this component renders, the user is authenticated.
+  if (!user) {
+    // This case should theoretically not be hit if the guard works correctly,
+    // but it's a fallback to prevent rendering with a null user.
+    // The guard will handle the redirect.
+    return null;
   }
 
   return (

@@ -44,14 +44,14 @@ export default function LoginPage() {
         title: "¡Bienvenido de nuevo!",
         description: "Has iniciado sesión correctamente. Redirigiendo...",
       })
-      // The (auth) layout will handle the redirect once the user state is updated.
+      // The AuthRouterGuard in the root layout will handle the redirect.
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
       } else if (err.code === 'auth/configuration-not-found') {
         setError("Error de configuración de Firebase. Asegúrate de haber habilitado los proveedores de inicio de sesión (Email/Contraseña y Google) en tu consola de Firebase.");
       } else {
-        setError("Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.");
+        setError("Ocurrió un error inesperado. Por favor, intentalo de nuevo más tarde.");
       }
       console.error(err)
     } finally {
@@ -74,7 +74,7 @@ export default function LoginPage() {
         title: "¡Bienvenido!",
         description: "Has iniciado sesión correctamente. Redirigiendo...",
       })
-       // The (auth) layout will handle the redirect once the user state is updated.
+       // The AuthRouterGuard in the root layout will handle the redirect.
     } catch (err: any) {
         if (err.code !== 'auth/popup-closed-by-user') {
             if (err.code === 'auth/configuration-not-found') {
@@ -92,6 +92,8 @@ export default function LoginPage() {
     }
   }
   
+  // The AuthRouterGuard shows a loader while redirecting a logged-in user,
+  // so we don't need extra loading logic here for that case.
   return (
     <div className="flex items-center justify-center min-h-svh bg-background">
       <Card className="mx-auto w-full max-w-sm bg-card text-card-foreground border-border">
