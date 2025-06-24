@@ -54,7 +54,7 @@ export default function LoginPage() {
         title: "¡Bienvenido de nuevo!",
         description: "Redirigiendo a tus proyectos...",
       })
-      // Redirection is handled by the useEffect hook.
+      router.replace('/projects');
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
@@ -64,7 +64,6 @@ export default function LoginPage() {
         setError("Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.");
       }
       console.error(err)
-    } finally {
       setIsLoading(false)
     }
   }
@@ -84,7 +83,7 @@ export default function LoginPage() {
         title: "¡Bienvenido!",
         description: "Redirigiendo a tus proyectos...",
       })
-       // Redirection is handled by the useEffect hook.
+       router.replace('/projects');
     } catch (err: any) {
         if (err.code !== 'auth/popup-closed-by-user') {
             if (err.code === 'auth/configuration-not-found') {
@@ -97,7 +96,6 @@ export default function LoginPage() {
             }
         }
         console.error(err)
-    } finally {
         setIsGoogleLoading(false)
     }
   }

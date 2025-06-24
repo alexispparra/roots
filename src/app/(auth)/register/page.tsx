@@ -67,7 +67,7 @@ export default function RegisterPage() {
         title: "¡Cuenta Creada!",
         description: "Redirigiendo a tus proyectos...",
       })
-      // Redirection is handled by the useEffect hook.
+      router.replace('/projects');
     } catch (err: any) {
         if (err.code === 'auth/email-already-in-use') {
             setError("Este correo electrónico ya está en uso. Por favor, inicia sesión o usa otro correo.");
@@ -77,8 +77,7 @@ export default function RegisterPage() {
             setError("Ocurrió un error inesperado al crear tu cuenta.");
         }
         console.error(err);
-    } finally {
-      setIsLoading(false)
+        setIsLoading(false);
     }
   }
 
@@ -110,7 +109,7 @@ export default function RegisterPage() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error de Registro</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              </Aler_DELETED_>
             )}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
