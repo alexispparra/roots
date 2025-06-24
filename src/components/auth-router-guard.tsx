@@ -29,8 +29,9 @@ export function AuthRouterGuard({ children }: { children: React.ReactNode }) {
     const isAuthRoute = AUTH_ROUTES.includes(pathname);
     const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
 
-    // Case 1: User is logged in but tries to access login/register page.
-    if (user && isAuthRoute) {
+    // Case 1: User is logged in, but is on a page meant for logged-out users
+    // (e.g., login, register, or the public landing page). Redirect to the main app.
+    if (user && (isAuthRoute || isPublicRoute)) {
       router.replace('/projects');
     } 
     // Case 2: User is not logged in and tries to access a protected page.
@@ -53,9 +54,9 @@ export function AuthRouterGuard({ children }: { children: React.ReactNode }) {
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
   const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
 
-  // If we are about to redirect a logged-in user away from an auth page,
+  // If we are about to redirect a logged-in user away from an auth or public page,
   // show a loader instead of the page content for a moment.
-  if (user && isAuthRoute) {
+  if (user && (isAuthRoute || isPublicRoute)) {
      return (
         <div className="flex items-center justify-center min-h-svh bg-background">
           <Loader2 className="h-8 w-8 animate-spin" />
