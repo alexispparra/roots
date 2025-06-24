@@ -1,10 +1,8 @@
-
 "use client";
 
-import { Card, CardDescription, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateProjectDialog } from "@/components/create-project-dialog";
+import { ProjectsList } from "@/components/projects-list";
 
 
 export default function ProjectsPage() {
@@ -19,17 +17,7 @@ export default function ProjectsPage() {
           <CreateProjectDialog />
         </CardHeader>
       </Card>
-      <Card>
-        <CardContent className="pt-6">
-            <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Modo de Recuperación</AlertTitle>
-                <AlertDescription>
-                La visualización de proyectos está temporalmente desactivada para resolver un problema del servidor. Tus datos están seguros.
-                </AlertDescription>
-            </Alert>
-        </CardContent>
-      </Card>
+      <ProjectsList />
     </div>
   );
 }

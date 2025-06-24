@@ -2,13 +2,11 @@
 
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { ProjectsList } from "@/components/projects-list";
 
 
 export default function DashboardPage() {
@@ -21,13 +19,7 @@ export default function DashboardPage() {
         </CardHeader>
       </Card>
       
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Modo de Recuperación</AlertTitle>
-        <AlertDescription>
-          La visualización de proyectos está temporalmente desactivada para resolver un problema del servidor. Tus datos están seguros.
-        </AlertDescription>
-      </Alert>
+      <ProjectsList />
     </div>
   );
 }

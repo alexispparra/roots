@@ -1,13 +1,10 @@
-
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from 'next/navigation';
 import { useEffect } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Shield } from "lucide-react";
 
 
 export default function AdminPage() {
@@ -29,11 +26,8 @@ export default function AdminPage() {
   }
 
   if (!isAppAdmin) {
-    return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        <p>No tienes permiso para acceder a esta página.</p>
-      </div>
-    );
+    // Return null or a simple message, the redirect will handle the rest
+    return null;
   }
 
   return (
@@ -45,17 +39,10 @@ export default function AdminPage() {
             Gestiona los roles de todos los participantes en todos los proyectos de la aplicación.
           </CardDescription>
         </CardHeader>
-      </Card>
-
-      <Card>
-        <CardContent className="pt-6">
-            <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Modo de Recuperación</AlertTitle>
-                <AlertDescription>
-                La administración de roles está temporalmente desactivada mientras se resuelve un problema del servidor. Tus datos están seguros.
-                </AlertDescription>
-            </Alert>
+         <CardContent className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
+            <Shield className="h-16 w-16 mb-4" />
+            <p>La administración global de usuarios estará disponible aquí pronto.</p>
+            <p className="text-xs mt-2">Esta función se habilitará en una futura actualización.</p>
         </CardContent>
       </Card>
     </div>

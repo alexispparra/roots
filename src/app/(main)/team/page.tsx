@@ -1,9 +1,7 @@
-
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { Users } from "lucide-react";
 
 export default function TeamPage() {
   return (
@@ -15,16 +13,10 @@ export default function TeamPage() {
             Asigna roles a los participantes en cada proyecto. Solo los administradores pueden cambiar los permisos.
           </CardDescription>
         </CardHeader>
-      </Card>
-      <Card>
-        <CardContent className="pt-6">
-            <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Modo de Recuperación</AlertTitle>
-                <AlertDescription>
-                La gestión de equipos está temporalmente desactivada mientras se resuelve un problema del servidor. Tus datos están seguros.
-                </AlertDescription>
-            </Alert>
+        <CardContent className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
+            <Users className="h-16 w-16 mb-4" />
+          <p>La gestión de equipos estará disponible aquí pronto.</p>
+           <p className="text-xs mt-2">Esta función se habilitará en una futura actualización.</p>
         </CardContent>
       </Card>
     </div>
