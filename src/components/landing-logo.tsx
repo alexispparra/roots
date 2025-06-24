@@ -26,7 +26,7 @@ export function LandingLogo(props: SVGProps<SVGSVGElement>) {
         roots.
       </text>
       <rect x="0" y="65" width="165" height="12" rx="6" className="roots-bar" />
-      <text x="0" y="115" className="roots-text">
+      <text x="82.5" y="115" className="roots-text" textAnchor="middle">
         oo.
       </text>
     </svg>
