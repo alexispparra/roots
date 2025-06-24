@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -29,11 +30,11 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
-  const { user, loading } = useAuth();
-  const router = useRouter();
+  const { user, loading } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
-    // If the user is authenticated, redirect them to the projects page.
+    // If we are not loading and the user is logged in, redirect to projects
     if (!loading && user) {
       router.replace('/projects');
     }
@@ -65,9 +66,9 @@ export default function RegisterPage() {
 
       toast({
         title: "¡Cuenta Creada!",
-        description: "Redirigiendo a tus proyectos...",
-      })
-      router.replace('/projects');
+        description: "Tu cuenta ha sido creada exitosamente. Redirigiendo...",
+      });
+      // The useEffect will catch the user state change and redirect.
     } catch (err: any) {
         if (err.code === 'auth/email-already-in-use') {
             setError("Este correo electrónico ya está en uso. Por favor, inicia sesión o usa otro correo.");
@@ -81,8 +82,9 @@ export default function RegisterPage() {
     }
   }
 
-  // While checking auth state or if a redirect is imminent, show a loader.
-  if (loading || user) {
+  // While we are checking auth state, show a loader.
+  // The useEffect will handle the redirect once the user object is available.
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-svh bg-background">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -109,7 +111,7 @@ export default function RegisterPage() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error de Registro</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
-              </Aler_DELETED_>
+              </Alert>
             )}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
