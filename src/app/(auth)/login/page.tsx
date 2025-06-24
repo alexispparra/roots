@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -33,6 +34,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     // If the user is authenticated, redirect them to the projects page.
+    // This is the single source of truth for redirection after login.
     if (!loading && user) {
       router.replace('/projects');
     }
@@ -52,9 +54,9 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password)
       toast({ 
         title: "¡Bienvenido de nuevo!",
-        description: "Redirigiendo a tus proyectos...",
+        description: "Has iniciado sesión correctamente.",
       })
-      router.replace('/projects');
+      // The useEffect will handle the redirect once the user state is updated.
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
@@ -64,7 +66,8 @@ export default function LoginPage() {
         setError("Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.");
       }
       console.error(err)
-      setIsLoading(false)
+    } finally {
+        setIsLoading(false)
     }
   }
 
@@ -81,9 +84,9 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider)
       toast({ 
         title: "¡Bienvenido!",
-        description: "Redirigiendo a tus proyectos...",
+        description: "Has iniciado sesión correctamente.",
       })
-       router.replace('/projects');
+       // The useEffect will handle the redirect once the user state is updated.
     } catch (err: any) {
         if (err.code !== 'auth/popup-closed-by-user') {
             if (err.code === 'auth/configuration-not-found') {
@@ -96,6 +99,7 @@ export default function LoginPage() {
             }
         }
         console.error(err)
+    } finally {
         setIsGoogleLoading(false)
     }
   }
