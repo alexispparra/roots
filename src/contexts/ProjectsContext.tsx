@@ -116,13 +116,36 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const projectsData = snapshot.docs.map(doc => {
                 const data = doc.data();
-                // Sanitize data to prevent crashes from malformed db entries
+
+                // Deep sanitization to prevent runtime errors from malformed data
+                const sanitizedParticipants: Participant[] = (Array.isArray(data.participants) ? data.participants : []).map((p: any) => ({
+                    name: p?.name || 'Usuario Anónimo',
+                    email: p?.email || '',
+                    role: p?.role || 'viewer',
+                    src: p?.src || undefined,
+                    fallback: p?.fallback || p?.name?.split(' ').map((n:string) => n[0]).join('').substring(0,2).toUpperCase() || 'U',
+                    contribution: p?.contribution || 0,
+                    share: p?.share || 0,
+                })).filter((p: Participant) => p.email); // Filter out participants without an email
+
+                const sanitizedCategories: Category[] = (Array.isArray(data.categories) ? data.categories : []).map((c: any) => ({
+                    name: c?.name || '',
+                    budget: c?.budget || 0,
+                })).filter((c: Category) => c.name); // Filter out categories without a name
+
                 return {
                     id: doc.id,
-                    ...data,
-                    participants: data.participants || [],
-                    participantEmails: data.participantEmails || [],
-                    categories: data.categories || [],
+                    name: data.name || 'Proyecto sin nombre',
+                    description: data.description || 'Sin descripción.',
+                    address: data.address || 'Sin dirección',
+                    status: data.status || 'Próximo',
+                    investment: data.investment || '0',
+                    googleSheetId: data.googleSheetId || undefined,
+                    participants: sanitizedParticipants,
+                    participantEmails: Array.isArray(data.participantEmails) ? data.participantEmails.filter((e: any) => typeof e === 'string') : [],
+                    progress: data.progress || 0,
+                    categories: sanitizedCategories,
+                    createdAt: data.createdAt instanceof Timestamp ? data.createdAt : Timestamp.now(),
                 } as Project;
             });
             setProjects(projectsData);
@@ -325,7 +348,5 @@ export const useProjects = () => {
     }
     return context;
 };
-
-    
 
     
