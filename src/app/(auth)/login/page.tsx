@@ -26,19 +26,19 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isFormLoading, setIsFormLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const { toast } = useToast()
-  const { user, loading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    // If the user is authenticated, redirect them to the projects page.
-    // This is the single source of truth for redirection after login.
-    if (!loading && user) {
+    // If auth state is not being checked and a user exists, redirect.
+    // This handles both redirects after login and prevents a logged-in user from seeing this page.
+    if (!authLoading && user) {
       router.replace('/projects');
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,13 +48,13 @@ export default function LoginPage() {
     }
 
     setError(null)
-    setIsLoading(true)
+    setIsFormLoading(true)
 
     try {
       await signInWithEmailAndPassword(auth, email, password)
       toast({ 
         title: "¡Bienvenido de nuevo!",
-        description: "Has iniciado sesión correctamente.",
+        description: "Has iniciado sesión correctamente. Redirigiendo...",
       })
       // The useEffect will handle the redirect once the user state is updated.
     } catch (err: any) {
@@ -67,7 +67,7 @@ export default function LoginPage() {
       }
       console.error(err)
     } finally {
-        setIsLoading(false)
+        setIsFormLoading(false)
     }
   }
 
@@ -84,7 +84,7 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider)
       toast({ 
         title: "¡Bienvenido!",
-        description: "Has iniciado sesión correctamente.",
+        description: "Has iniciado sesión correctamente. Redirigiendo...",
       })
        // The useEffect will handle the redirect once the user state is updated.
     } catch (err: any) {
@@ -105,7 +105,7 @@ export default function LoginPage() {
   }
   
   // While checking auth state or if a redirect is imminent, show a loader.
-  if (loading || user) {
+  if (authLoading || user) {
     return (
       <div className="flex items-center justify-center min-h-svh bg-background">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -144,7 +144,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading || isGoogleLoading}
+                disabled={isFormLoading || isGoogleLoading}
               />
             </div>
             <div className="grid gap-2">
@@ -154,13 +154,13 @@ export default function LoginPage() {
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading || isGoogleLoading}
+                disabled={isFormLoading || isGoogleLoading}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
-              {isLoading ? <Loader2 className="animate-spin" /> : "Ingresar"}
+            <Button type="submit" className="w-full" disabled={isFormLoading || isGoogleLoading}>
+              {isFormLoading ? <Loader2 className="animate-spin" /> : "Ingresar"}
             </Button>
-            <Button variant="outline" type="button" className="w-full" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading}>
+            <Button variant="outline" type="button" className="w-full" onClick={handleGoogleLogin} disabled={isFormLoading || isGoogleLoading}>
               {isGoogleLoading ? <Loader2 className="animate-spin mr-2" /> : 
                 <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
                   <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 21.2 172.9 56.6l-69.8 69.8C322.2 106.3 287.9 96 248 96c-88.8 0-160.1 71.1-160.1 160.1s71.3 160.1 160.1 160.1c98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>

@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useEffect } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,10 +14,10 @@ import {
 import { Navigation } from "@/components/navigation";
 import { Logo } from "@/components/logo";
 import { ProjectsProvider } from "@/contexts/ProjectsContext";
-import { AuthGuard, useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/firebase";
-import { LogOut } from "lucide-react";
+import { LogOut, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,8 +27,16 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // If the initial auth check is done and there's still no user,
+    // redirect them to the login page.
+    if (!authLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, authLoading, router]);
 
   const handleLogout = async () => {
     if (!auth) {
@@ -52,44 +61,52 @@ export default function MainLayout({
     }
   };
 
+  // While the auth state is loading, or if there's no user (and a redirect is imminent),
+  // show a full-screen loader. This prevents a flash of protected content.
+  if (authLoading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <AuthGuard>
-      <ProjectsProvider>
-        <SidebarProvider>
-          <Sidebar collapsible="icon">
-            <SidebarHeader className="p-4">
-              <Logo className="text-foreground group-data-[collapsible=icon]:hidden" />
-              <Logo className="hidden size-8 text-foreground group-data-[collapsible=icon]:block" />
-            </SidebarHeader>
-            <SidebarContent>
-              <Navigation />
-            </SidebarContent>
-            <SidebarFooter className="p-2">
-              <div className="p-2 group-data-[collapsible=icon]:hidden">
-                <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground text-xs font-bold">
-                        {user?.displayName?.split(' ').map(n => n[0]).join('') || user?.email?.[0].toUpperCase()}
-                    </div>
-                    <div className="flex-1 truncate">
-                        <p className="text-sm font-semibold truncate">{user?.displayName || "Usuario"}</p>
-                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                    </div>
-                </div>
+    <ProjectsProvider>
+      <SidebarProvider>
+        <Sidebar collapsible="icon">
+          <SidebarHeader className="p-4">
+            <Logo className="text-foreground group-data-[collapsible=icon]:hidden" />
+            <Logo className="hidden size-8 text-foreground group-data-[collapsible=icon]:block" />
+          </SidebarHeader>
+          <SidebarContent>
+            <Navigation />
+          </SidebarContent>
+          <SidebarFooter className="p-2">
+            <div className="p-2 group-data-[collapsible=icon]:hidden">
+              <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground text-xs font-bold">
+                      {user?.displayName?.split(' ').map(n => n[0]).join('') || user?.email?.[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 truncate">
+                      <p className="text-sm font-semibold truncate">{user?.displayName || "Usuario"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                  </div>
               </div>
-              <Button variant="ghost" className="w-full justify-start p-2" onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span className="group-data-[collapsible=icon]:hidden">Cerrar Sesión</span>
-              </Button>
-            </SidebarFooter>
-          </Sidebar>
-          <SidebarInset>
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6 md:hidden">
-              <SidebarTrigger />
-            </header>
-            <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
-          </SidebarInset>
-        </SidebarProvider>
-      </ProjectsProvider>
-    </AuthGuard>
+            </div>
+            <Button variant="ghost" className="w-full justify-start p-2" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span className="group-data-[collapsible=icon]:hidden">Cerrar Sesión</span>
+            </Button>
+          </SidebarFooter>
+        </Sidebar>
+        <SidebarInset>
+          <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6 md:hidden">
+            <SidebarTrigger />
+          </header>
+          <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </ProjectsProvider>
   );
 }

@@ -30,15 +30,15 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
-  const { user, loading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    // If we are not loading and the user is logged in, redirect to projects
-    if (!loading && user) {
+    // If auth state is not being checked and a user exists, redirect.
+    if (!authLoading && user) {
       router.replace('/projects');
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
 
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -78,13 +78,13 @@ export default function RegisterPage() {
             setError("Ocurrió un error inesperado al crear tu cuenta.");
         }
         console.error(err);
-        setIsLoading(false);
+    } finally {
+        setIsLoading(false)
     }
   }
 
-  // While we are checking auth state, show a loader.
-  // The useEffect will handle the redirect once the user object is available.
-  if (loading) {
+  // While we are checking auth state, or if a redirect is imminent, show a loader.
+  if (authLoading || user) {
     return (
       <div className="flex items-center justify-center min-h-svh bg-background">
         <Loader2 className="h-8 w-8 animate-spin" />

@@ -11,18 +11,18 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 export default function LandingPage() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     // If the user is logged in, redirect them to the projects page.
-    if (!loading && user) {
+    if (!authLoading && user) {
       router.replace('/projects');
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
   
   // While loading auth state, or if we are about to redirect, show a full-screen loader.
-  if (loading || user) {
+  if (authLoading || user) {
     return (
        <div className="flex items-center justify-center min-h-svh bg-background">
         <Loader2 className="h-8 w-8 animate-spin" />
