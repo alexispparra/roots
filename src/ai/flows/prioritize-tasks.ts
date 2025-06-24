@@ -1,55 +1,26 @@
-// prioritize-tasks.ts
 'use server';
 /**
  * @fileOverview AI-powered task prioritization flow.
- *
- * - aiPrioritizeTasks - A function that prioritizes tasks based on project data and Google Sheet inputs.
- * - AIPrioritizeTasksInput - The input type for the aiPrioritizeTasks function.
- * - AIPrioritizeTasksOutput - The return type for the aiPrioritizeTasks function.
+ * THIS FEATURE IS TEMPORARILY DISABLED to resolve dependency conflicts.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { z } from 'zod';
 
 const AIPrioritizeTasksInputSchema = z.object({
-  projectData: z.string().describe('Project data including tasks, deadlines, and resource allocation.'),
-  googleSheetData: z.string().describe('Data from Google Sheets containing task details and priorities.'),
+  projectData: z.string(),
+  googleSheetData: z.string(),
 });
 export type AIPrioritizeTasksInput = z.infer<typeof AIPrioritizeTasksInputSchema>;
 
 const AIPrioritizeTasksOutputSchema = z.object({
-  prioritizedTasks: z.string().describe('A list of tasks prioritized based on urgency and importance.'),
-  resourceAllocationSuggestions: z
-    .string()
-    .describe('Suggestions for resource allocation to improve project efficiency.'),
+  prioritizedTasks: z.string(),
+  resourceAllocationSuggestions: z.string(),
 });
 export type AIPrioritizeTasksOutput = z.infer<typeof AIPrioritizeTasksOutputSchema>;
 
 export async function aiPrioritizeTasks(input: AIPrioritizeTasksInput): Promise<AIPrioritizeTasksOutput> {
-  return aiPrioritizeTasksFlow(input);
+  console.warn("AI Prioritization is temporarily disabled.");
+  // We throw an error here to make it clear in the UI that the feature is offline
+  // The calling page should catch this and display a user-friendly message.
+  throw new Error("AI_DISABLED");
 }
-
-const prompt = ai.definePrompt({
-  name: 'aiPrioritizeTasksPrompt',
-  input: {schema: AIPrioritizeTasksInputSchema},
-  output: {schema: AIPrioritizeTasksOutputSchema},
-  prompt: `You are an AI project management assistant. Analyze the project data and Google Sheet inputs to prioritize tasks and suggest resource allocation.
-
-Project Data: {{{projectData}}}
-Google Sheet Data: {{{googleSheetData}}}
-
-Prioritized Tasks: Prioritize tasks based on urgency and importance.
-Resource Allocation Suggestions: Provide suggestions for resource allocation to improve project efficiency.`,
-});
-
-const aiPrioritizeTasksFlow = ai.defineFlow(
-  {
-    name: 'aiPrioritizeTasksFlow',
-    inputSchema: AIPrioritizeTasksInputSchema,
-    outputSchema: AIPrioritizeTasksOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);

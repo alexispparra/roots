@@ -168,19 +168,6 @@ export function Navigation() {
       <SidebarMenuItem>
         <SidebarMenuButton
           asChild
-          isActive={pathname === "/prioritize"}
-          tooltip="Prioridad IA"
-        >
-          <Link href="/prioritize">
-            <WandSparkles />
-            <span>Prioridad IA</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          asChild
           isActive={pathname === "/settings"}
           tooltip="Configuración"
         >

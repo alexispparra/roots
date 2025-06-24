@@ -1,4 +1,1 @@
-import { config } from 'dotenv';
-config();
-
-import '@/ai/flows/prioritize-tasks.ts';
+// This file is intentionally left empty to disable Genkit.

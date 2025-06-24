@@ -114,10 +114,17 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         }
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const projectsData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            } as Project));
+            const projectsData = snapshot.docs.map(doc => {
+                const data = doc.data();
+                // Sanitize data to prevent crashes from malformed db entries
+                return {
+                    id: doc.id,
+                    ...data,
+                    participants: data.participants || [],
+                    participantEmails: data.participantEmails || [],
+                    categories: data.categories || [],
+                } as Project;
+            });
             setProjects(projectsData);
             setLoading(false);
         }, (error) => {
@@ -217,7 +224,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
             const projectSnap = await getDoc(projectRef);
             if(projectSnap.exists()){
                 const projectData = projectSnap.data();
-                const newCategories = [...projectData.categories, category];
+                const newCategories = [...(projectData.categories || []), category];
                 await updateDoc(projectRef, { categories: newCategories });
                 toast({ title: "Categoría Añadida" });
             }
@@ -237,7 +244,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
             const projectSnap = await getDoc(projectRef);
             if(projectSnap.exists()){
                 const projectData = projectSnap.data();
-                const updatedCategories = projectData.categories.map((c: Category) => 
+                const updatedCategories = (projectData.categories || []).map((c: Category) => 
                     c.name === categoryName ? { ...c, budget: newCategoryData.budget } : c
                 );
                 await updateDoc(projectRef, { categories: updatedCategories });
@@ -259,7 +266,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
             const projectSnap = await getDoc(projectRef);
             if (projectSnap.exists()) {
                 const projectData = projectSnap.data();
-                const updatedCategories = projectData.categories.filter((c: Category) => c.name !== categoryName);
+                const updatedCategories = (projectData.categories || []).filter((c: Category) => c.name !== categoryName);
                 await updateDoc(projectRef, { categories: updatedCategories });
                 toast({ title: "Categoría Eliminada" });
             }
@@ -279,7 +286,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
              const projectSnap = await getDoc(projectRef);
             if (projectSnap.exists()) {
                 const projectData = projectSnap.data();
-                const updatedParticipants = projectData.participants.map((p: Participant) => 
+                const updatedParticipants = (projectData.participants || []).map((p: Participant) => 
                     p.email === participantEmail ? { ...p, role: newRole } : p
                 );
                 await updateDoc(projectRef, { participants: updatedParticipants });
