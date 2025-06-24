@@ -1,21 +1,10 @@
+
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { db } from '@/lib/firebase';
-import { 
-    collection, 
-    query, 
-    where, 
-    onSnapshot, 
-    addDoc, 
-    doc, 
-    updateDoc, 
-    serverTimestamp,
-    getDoc,
-    type Timestamp 
-} from 'firebase/firestore';
-import { useToast } from '@/hooks/use-toast';
+import { collection, query, where, onSnapshot, Timestamp, doc, updateDoc, arrayUnion, arrayRemove, addDoc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
 
 // --- TYPES ---
 export type Participant = {
@@ -29,7 +18,7 @@ export type Participant = {
 };
 
 export type Category = {
-    name: string;
+    name:string;
     budget: number;
 };
 
@@ -77,197 +66,198 @@ type ProjectsContextType = {
     updateParticipantRole: (projectId: string, participantEmail: string, newRole: 'admin' | 'editor' | 'viewer') => Promise<void>;
 };
 
-const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
+const defaultContextValue: ProjectsContextType = {
+    projects: [],
+    loading: true,
+    addProject: async () => console.warn("Context not ready"),
+    getProjectById: () => undefined,
+    updateProjectStatus: async () => console.warn("Context not ready"),
+    addCategoryToProject: async () => console.warn("Context not ready"),
+    updateCategoryInProject: async () => console.warn("Context not ready"),
+    deleteCategoryFromProject: async () => console.warn("Context not ready"),
+    updateProject: async () => console.warn("Context not ready"),
+    updateParticipantRole: async () => console.warn("Context not ready"),
+};
 
-// A safe, static timestamp for mock data to avoid Firebase dependencies during recovery mode.
-const MOCK_TIMESTAMP = { seconds: 1672531200, nanoseconds: 0 } as Timestamp;
-
-// --- MOCK DATA FOR RECOVERY MODE ---
-const MOCK_PROJECTS: Project[] = [
-    {
-        id: 'proj_1',
-        name: 'Proyecto de Recuperación',
-        description: 'La app está en modo de recuperación. Los datos en vivo no se están cargando.',
-        address: 'Calle Falsa 123',
-        status: 'En Curso',
-        investment: '10000',
-        googleSheetId: '',
-        participants: [
-            { name: 'Usuario de Demo', email: 'demo@example.com', role: 'admin', contribution: 10000, share: 100, fallback: 'UD' },
-        ],
-        participantEmails: ['demo@example.com'],
-        progress: 75,
-        categories: [
-            { name: 'Desarrollo', budget: 5000 },
-            { name: 'Marketing', budget: 3000 },
-        ],
-        createdAt: MOCK_TIMESTAMP,
-    },
-    {
-        id: 'proj_2',
-        name: 'Emprendimiento Inmobiliario (Demo)',
-        description: 'Un segundo proyecto para visualizar el funcionamiento de la app.',
-        address: 'Av. Siempre Viva 742',
-        status: 'Completado',
-        investment: '50000',
-        participants: [
-            { name: 'Usuario de Demo', email: 'demo@example.com', role: 'admin', contribution: 25000, share: 50, fallback: 'UD' },
-            { name: 'Otro Inversor', email: 'otro@example.com', role: 'viewer', contribution: 25000, share: 50, fallback: 'OI' },
-        ],
-        participantEmails: ['demo@example.com', 'otro@example.com'],
-        progress: 100,
-        categories: [
-            { name: 'Construcción', budget: 40000 },
-            { name: 'Permisos', budget: 5000 },
-        ],
-        createdAt: MOCK_TIMESTAMP,
-    },
-];
-
+const ProjectsContext = createContext<ProjectsContextType>(defaultContextValue);
 
 export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
-    // --- RECOVERY MODE STATE ---
-    // We initialize with mock data to prevent any server crash.
-    const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
-    const [loading, setLoading] = useState(false); // Start with loading false.
-    const { user, isAppAdmin } = useAuth();
-    const { toast } = useToast();
+    const { user } = useAuth();
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // --- FIRESTORE CONNECTION (TEMPORARILY DISABLED) ---
-    // The following useEffect is commented out to prevent the app from crashing.
-    // Once the app is stable, we can re-enable this to debug the live data issue.
-    /*
     useEffect(() => {
+        // Absolutely do not proceed if there's no user or no db connection.
         if (!user || !db) {
             setProjects([]);
             setLoading(false);
             return;
-        };
-
-        setLoading(true);
-
-        let q;
-        const projectsCol = collection(db, 'projects');
-
-        if (isAppAdmin) {
-            q = query(projectsCol);
-        } else {
-            if (!user.email) {
-                setProjects([]);
-                setLoading(false);
-                return;
-            }
-            q = query(projectsCol, where("participantEmails", "array-contains", user.email));
         }
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const projectsData = snapshot.docs.map(doc => {
-                try {
-                    const data = doc.data();
-                    
-                    const participants = (data.participants || []).map((p: any) => ({
-                        name: String(p.name || 'Usuario Anónimo'),
-                        email: p.email || '',
-                        role: p.role || 'viewer',
-                        src: p.src,
-                        fallback: p.fallback || (p.name ? String(p.name).substring(0, 2) : '??'),
-                        contribution: p.contribution || 0,
-                        share: p.share || 0,
-                    }));
+        let unsubscribe: (() => void) | undefined;
 
-                    return {
-                        id: doc.id,
-                        name: data.name || 'Proyecto sin nombre',
-                        description: data.description || 'Sin descripción.',
-                        address: data.address || 'Sin dirección',
-                        status: data.status || 'Próximo',
-                        investment: data.investment || '0',
-                        googleSheetId: data.googleSheetId,
-                        participants: participants,
-                        participantEmails: data.participantEmails || [],
-                        progress: data.progress || 0,
-                        categories: data.categories || [],
-                        createdAt: data.createdAt,
-                    } as Project;
-                } catch (e) {
-                    console.error(`Error processing project document with ID: ${doc.id}`, e);
-                    return null;
-                }
-            }).filter((project): project is Project => project !== null);
+        try {
+            const q = query(collection(db, 'projects'), where('participantEmails', 'array-contains', user.email));
+            
+            unsubscribe = onSnapshot(q, (querySnapshot) => {
+                const projectsData: Project[] = [];
+                querySnapshot.forEach((doc) => {
+                    try {
+                        const data = doc.data();
 
-            setProjects(projectsData);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching projects:", error);
-            toast({
-                title: "Error al Cargar Proyectos",
-                description: "No se pudieron cargar los datos de los proyectos. Se ha cargado un modo de demostración.",
-                variant: "destructive",
+                        // Paranoid-level data validation
+                        if (!data || typeof data !== 'object' || !data.name) {
+                            console.warn(`Skipping malformed project document (ID: ${doc.id}): data is not a valid object or name is missing.`);
+                            return;
+                        }
+
+                        const participants = (data.participants && Array.isArray(data.participants) ? data.participants : []).map((p: any) => {
+                            if (!p || typeof p.email !== 'string') return null;
+                            const nameStr = String(p.name || 'Usuario Desconocido');
+                            return {
+                                name: nameStr,
+                                email: p.email,
+                                role: p.role || 'viewer',
+                                src: p.src || '',
+                                fallback: nameStr.split(' ').map((n: string) => n[0]).join('') || '?',
+                                contribution: p.contribution || 0,
+                                share: p.share || 0,
+                            };
+                        }).filter((p: Participant | null): p is Participant => p !== null);
+
+                        const project: Project = {
+                            id: doc.id,
+                            name: data.name,
+                            description: data.description || '',
+                            address: data.address || 'Sin dirección',
+                            status: data.status || 'Próximo',
+                            investment: data.investment || '$0',
+                            googleSheetId: data.googleSheetId || '',
+                            participants: participants,
+                            participantEmails: data.participantEmails && Array.isArray(data.participantEmails) ? data.participantEmails : [],
+                            progress: data.progress || 0,
+                            categories: data.categories && Array.isArray(data.categories) ? data.categories : [],
+                            createdAt: data.createdAt instanceof Timestamp ? data.createdAt : Timestamp.now(),
+                        };
+                        projectsData.push(project);
+                    } catch (e) {
+                        console.error(`Error processing a single project document (ID: ${doc.id}). Skipping it.`, e);
+                    }
+                });
+                setProjects(projectsData);
+                setLoading(false);
+            }, (error) => {
+                console.error("Error fetching projects from Firestore snapshot: ", error);
+                setProjects([]);
+                setLoading(false);
             });
-            setProjects(MOCK_PROJECTS); // Fallback to mock data on error
-            setLoading(false);
-        });
 
-        return () => unsubscribe();
-    }, [user, isAppAdmin, toast]);
-    */
+        } catch (e) {
+             console.error("A critical error occurred while setting up the projects listener. The app will continue without project data.", e);
+             setProjects([]);
+             setLoading(false);
+        }
 
-    const showRecoveryToast = () => {
-         toast({
-            variant: "destructive",
-            title: "Modo de Recuperación Activo",
-            description: "La aplicación está en modo de solo lectura. Los cambios no se guardarán.",
-        });
-    }
-    
-    const addProject = async (projectData: AddProjectData) => {
-        showRecoveryToast();
-    };
-    
-    const getProjectById = useCallback((id: string | null): Project | undefined => {
+        return () => {
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
+    }, [user]);
+
+    const getProjectById = (id: string | null) => {
         if (!id) return undefined;
         return projects.find(p => p.id === id);
-    }, [projects]);
-
-    const updateProjectStatus = async (projectId: string, newStatus: ProjectStatus) => {
-        showRecoveryToast();
+    };
+    
+    const addProject = async (projectData: AddProjectData) => {
+        if (!user || !db) return;
+        const newProject = {
+            ...projectData,
+            status: 'Próximo',
+            investment: '$0',
+            progress: 0,
+            categories: [],
+            participants: [{ name: user.displayName || 'Admin', email: user.email, role: 'admin', fallback: user.displayName?.split(' ').map(n => n[0]).join('') }],
+            participantEmails: [user.email],
+            createdAt: serverTimestamp(),
+        };
+        await addDoc(collection(db, 'projects'), newProject);
     };
     
     const updateProject = async (projectId: string, projectData: UpdateProjectData) => {
-       showRecoveryToast();
+        if (!db) return;
+        const projectRef = doc(db, "projects", projectId);
+        await updateDoc(projectRef, projectData);
     };
 
-    const addCategoryToProject = async (projectId: string, category: Category) => {
-        showRecoveryToast();
-    };
-
-    const updateCategoryInProject = async (projectId: string, categoryName: string, newCategoryData: { budget: number }) => {
-        showRecoveryToast();
-    };
-
-    const deleteCategoryFromProject = async (projectId: string, categoryName: string) => {
-       showRecoveryToast();
+    const updateProjectStatus = async (projectId: string, newStatus: ProjectStatus) => {
+        if (!db) return;
+        const projectRef = doc(db, 'projects', projectId);
+        await updateDoc(projectRef, { status: newStatus });
     };
 
     const updateParticipantRole = async (projectId: string, participantEmail: string, newRole: 'admin' | 'editor' | 'viewer') => {
-        showRecoveryToast();
+        if (!db) return;
+        const project = projects.find(p => p.id === projectId);
+        if (!project) return;
+
+        const updatedParticipants = project.participants.map(p =>
+            p.email === participantEmail ? { ...p, role: newRole } : p
+        );
+
+        const projectRef = doc(db, 'projects', projectId);
+        await updateDoc(projectRef, { participants: updatedParticipants });
     };
 
-    const contextValue = {
-        projects,
-        loading,
-        addProject,
-        getProjectById,
-        updateProjectStatus,
-        addCategoryToProject,
-        updateCategoryInProject,
-        deleteCategoryFromProject,
-        updateProject,
-        updateParticipantRole,
+    const addCategoryToProject = async (projectId: string, category: Category) => {
+        if (!db) return;
+        const projectRef = doc(db, 'projects', projectId);
+        await updateDoc(projectRef, {
+            categories: arrayUnion(category)
+        });
     };
 
+    const updateCategoryInProject = async (projectId: string, categoryName: string, newCategoryData: { budget: number }) => {
+        if (!db) return;
+        const project = projects.find(p => p.id === projectId);
+        if (!project) return;
+
+        const updatedCategories = project.categories.map(c =>
+            c.name === categoryName ? { ...c, ...newCategoryData } : c
+        );
+
+        const projectRef = doc(db, 'projects', projectId);
+        await updateDoc(projectRef, { categories: updatedCategories });
+    };
+
+    const deleteCategoryFromProject = async (projectId: string, categoryName: string) => {
+        if (!db) return;
+        const project = projects.find(p => p.id === projectId);
+        if (!project) return;
+        const categoryToDelete = project.categories.find(c => c.name === categoryName);
+
+        if (categoryToDelete) {
+            const projectRef = doc(db, 'projects', projectId);
+            await updateDoc(projectRef, {
+                categories: arrayRemove(categoryToDelete)
+            });
+        }
+    };
+    
     return (
-        <ProjectsContext.Provider value={contextValue}>
+        <ProjectsContext.Provider value={{
+            projects,
+            loading,
+            addProject,
+            getProjectById,
+            updateProject,
+            updateProjectStatus,
+            updateParticipantRole,
+            addCategoryToProject,
+            updateCategoryInProject,
+            deleteCategoryFromProject
+        }}>
             {children}
         </ProjectsContext.Provider>
     );
@@ -280,3 +270,5 @@ export const useProjects = () => {
     }
     return context;
 };
+
+    
