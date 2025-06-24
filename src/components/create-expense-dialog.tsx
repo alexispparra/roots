@@ -48,8 +48,8 @@ const formSchema = z.object({
     required_error: "La fecha es requerida.",
   }),
   description: z.string().min(1, "La descripción es requerida."),
-  categoryId: z.string().min(1, "La categoría es requerida."),
-  userId: z.string().min(1, "El usuario es requerido."),
+  category: z.string().min(1, "La categoría es requerida."),
+  user: z.string().min(1, "El usuario es requerido."),
   paymentMethod: z.string().min(1, "El medio de pago es requerido."),
   amountARS: z.coerce.number().positive("El monto debe ser positivo."),
   exchangeRate: z.coerce.number().positive("El cambio debe ser positivo."),
@@ -68,8 +68,8 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
     defaultValues: {
       date: new Date(),
       description: "",
-      userId: "",
-      categoryId: "",
+      user: "",
+      category: categories.length === 1 ? categories[0].name : "",
       paymentMethod: "",
       amountARS: 0,
       exchangeRate: 1,
@@ -82,8 +82,8 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
     form.reset({
       date: new Date(),
       description: "",
-      userId: "",
-      categoryId: "",
+      user: "",
+      category: categories.length === 1 ? categories[0].name : "",
       paymentMethod: "",
       amountARS: 0,
       exchangeRate: 1,
@@ -164,7 +164,7 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
               />
                <FormField
                 control={form.control}
-                name="userId"
+                name="user"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Usuario</FormLabel>
@@ -186,11 +186,11 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
               />
               <FormField
                 control={form.control}
-                name="categoryId"
+                name="category"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Categoría</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={categories.length === 1}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona una categoría" />
