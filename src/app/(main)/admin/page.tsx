@@ -2,17 +2,15 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useProjects } from "@/contexts/ProjectsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from 'next/navigation';
 import { useEffect } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 import { Loader2 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+
 
 export default function AdminPage() {
-  const { projects, updateParticipantRole, loading: projectsLoading } = useProjects();
   const { isAppAdmin, loading: authLoading } = useAuth();
   const router = useRouter();
 
@@ -22,9 +20,15 @@ export default function AdminPage() {
     }
   }, [isAppAdmin, authLoading, router]);
 
-  const isLoading = authLoading || projectsLoading;
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
-  if (!isAppAdmin && !authLoading) {
+  if (!isAppAdmin) {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground">
         <p>No tienes permiso para acceder a esta página.</p>
@@ -43,82 +47,17 @@ export default function AdminPage() {
         </CardHeader>
       </Card>
 
-      {isLoading ? (
-         <div className="grid gap-8">
-            {[1, 2].map(i => (
-                <Card key={i}>
-                    <CardHeader>
-                        <Skeleton className="h-6 w-1/2" />
-                        <Skeleton className="h-4 w-3/4" />
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                       {[1, 2, 3].map(j => (
-                         <div key={j} className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <Skeleton className="h-12 w-12 rounded-full" />
-                                <div className="space-y-2">
-                                    <Skeleton className="h-4 w-24" />
-                                    <Skeleton className="h-3 w-32" />
-                                </div>
-                            </div>
-                            <Skeleton className="h-10 w-[180px]" />
-                        </div>
-                       ))}
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
-      ) : projects.length === 0 ? (
-        <Card>
-            <CardContent className="pt-6">
-                <p className="text-muted-foreground">No hay proyectos para administrar todavía.</p>
-            </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-8">
-            {projects.map(project => (
-            <Card key={project.id}>
-              <CardHeader>
-                <CardTitle>{project.name}</CardTitle>
-                <CardDescription>{project.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {project.participants.map(participant => (
-                    <div key={participant.email} className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Avatar>
-                          <AvatarImage src={participant.src} />
-                          <AvatarFallback>{participant.fallback || participant.name.substring(0, 2)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{participant.name}</p>
-                          <p className="text-sm text-muted-foreground">{participant.email}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <Select
-                          value={participant.role}
-                          onValueChange={(newRole: 'admin' | 'editor' | 'viewer') => updateParticipantRole(project.id, participant.email, newRole)}
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Seleccionar rol" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="admin">Administrador</SelectItem>
-                            <SelectItem value="editor">Editor</SelectItem>
-                            <SelectItem value="viewer">Lector</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <Card>
+        <CardContent className="pt-6">
+            <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Modo de Recuperación</AlertTitle>
+                <AlertDescription>
+                La administración de roles está temporalmente desactivada mientras se resuelve un problema del servidor. Tus datos están seguros.
+                </AlertDescription>
+            </Alert>
+        </CardContent>
+      </Card>
     </div>
   );
 }
