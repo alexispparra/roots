@@ -29,12 +29,12 @@ export default function AuthLayout({
   // Show a loader while checking auth status or if redirecting.
   if (!auth || loading || user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-svh bg-background">
           <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   // Render the auth page content (login/register)
-  return <div className="min-h-screen">{children}</div>;
+  return <div className="min-h-svh">{children}</div>;
 }

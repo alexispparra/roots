@@ -70,8 +70,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="mx-auto max-w-sm">
+    <div className="flex items-center justify-center min-h-svh bg-background p-4">
+      <Card className="mx-auto w-full max-w-sm">
         <CardHeader className="space-y-4">
            <div className="flex justify-center">
             <Logo />
