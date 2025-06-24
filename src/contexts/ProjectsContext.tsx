@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp, arrayUnion, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 // --- Type Definitions ---
@@ -65,6 +65,12 @@ type ProjectsContextType = {
   addProject: (projectData: AddProjectData) => Promise<string | null>;
   getProjectById: (id: string | null) => Project | undefined;
   updateProject: (projectId: string, projectData: UpdateProjectData) => Promise<void>;
+  addTransaction: (projectId: string, transactionData: Omit<Transaction, 'id'>) => Promise<void>;
+  updateTransaction: (projectId: string, transactionId: string, transactionData: Partial<Omit<Transaction, 'id' | 'type'>>) => Promise<void>;
+  deleteTransaction: (projectId: string, transactionId: string) => Promise<void>;
+  addCategory: (projectId: string, categoryData: Category) => Promise<void>;
+  updateCategory: (projectId: string, categoryName: string, categoryData: Partial<Category>) => Promise<void>;
+  deleteCategory: (projectId: string, categoryName: string) => Promise<void>;
 };
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -115,7 +121,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
                 role: p.role || 'viewer',
             })).filter((p: Participant) => p.email), // Filter out invalid participants
             categories: data.categories || [],
-            transactions: data.transactions || [],
+            transactions: (data.transactions || []).map((t: any) => ({ ...t, date: t.date || Timestamp.now() })),
             status: data.status || 'planning',
             createdAt: data.createdAt || Timestamp.now(),
           });
@@ -184,6 +190,115 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         toast({ variant: "destructive", title: "Error", description: "No se pudo actualizar el proyecto." });
     }
   };
+  
+  const addTransaction = async (projectId: string, transactionData: Omit<Transaction, 'id'>) => {
+    if (!db) return;
+    const projectRef = doc(db, 'projects', projectId);
+    try {
+        const newTransaction = {
+            ...transactionData,
+            id: doc(collection(db, 'dummy')).id, // Generate a unique ID
+        };
+        await updateDoc(projectRef, {
+            transactions: arrayUnion(newTransaction)
+        });
+        toast({ title: "Transacción Añadida" });
+    } catch (error) {
+        console.error("Error adding transaction: ", error);
+        toast({ variant: "destructive", title: "Error", description: "No se pudo añadir la transacción." });
+    }
+  };
+
+  const updateTransaction = async (projectId: string, transactionId: string, transactionData: Partial<Omit<Transaction, 'id' | 'type'>>) => {
+      if (!db) return;
+      const projectRef = doc(db, 'projects', projectId);
+      try {
+          const projectDoc = await getDoc(projectRef);
+          if (!projectDoc.exists()) throw new Error("Project not found");
+          
+          const project = projectDoc.data() as Project;
+          const newTransactions = project.transactions.map(t => 
+              t.id === transactionId ? { ...t, ...transactionData } : t
+          );
+          
+          await updateDoc(projectRef, { transactions: newTransactions });
+          toast({ title: "Transacción Actualizada" });
+      } catch (error) {
+          console.error("Error updating transaction: ", error);
+          toast({ variant: "destructive", title: "Error", description: "No se pudo actualizar la transacción." });
+      }
+  };
+
+  const deleteTransaction = async (projectId: string, transactionId: string) => {
+      if (!db) return;
+      const projectRef = doc(db, 'projects', projectId);
+      try {
+          const projectDoc = await getDoc(projectRef);
+          if (!projectDoc.exists()) throw new Error("Project not found");
+          
+          const project = projectDoc.data() as Project;
+          const newTransactions = project.transactions.filter(t => t.id !== transactionId);
+
+          await updateDoc(projectRef, { transactions: newTransactions });
+          toast({ title: "Transacción Eliminada" });
+      } catch (error) {
+          console.error("Error deleting transaction: ", error);
+          toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar la transacción." });
+      }
+  };
+
+  const addCategory = async (projectId: string, categoryData: Category) => {
+      if (!db) return;
+      const projectRef = doc(db, 'projects', projectId);
+      try {
+          await updateDoc(projectRef, {
+              categories: arrayUnion(categoryData)
+          });
+          toast({ title: "Categoría Añadida" });
+      } catch (error) {
+          console.error("Error adding category: ", error);
+          toast({ variant: "destructive", title: "Error", description: "No se pudo añadir la categoría." });
+      }
+  };
+  
+  const updateCategory = async (projectId: string, categoryName: string, categoryData: Partial<Category>) => {
+      if (!db) return;
+      const projectRef = doc(db, 'projects', projectId);
+      try {
+          const projectDoc = await getDoc(projectRef);
+          if (!projectDoc.exists()) throw new Error("Project not found");
+          
+          const project = projectDoc.data() as Project;
+          const newCategories = project.categories.map(c => 
+              c.name === categoryName ? { ...c, ...categoryData } : c
+          );
+
+          await updateDoc(projectRef, { categories: newCategories });
+          toast({ title: "Categoría Actualizada" });
+      } catch (error) {
+          console.error("Error updating category: ", error);
+          toast({ variant: "destructive", title: "Error", description: "No se pudo actualizar la categoría." });
+      }
+  };
+
+  const deleteCategory = async (projectId: string, categoryName: string) => {
+      if (!db) return;
+      const projectRef = doc(db, 'projects', projectId);
+       try {
+          const projectDoc = await getDoc(projectRef);
+          if (!projectDoc.exists()) throw new Error("Project not found");
+          
+          const project = projectDoc.data() as Project;
+          const newCategories = project.categories.filter(c => c.name !== categoryName);
+
+          await updateDoc(projectRef, { categories: newCategories });
+          toast({ title: "Categoría Eliminada" });
+      } catch (error) {
+          console.error("Error deleting category: ", error);
+          toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar la categoría." });
+      }
+  };
+
 
   const contextValue: ProjectsContextType = {
     projects,
@@ -191,6 +306,12 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     addProject,
     getProjectById,
     updateProject,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    addCategory,
+    updateCategory,
+    deleteCategory,
   };
 
   return (

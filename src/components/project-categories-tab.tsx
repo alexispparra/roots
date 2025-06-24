@@ -1,0 +1,129 @@
+"use client"
+
+import { useState } from "react"
+import { useProjects } from "@/contexts/ProjectsContext"
+import type { Project, Category } from "@/contexts/ProjectsContext"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { CreateCategoryDialog } from "@/components/create-category-dialog"
+import { EditCategoryDialog } from "@/components/edit-category-dialog"
+import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
+
+type ProjectCategoriesTabProps = {
+  project: Project;
+}
+
+export function ProjectCategoriesTab({ project }: ProjectCategoriesTabProps) {
+  const { addCategory, updateCategory, deleteCategory } = useProjects()
+  
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+
+  const handleAddCategory = (data: Omit<Category, "id">) => {
+    addCategory(project.id, data)
+  }
+
+  const handleEditClick = (category: Category) => {
+    setSelectedCategory(category)
+    setIsEditDialogOpen(true)
+  }
+
+  const handleUpdateCategory = (data: Category) => {
+    if (selectedCategory) {
+      updateCategory(project.id, selectedCategory.name, data)
+      setIsEditDialogOpen(false)
+      setSelectedCategory(null)
+    }
+  }
+
+  const handleDeleteClick = (category: Category) => {
+    setSelectedCategory(category)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = () => {
+    if (selectedCategory) {
+      deleteCategory(project.id, selectedCategory.name)
+      setIsDeleteDialogOpen(false)
+      setSelectedCategory(null)
+    }
+  }
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
+            <CardDescription>Gestiona las categorías y presupuestos para los gastos de tu proyecto.</CardDescription>
+          </div>
+          <CreateCategoryDialog onAddCategory={handleAddCategory} />
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead className="text-right">Presupuesto</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {project.categories.length > 0 ? (
+                project.categories.map((category) => (
+                  <TableRow key={category.name}>
+                    <TableCell className="font-medium">{category.name}</TableCell>
+                    <TableCell className="text-right">${category.budget.toLocaleString('es-AR')}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir menú</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditClick(category)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteClick(category)} className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                    No hay categorías. ¡Añade la primera!
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      <EditCategoryDialog
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        category={selectedCategory}
+        onUpdateCategory={handleUpdateCategory}
+      />
+      <DeleteConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title="¿Estás seguro de que quieres eliminar esta categoría?"
+        description="Esta acción no se puede deshacer. Se eliminará la categoría de forma permanente."
+      />
+    </>
+  )
+}

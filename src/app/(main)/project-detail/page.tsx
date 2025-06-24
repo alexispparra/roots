@@ -8,6 +8,8 @@ import { Loader2, AlertTriangle, Briefcase, BarChart2, List, Users, Settings } f
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ProjectSettingsForm } from '@/components/project-settings-form'
+import { ProjectCategoriesTab } from '@/components/project-categories-tab'
+import { ProjectTransactionsTab } from '@/components/project-transactions-tab'
 
 export default function ProjectDetailPage() {
   const searchParams = useSearchParams()
@@ -75,29 +77,11 @@ export default function ProjectDetailPage() {
         </TabsContent>
 
         <TabsContent value="transactions">
-           <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Transacciones</CardTitle>
-                <CardDescription>Todos los ingresos y gastos registrados en el proyecto.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
-                <List className="h-16 w-16 mb-4" />
-                <p>El registro de transacciones estará disponible aquí pronto.</p>
-            </CardContent>
-          </Card>
+           <ProjectTransactionsTab project={project} />
         </TabsContent>
 
         <TabsContent value="categories">
-           <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
-                <CardDescription>Gestiona las categorías y presupuestos para los gastos de tu proyecto.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
-                <Briefcase className="h-16 w-16 mb-4" />
-                <p>La gestión de categorías estará disponible aquí pronto.</p>
-            </CardContent>
-          </Card>
+           <ProjectCategoriesTab project={project} />
         </TabsContent>
 
         <TabsContent value="team">
