@@ -16,39 +16,22 @@ let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 
-// This check is crucial for local development vs. deployed environment.
+// This check is crucial. It ensures we only try to initialize Firebase
+// if the necessary configuration is provided.
 const isConfigured = firebaseConfig.apiKey && firebaseConfig.projectId;
 
-if (getApps().length === 0) {
-    if (isConfigured) {
-        // If we have keys, we're in a configured local environment.
-        app = initializeApp(firebaseConfig);
-    } else {
-        // If we DON'T have keys, we might be in a deployed App Hosting environment
-        // OR an unconfigured local one.
-        // initializeApp({}) works for App Hosting but throws an error locally.
-        // We wrap this in a try-catch to handle the local case gracefully.
-        try {
-            app = initializeApp({});
-        } catch (e) {
-            console.error("Firebase initialization failed. This is expected if you are running locally without a .env file. The app will run in a read-only demonstration mode.");
-            // app, auth, and db will remain null.
-        }
-    }
-} else {
+if (isConfigured) {
+  if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+  } else {
     app = getApp();
-}
-
-// Only try to get services if the app was successfully initialized.
-if (app) {
-    try {
-        auth = getAuth(app);
-        db = getFirestore(app);
-    } catch(e) {
-        console.error("Failed to initialize Firebase services.", e)
-        auth = null;
-        db = null;
-    }
+  }
+  auth = getAuth(app);
+  db = getFirestore(app);
+} else {
+  // This message is helpful for local development.
+  // In a deployed App Hosting environment, the config should always be present.
+  console.warn("Firebase configuration not found. The app will run in a read-only demonstration mode.");
 }
 
 export { app, auth, db };

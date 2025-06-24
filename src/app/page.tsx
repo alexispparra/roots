@@ -63,20 +63,17 @@ export default function LandingPage() {
         <section className="container mx-auto px-4 pb-24">
           <div className="relative mx-auto w-full max-w-5xl">
             <div className="absolute -inset-2 rounded-xl bg-primary/10 blur-2xl" />
-            <Image
-              src="https://placehold.co/1200x800.png"
-              alt="Captura de pantalla de la aplicación Roots"
-              width={1200}
-              height={800}
-              className="relative rounded-xl shadow-2xl ring-1 ring-white/10"
+            <div
+              className="relative aspect-[3/2] w-full rounded-xl bg-card shadow-2xl ring-1 ring-white/10"
               data-ai-hint="finance dashboard"
-            />
+            >
+            </div>
           </div>
         </section>
       </main>
       
       <footer className="container mx-auto border-t py-6 text-center text-sm text-muted-foreground">
-        <p>© {new Date().getFullYear()} Roots.co. Todos los derechos reservados.</p>
+        <p>© {new Date().getFullYear()} Roots.oo. Todos los derechos reservados.</p>
       </footer>
     </div>
   );
