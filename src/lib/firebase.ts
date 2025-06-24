@@ -1,3 +1,4 @@
+
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
@@ -11,32 +12,24 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
-let db: Firestore | null = null;
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
 
-// This logic handles both local development (with .env) and deployed environments (App Hosting)
-try {
-  if (getApps().length > 0) {
-    app = getApp();
-  } else if (firebaseConfig.apiKey) {
-    // Use environment variables for local development
+if (getApps().length === 0) {
+  // Check if all required keys are present for local development
+  if (firebaseConfig.apiKey && firebaseConfig.projectId) {
     app = initializeApp(firebaseConfig);
   } else {
-    // In a deployed Firebase environment (like App Hosting),
-    // the SDK can be initialized without a config object.
+    // This will be true for deployed App Hosting environments
+    // where config is auto-injected
     app = initializeApp({});
   }
-
-  auth = getAuth(app);
-  db = getFirestore(app);
-} catch (error) {
-    console.error("Firebase initialization error:", error);
-    // If initialization fails, app, auth, and db will remain null.
-    // The UI is already designed to handle this and show demo mode messages.
-    if (typeof window !== 'undefined') {
-        console.log("Could not initialize Firebase. Running in demo mode.");
-    }
+} else {
+  app = getApp();
 }
+
+auth = getAuth(app);
+db = getFirestore(app);
 
 export { app, auth, db };

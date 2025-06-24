@@ -32,7 +32,10 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!auth) return;
+    if (!auth) {
+        setError("La autenticación no está configurada. Ejecutando en modo demostración.");
+        return;
+    }
     
     if (password.length < 6) {
         setError("La contraseña debe tener al menos 6 caracteres.");
@@ -54,7 +57,7 @@ export default function RegisterPage() {
         title: "¡Cuenta Creada!",
         description: "Tu cuenta ha sido creada exitosamente.",
       })
-      router.push("/")
+      router.push("/projects")
     } catch (err: any) {
         if (err.code === 'auth/email-already-in-use') {
             setError("Este correo electrónico ya está en uso. Por favor, inicia sesión o usa otro correo.");
@@ -71,14 +74,14 @@ export default function RegisterPage() {
 
   return (
     <div className="flex items-center justify-center min-h-svh bg-background p-4">
-      <Card className="mx-auto w-full max-w-sm">
+      <Card className="mx-auto w-full max-w-sm bg-card text-card-foreground border-border">
         <CardHeader className="space-y-4">
            <div className="flex justify-center">
             <Logo />
           </div>
           <CardTitle className="text-2xl font-headline text-center">Crear una Cuenta</CardTitle>
           <CardDescription className="text-center">
-            Ingresa tus datos para comenzar a gestionar tus proyectos
+            Ingresa tus datos para comenzar
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -90,27 +93,29 @@ export default function RegisterPage() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <div className="grid gap-2">
-                <Label htmlFor="first-name">Nombre</Label>
-                <Input 
-                    id="first-name" 
-                    placeholder="Juan" 
-                    required 
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    disabled={isLoading}
-                />
-            </div>
-             <div className="grid gap-2">
-                <Label htmlFor="last-name">Apellido</Label>
-                <Input 
-                    id="last-name" 
-                    placeholder="Pérez" 
-                    required 
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    disabled={isLoading}
-                />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                  <Label htmlFor="first-name">Nombre</Label>
+                  <Input 
+                      id="first-name" 
+                      placeholder="Juan" 
+                      required 
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      disabled={isLoading}
+                  />
+              </div>
+              <div className="grid gap-2">
+                  <Label htmlFor="last-name">Apellido</Label>
+                  <Input 
+                      id="last-name" 
+                      placeholder="Pérez" 
+                      required 
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      disabled={isLoading}
+                  />
+              </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Correo Electrónico</Label>
@@ -141,7 +146,7 @@ export default function RegisterPage() {
           </form>
           <div className="mt-4 text-center text-sm">
             ¿Ya tienes una cuenta?{" "}
-            <Link href="/login" className="underline">
+            <Link href="/login" className="underline hover:text-primary">
               Inicia Sesión
             </Link>
           </div>

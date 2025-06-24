@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { auth } from "@/lib/firebase";
 
 export default function AuthLayout({
   children,
@@ -15,19 +14,14 @@ export default function AuthLayout({
   const router = useRouter();
 
   useEffect(() => {
-    // If Firebase is not configured, redirect to the main page since auth pages are not usable.
-    if (!auth) {
-      router.push('/');
-      return;
-    }
-    // If Firebase is configured and user is logged in, redirect to main page.
+    // If Firebase is configured and user is logged in, redirect to main app page.
     if (!loading && user) {
-      router.push('/');
+      router.push('/projects');
     }
   }, [user, loading, router]);
 
   // Show a loader while checking auth status or if redirecting.
-  if (!auth || loading || user) {
+  if (loading || user) {
     return (
       <div className="flex items-center justify-center min-h-svh bg-background">
           <Loader2 className="h-8 w-8 animate-spin" />

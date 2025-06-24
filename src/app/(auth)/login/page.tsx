@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -31,7 +32,10 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!auth) return;
+    if (!auth) {
+        setError("La autenticación no está configurada. Ejecutando en modo demostración.");
+        return;
+    }
 
     setError(null)
     setIsLoading(true)
@@ -39,7 +43,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password)
       toast({ title: "¡Bienvenido de nuevo!" })
-      router.push("/")
+      router.push("/projects")
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
@@ -55,7 +59,10 @@ export default function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
-    if (!auth) return;
+    if (!auth) {
+        setError("La autenticación no está configurada. Ejecutando en modo demostración.");
+        return;
+    };
 
     setError(null)
     setIsGoogleLoading(true)
@@ -63,14 +70,14 @@ export default function LoginPage() {
     try {
       await signInWithPopup(auth, provider)
       toast({ title: "¡Bienvenido!" })
-      router.push("/")
+      router.push("/projects")
     } catch (err: any) {
         if (err.code !== 'auth/popup-closed-by-user') {
             if (err.code === 'auth/configuration-not-found') {
               setError("Error de configuración de Firebase. Asegúrate de haber habilitado el proveedor de inicio de sesión de Google en tu consola de Firebase.");
             } else if (err.code === 'auth/unauthorized-domain') {
               const hostname = window.location.hostname;
-              setError(`Este dominio (${hostname}) no está autorizado. Ve a tu Consola de Firebase -> Authentication -> Settings -> Dominios autorizados y añádelo a la lista. A veces, los cambios tardan unos minutos en aplicarse.`);
+              setError(`Este dominio (${hostname}) no está autorizado. Ve a tu Consola de Firebase -> Authentication -> Settings -> Dominios autorizados y añádelo a la lista.`);
             } else {
               setError("No se pudo iniciar sesión con Google. Por favor, intentalo de nuevo.")
             }
@@ -83,14 +90,14 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-svh bg-background">
-      <Card className="mx-auto w-full max-w-sm">
+      <Card className="mx-auto w-full max-w-sm bg-card text-card-foreground border-border">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
             <Logo />
           </div>
           <CardTitle className="text-2xl font-headline text-center">Iniciar Sesión</CardTitle>
           <CardDescription className="text-center">
-            Ingresa tu correo electrónico para acceder a tus proyectos
+            Ingresa tus datos para acceder a tus proyectos
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -115,9 +122,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Contraseña</Label>
-              </div>
+              <Label htmlFor="password">Contraseña</Label>
               <Input id="password" 
                 type="password" 
                 required 
@@ -140,7 +145,7 @@ export default function LoginPage() {
           </form>
           <div className="mt-4 text-center text-sm">
             ¿No tienes una cuenta?{" "}
-            <Link href="/register" className="underline">
+            <Link href="/register" className="underline hover:text-primary">
               Regístrate
             </Link>
           </div>

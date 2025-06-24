@@ -7,11 +7,12 @@ import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp
 import { useToast } from '@/hooks/use-toast';
 
 // --- Type Definitions ---
+export type UserRole = 'admin' | 'editor' | 'viewer';
 
 export type Participant = {
   email: string;
   name: string;
-  role: 'admin' | 'editor' | 'viewer';
+  role: UserRole;
 };
 
 export type Category = {
@@ -36,7 +37,7 @@ export type Transaction = {
 
 export type Project = {
   id: string;
-  name: string;
+  name:string;
   description?: string;
   address: string;
   googleSheetId?: string;
@@ -64,6 +65,7 @@ type ProjectsContextType = {
   loading: boolean;
   addProject: (projectData: AddProjectData) => Promise<string | null>;
   getProjectById: (id: string | null) => Project | undefined;
+  getUserRoleForProject: (projectId: string) => UserRole | null;
   updateProject: (projectId: string, projectData: UpdateProjectData) => Promise<void>;
   addTransaction: (projectId: string, transactionData: Omit<Transaction, 'id'>) => Promise<void>;
   updateTransaction: (projectId: string, transactionId: string, transactionData: Partial<Omit<Transaction, 'id' | 'type'>>) => Promise<void>;
@@ -152,6 +154,14 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     if (!id) return undefined;
     return projects.find(p => p.id === id);
   }, [projects]);
+
+  const getUserRoleForProject = useCallback((projectId: string): UserRole | null => {
+    if (!user) return null;
+    const project = getProjectById(projectId);
+    if (!project) return null;
+    const participant = project.participants.find(p => p.email === user.email);
+    return participant ? participant.role : null;
+  }, [projects, user, getProjectById]);
 
   const addProject = async (projectData: AddProjectData): Promise<string | null> => {
     if (!user || !db) {
@@ -305,6 +315,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     loading,
     addProject,
     getProjectById,
+    getUserRoleForProject,
     updateProject,
     addTransaction,
     updateTransaction,

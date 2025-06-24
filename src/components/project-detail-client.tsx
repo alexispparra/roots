@@ -15,9 +15,12 @@ import { ProjectTransactionsTab } from '@/components/project-transactions-tab'
 export default function ProjectDetailClient() {
   const searchParams = useSearchParams()
   const projectId = searchParams.get('id')
-  const { getProjectById, loading } = useProjects()
+  const { getProjectById, getUserRoleForProject, loading } = useProjects()
 
   const project = getProjectById(projectId)
+  const userRole = project ? getUserRoleForProject(project.id) : null;
+  const canEdit = userRole === 'admin' || userRole === 'editor';
+  const isAdmin = userRole === 'admin';
 
   if (loading) {
     return (
@@ -56,12 +59,12 @@ export default function ProjectDetailClient() {
       </Card>
 
       <Tabs defaultValue="dashboard" className="grid gap-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
           <TabsTrigger value="dashboard"><BarChart2 className="mr-2 h-4 w-4" />Resumen</TabsTrigger>
           <TabsTrigger value="transactions"><List className="mr-2 h-4 w-4" />Transacciones</TabsTrigger>
           <TabsTrigger value="categories"><Briefcase className="mr-2 h-4 w-4" />Categorías</TabsTrigger>
-          <TabsTrigger value="team"><Users className="mr-2 h-4 w-4" />Equipo</TabsTrigger>
-          <TabsTrigger value="settings"><Settings className="mr-2 h-4 w-4" />Configuración</TabsTrigger>
+          {isAdmin && <TabsTrigger value="team"><Users className="mr-2 h-4 w-4" />Equipo</TabsTrigger>}
+          {isAdmin && <TabsTrigger value="settings"><Settings className="mr-2 h-4 w-4" />Configuración</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="dashboard">
@@ -78,14 +81,14 @@ export default function ProjectDetailClient() {
         </TabsContent>
 
         <TabsContent value="transactions">
-           <ProjectTransactionsTab project={project} />
+           <ProjectTransactionsTab project={project} canEdit={canEdit} />
         </TabsContent>
 
         <TabsContent value="categories">
-           <ProjectCategoriesTab project={project} />
+           <ProjectCategoriesTab project={project} canEdit={canEdit} />
         </TabsContent>
 
-        <TabsContent value="team">
+        {isAdmin && <TabsContent value="team">
            <Card>
             <CardHeader>
                 <CardTitle className="font-headline">Equipo del Proyecto</CardTitle>
@@ -96,11 +99,11 @@ export default function ProjectDetailClient() {
                 <p>La gestión de equipo estará disponible aquí pronto.</p>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent>}
 
-        <TabsContent value="settings">
+        {isAdmin && <TabsContent value="settings">
           <ProjectSettingsForm project={project} />
-        </TabsContent>
+        </TabsContent>}
       </Tabs>
     </div>
   )

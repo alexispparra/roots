@@ -12,7 +12,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'Financier',
+  title: 'Roots',
   description: 'Gestiona tus proyectos y emprendimientos de forma centralizada.',
 };
 
@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" className="dark" suppressHydrationWarning>
       <body className={`${inter.variable} ${poppins.variable} font-body antialiased`}>
         <AuthProvider>
           {children}

@@ -17,9 +17,10 @@ import { Badge } from "@/components/ui/badge"
 
 type ProjectTransactionsTabProps = {
   project: Project;
+  canEdit: boolean;
 }
 
-export function ProjectTransactionsTab({ project }: ProjectTransactionsTabProps) {
+export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactionsTabProps) {
     const { addTransaction, updateTransaction, deleteTransaction } = useProjects()
 
     const [isEditExpenseDialogOpen, setIsEditExpenseDialogOpen] = useState(false)
@@ -71,19 +72,19 @@ export function ProjectTransactionsTab({ project }: ProjectTransactionsTabProps)
   return (
     <>
         <Card>
-            <CardHeader className="flex flex-row items-start justify-between">
+            <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div>
                     <CardTitle className="font-headline">Transacciones</CardTitle>
                     <CardDescription>Todos los ingresos y gastos registrados en el proyecto.</CardDescription>
                 </div>
-                <div className="flex gap-2">
+                {canEdit && <div className="flex gap-2">
                     <CreateIncomeDialog onAddIncome={handleAddIncome} />
                     <CreateExpenseDialog
                         onAddExpense={handleAddExpense}
                         categories={project.categories}
                         participants={project.participants}
                     />
-                </div>
+                </div>}
             </CardHeader>
             <CardContent>
                 <Table>
@@ -96,7 +97,7 @@ export function ProjectTransactionsTab({ project }: ProjectTransactionsTabProps)
                             <TableHead>Medio de Pago</TableHead>
                             <TableHead className="text-right">Monto (AR$)</TableHead>
                             <TableHead className="text-right">Monto (U$S)</TableHead>
-                            <TableHead className="w-[50px]"></TableHead>
+                            {canEdit && <TableHead className="w-[50px]"></TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -108,13 +109,13 @@ export function ProjectTransactionsTab({ project }: ProjectTransactionsTabProps)
                                     <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
                                     <TableCell>{t.user}</TableCell>
                                     <TableCell>{t.paymentMethod}</TableCell>
-                                    <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-600' : 'text-destructive'}`}>
+                                    <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
                                       {t.type === 'income' ? '+' : '-'}${t.amountARS.toLocaleString('es-AR')}
                                     </TableCell>
-                                    <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-600' : 'text-destructive'}`}>
+                                    <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
                                       {t.type === 'income' ? '+' : '-'}${(t.amountARS / t.exchangeRate).toFixed(2)}
                                     </TableCell>
-                                    <TableCell>
+                                    {canEdit && <TableCell>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -133,13 +134,14 @@ export function ProjectTransactionsTab({ project }: ProjectTransactionsTabProps)
                                             </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
-                                    </TableCell>
+                                    </TableCell>}
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                                    No hay transacciones. ¡Registra la primera!
+                                <TableCell colSpan={canEdit ? 8 : 7} className="h-24 text-center text-muted-foreground">
+                                    No hay transacciones. 
+                                    {canEdit && " ¡Registra la primera!"}
                                 </TableCell>
                             </TableRow>
                         )}
@@ -148,7 +150,7 @@ export function ProjectTransactionsTab({ project }: ProjectTransactionsTabProps)
             </CardContent>
         </Card>
         
-        {selectedTransaction && selectedTransaction.type === 'expense' && (
+        {canEdit && selectedTransaction && selectedTransaction.type === 'expense' && (
             <EditExpenseDialog
                 isOpen={isEditExpenseDialogOpen}
                 onOpenChange={setIsEditExpenseDialogOpen}
@@ -159,7 +161,7 @@ export function ProjectTransactionsTab({ project }: ProjectTransactionsTabProps)
             />
         )}
 
-        {selectedTransaction && selectedTransaction.type === 'income' && (
+        {canEdit && selectedTransaction && selectedTransaction.type === 'income' && (
             <EditIncomeDialog
                 isOpen={isEditIncomeDialogOpen}
                 onOpenChange={setIsEditIncomeDialogOpen}
@@ -168,13 +170,13 @@ export function ProjectTransactionsTab({ project }: ProjectTransactionsTabProps)
             />
         )}
         
-        <DeleteConfirmationDialog
+        {canEdit && <DeleteConfirmationDialog
             isOpen={isDeleteDialogOpen}
             onOpenChange={setIsDeleteDialogOpen}
             onConfirm={handleConfirmDelete}
             title="¿Estás seguro de que quieres eliminar esta transacción?"
             description="Esta acción no se puede deshacer. Se eliminará la transacción de forma permanente."
-        />
+        />}
     </>
   )
 }

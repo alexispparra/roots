@@ -10,11 +10,10 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Briefcase,
-  Home,
   Settings,
-  Wallet,
-  Users,
   Shield,
+  Wallet,
+  Users
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -27,19 +26,6 @@ export function Navigation() {
 
   return (
     <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          asChild
-          isActive={pathname === "/"}
-          tooltip="Panel"
-        >
-          <Link href="/">
-            <Home />
-            <span>Panel</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      
       <SidebarMenuItem>
         <SidebarMenuButton
           asChild

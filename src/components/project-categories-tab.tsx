@@ -14,9 +14,10 @@ import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialo
 
 type ProjectCategoriesTabProps = {
   project: Project;
+  canEdit: boolean;
 }
 
-export function ProjectCategoriesTab({ project }: ProjectCategoriesTabProps) {
+export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabProps) {
   const { addCategory, updateCategory, deleteCategory } = useProjects()
   
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -61,7 +62,7 @@ export function ProjectCategoriesTab({ project }: ProjectCategoriesTabProps) {
             <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
             <CardDescription>Gestiona las categorías y presupuestos para los gastos de tu proyecto.</CardDescription>
           </div>
-          <CreateCategoryDialog onAddCategory={handleAddCategory} />
+          {canEdit && <CreateCategoryDialog onAddCategory={handleAddCategory} />}
         </CardHeader>
         <CardContent>
           <Table>
@@ -69,7 +70,7 @@ export function ProjectCategoriesTab({ project }: ProjectCategoriesTabProps) {
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead className="text-right">Presupuesto</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
+                {canEdit && <TableHead className="w-[50px]"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -78,7 +79,7 @@ export function ProjectCategoriesTab({ project }: ProjectCategoriesTabProps) {
                   <TableRow key={category.name}>
                     <TableCell className="font-medium">{category.name}</TableCell>
                     <TableCell className="text-right">${category.budget.toLocaleString('es-AR')}</TableCell>
-                    <TableCell>
+                    {canEdit && <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">
@@ -97,13 +98,14 @@ export function ProjectCategoriesTab({ project }: ProjectCategoriesTabProps) {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </TableCell>
+                    </TableCell>}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
-                    No hay categorías. ¡Añade la primera!
+                  <TableCell colSpan={canEdit ? 3 : 2} className="h-24 text-center text-muted-foreground">
+                    No hay categorías.
+                    {canEdit && " ¡Añade la primera!"}
                   </TableCell>
                 </TableRow>
               )}
@@ -111,19 +113,21 @@ export function ProjectCategoriesTab({ project }: ProjectCategoriesTabProps) {
           </Table>
         </CardContent>
       </Card>
-      <EditCategoryDialog
-        isOpen={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        category={selectedCategory}
-        onUpdateCategory={handleUpdateCategory}
-      />
-      <DeleteConfirmationDialog
-        isOpen={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={handleConfirmDelete}
-        title="¿Estás seguro de que quieres eliminar esta categoría?"
-        description="Esta acción no se puede deshacer. Se eliminará la categoría de forma permanente."
-      />
+      {canEdit && <>
+        <EditCategoryDialog
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          category={selectedCategory}
+          onUpdateCategory={handleUpdateCategory}
+        />
+        <DeleteConfirmationDialog
+          isOpen={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onConfirm={handleConfirmDelete}
+          title="¿Estás seguro de que quieres eliminar esta categoría?"
+          description="Esta acción no se puede deshacer. Se eliminará la categoría de forma permanente."
+        />
+      </>}
     </>
   )
 }

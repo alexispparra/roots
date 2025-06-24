@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 type AuthContextType = {
   user: User | null;
@@ -21,13 +21,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAppAdmin, setIsAppAdmin] = useState(false);
 
   useEffect(() => {
-    // If firebase is not configured, we're not loading and there's no user.
-    // The app will run in demo mode.
-    if (!auth) {
-      setLoading(false);
-      return;
-    }
-
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
        if (user && process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL && user.email === process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL) {
@@ -61,14 +54,12 @@ export const AuthGuard = ({ children }: { children: ReactNode }) => {
     const router = useRouter();
 
     useEffect(() => {
-        // If Firebase is configured, and we're done loading, and there's no user, redirect to login.
-        if (auth && !loading && !user) {
+        if (!loading && !user) {
             router.push('/login');
         }
     }, [user, loading, router]);
 
-    // If Firebase is configured and we're loading, or if there's no user yet (and we're not yet redirecting), show a loader.
-    if (auth && (loading || !user)) {
+    if (loading || !user) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-background">
                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -76,6 +67,5 @@ export const AuthGuard = ({ children }: { children: ReactNode }) => {
         );
     }
 
-    // If Firebase is not configured, or if we have a user, show the content.
     return <>{children}</>;
 };

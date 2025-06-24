@@ -30,12 +30,11 @@ export default function MainLayout({
   const { toast } = useToast();
 
   const handleLogout = async () => {
-    // If Firebase isn't configured, inform the user instead of doing nothing.
     if (!auth) {
         toast({
             variant: "destructive",
-            title: "Modo de Demostración",
-            description: "La función de cerrar sesión requiere la configuración de Firebase.",
+            title: "Error de Configuración",
+            description: "La función de cerrar sesión no está disponible en modo demostración.",
         });
         return;
     }
