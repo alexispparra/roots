@@ -1,4 +1,3 @@
-
 import type { SVGProps } from "react";
 
 export function LandingLogo(props: SVGProps<SVGSVGElement>) {
@@ -6,7 +5,7 @@ export function LandingLogo(props: SVGProps<SVGSVGElement>) {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 170 130"
-      aria-label="Roots.co"
+      aria-label="Roots.oo"
       {...props}
     >
       <style>
@@ -28,7 +27,7 @@ export function LandingLogo(props: SVGProps<SVGSVGElement>) {
       </text>
       <rect x="0" y="65" width="165" height="12" rx="6" className="roots-bar" />
       <text x="0" y="115" className="roots-text">
-        co.
+        oo.
       </text>
     </svg>
   );
