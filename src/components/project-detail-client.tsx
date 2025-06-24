@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { ProjectSettingsForm } from '@/components/project-settings-form'
 import { ProjectCategoriesTab } from '@/components/project-categories-tab'
 import { ProjectTransactionsTab } from '@/components/project-transactions-tab'
+import { ProjectSummary } from '@/components/project-summary'
 
 export default function ProjectDetailClient() {
   const searchParams = useSearchParams()
@@ -68,16 +69,7 @@ export default function ProjectDetailClient() {
         </TabsList>
 
         <TabsContent value="dashboard">
-          <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Resumen del Proyecto</CardTitle>
-                <CardDescription>Métricas clave y estado general de tu proyecto.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
-                <BarChart2 className="h-16 w-16 mb-4" />
-                <p>El resumen financiero estará disponible aquí pronto.</p>
-            </CardContent>
-          </Card>
+          <ProjectSummary project={project} />
         </TabsContent>
 
         <TabsContent value="transactions">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -107,23 +108,26 @@ export function Navigation() {
         <Accordion type="single" collapsible className="w-full px-2" defaultValue={currentProjectId ?? undefined}>
           {projects.map((project) => (
             <AccordionItem value={project.id} key={project.id} className="border-none">
-              <AccordionTrigger className="p-2 justify-start gap-2 text-sm rounded-md hover:bg-sidebar-accent hover:no-underline [&>svg]:size-4">
-                 <span className="truncate">{project.name}</span>
+               <AccordionTrigger 
+                  className="p-2 justify-start gap-2 text-sm rounded-md hover:bg-sidebar-accent hover:no-underline [&>svg]:size-4"
+                  asChild
+                >
+                  <Link href={`/project-detail?id=${project.id}`} className="flex flex-1 items-center">
+                    <span className="truncate flex-1 text-left">{project.name}</span>
+                    <ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                  </Link>
               </AccordionTrigger>
               <AccordionContent className="pl-4 pb-1">
                  <ul className="flex flex-col gap-1 border-l border-sidebar-border ml-2 pl-4 py-1">
-                    <li>
-                      <Link href={`/project-detail?id=${project.id}`} className={cn("flex items-center gap-2 p-1.5 rounded-md text-sm hover:bg-sidebar-accent", (pathname === '/project-detail' && searchParams.get('id') === project.id) && 'bg-sidebar-accent font-semibold')}>
-                         <LayoutDashboard className="h-4 w-4 shrink-0" /> Resumen
-                      </Link>
-                    </li>
-                    {project.categories.map(category => (
+                    {project.categories.length > 0 ? project.categories.map(category => (
                        <li key={category.name}>
                          <Link href={`/project-category?projectId=${project.id}&categoryName=${encodeURIComponent(category.name)}`} className={cn("flex items-center gap-2 p-1.5 rounded-md text-sm hover:bg-sidebar-accent", pathname === '/project-category' && searchParams.get('projectId') === project.id && decodeURIComponent(searchParams.get('categoryName') ?? '') === category.name && 'bg-sidebar-accent font-semibold')}>
                            <ChevronRight className="h-4 w-4 shrink-0" /> <span className="truncate">{category.name}</span>
                          </Link>
                        </li>
-                    ))}
+                    )) : (
+                      <li className="text-xs text-sidebar-foreground/70 p-1.5">No hay categorías</li>
+                    )}
                  </ul>
               </AccordionContent>
             </AccordionItem>

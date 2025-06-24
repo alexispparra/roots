@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -54,6 +55,7 @@ export type AddProjectData = {
   description?: string;
   address: string;
   googleSheetId?: string;
+  status: ProjectStatus;
 };
 
 export type UpdateProjectData = Partial<Omit<Project, 'id' | 'ownerEmail' | 'participants' | 'createdAt'>>;
@@ -177,7 +179,6 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         participantsEmails: [user.email], // For querying
         categories: [],
         transactions: [],
-        status: 'planning',
         createdAt: Timestamp.now(),
       });
       toast({ title: "¡Proyecto Creado!", description: `El proyecto "${projectData.name}" ha sido creado.` });

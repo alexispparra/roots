@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -27,12 +28,14 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useProjects } from "@/contexts/ProjectsContext"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const formSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
   description: z.string().optional(),
   address: z.string().min(1, "La dirección es requerida."),
   googleSheetId: z.string().optional(),
+  status: z.enum(['planning', 'in-progress', 'completed', 'on-hold']),
 })
 
 export function CreateProjectDialog() {
@@ -45,6 +48,7 @@ export function CreateProjectDialog() {
       description: "",
       address: "",
       googleSheetId: "",
+      status: "planning",
     },
   })
 
@@ -123,6 +127,29 @@ export function CreateProjectDialog() {
                     <FormControl>
                       <Input placeholder="Pega aquí el ID de tu hoja de cálculo" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado Inicial</FormLabel>
+                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecciona un estado" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="planning">Planeación</SelectItem>
+                            <SelectItem value="in-progress">En Progreso</SelectItem>
+                            <SelectItem value="completed">Completado</SelectItem>
+                            <SelectItem value="on-hold">En Pausa</SelectItem>
+                        </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
