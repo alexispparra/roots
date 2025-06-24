@@ -1,14 +1,34 @@
-
 "use client";
 
-// Este layout ya no se encarga de la lógica de redirección.
-// Las páginas individuales (/login, /register) se encargarán de redirigir
-// a los usuarios autenticados. Esto simplifica la lógica y previene
-// las "carreras de condiciones" con el AuthGuard.
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
+
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // If the user is authenticated, redirect them to the projects page.
+    if (!loading && user) {
+      router.replace('/projects');
+    }
+  }, [user, loading, router]);
+
+  // While checking auth state or if a redirect is imminent, show a loader.
+  if (loading || user) {
+    return (
+      <div className="flex items-center justify-center min-h-svh bg-background">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // If not loading and no user, render the children (login/register page)
   return <div className="min-h-svh">{children}</div>;
 }

@@ -1,8 +1,6 @@
-
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
@@ -20,7 +18,6 @@ import { LandingLogo } from "@/components/landing-logo"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useAuth } from "@/contexts/AuthContext"
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("")
@@ -30,25 +27,6 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
-  const { user, loading: authLoading } = useAuth()
-  const router = useRouter()
-
-  useEffect(() => {
-    // Si el usuario ya está autenticado, redirige a la página de proyectos.
-    if (!authLoading && user) {
-      router.replace('/projects');
-    }
-  }, [user, authLoading, router]);
-
-  // Muestra un loader mientras se verifica el estado de autenticación
-  // o si el usuario ya está logueado y estamos por redirigir.
-  if (authLoading || user) {
-    return (
-      <div className="flex items-center justify-center min-h-svh bg-background">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,7 +55,7 @@ export default function RegisterPage() {
         title: "¡Cuenta Creada!",
         description: "Redirigiendo a tus proyectos...",
       })
-      // La redirección ahora la maneja el useEffect
+      // The AuthLayout will handle the redirection.
     } catch (err: any) {
         if (err.code === 'auth/email-already-in-use') {
             setError("Este correo electrónico ya está en uso. Por favor, inicia sesión o usa otro correo.");
