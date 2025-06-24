@@ -15,15 +15,27 @@ let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 
-// Initialize Firebase only if the API key is provided
-if (firebaseConfig.apiKey) {
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
-} else {
-    // You can optionally log a message to the console for developers
+// This logic handles both local development (with .env) and deployed environments (App Hosting)
+try {
+  if (getApps().length > 0) {
+    app = getApp();
+  } else if (firebaseConfig.apiKey) {
+    // Use environment variables for local development
+    app = initializeApp(firebaseConfig);
+  } else {
+    // In a deployed Firebase environment (like App Hosting),
+    // the SDK can be initialized without a config object.
+    app = initializeApp({});
+  }
+
+  auth = getAuth(app);
+  db = getFirestore(app);
+} catch (error) {
+    console.error("Firebase initialization error:", error);
+    // If initialization fails, app, auth, and db will remain null.
+    // The UI is already designed to handle this and show demo mode messages.
     if (typeof window !== 'undefined') {
-        console.log("Firebase API key not found. Running in demo mode.");
+        console.log("Could not initialize Firebase. Running in demo mode.");
     }
 }
 
