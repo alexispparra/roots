@@ -2,7 +2,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
@@ -28,7 +27,6 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
   const { toast } = useToast()
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -56,9 +54,9 @@ export default function RegisterPage() {
 
       toast({
         title: "¡Cuenta Creada!",
-        description: "Tu cuenta ha sido creada exitosamente.",
+        description: "Redirigiendo a tus proyectos...",
       })
-      router.push("/projects")
+      // The redirect is now handled by the AuthLayout
     } catch (err: any) {
         if (err.code === 'auth/email-already-in-use') {
             setError("Este correo electrónico ya está en uso. Por favor, inicia sesión o usa otro correo.");

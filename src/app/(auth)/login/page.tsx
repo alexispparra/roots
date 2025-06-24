@@ -2,7 +2,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
@@ -27,7 +26,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
-  const router = useRouter()
   const { toast } = useToast()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -42,8 +40,11 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password)
-      toast({ title: "¡Bienvenido de nuevo!" })
-      router.push("/projects")
+      toast({ 
+        title: "¡Bienvenido de nuevo!",
+        description: "Redirigiendo a tus proyectos...",
+      })
+      // The redirect is now handled by the AuthLayout
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
@@ -69,8 +70,11 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider()
     try {
       await signInWithPopup(auth, provider)
-      toast({ title: "¡Bienvenido!" })
-      router.push("/projects")
+      toast({ 
+        title: "¡Bienvenido!",
+        description: "Redirigiendo a tus proyectos...",
+      })
+      // The redirect is now handled by the AuthLayout
     } catch (err: any) {
         if (err.code !== 'auth/popup-closed-by-user') {
             if (err.code === 'auth/configuration-not-found') {
