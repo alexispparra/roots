@@ -111,43 +111,41 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const projectsData = snapshot.docs.map(doc => {
-                const data = doc.data();
-
-                const sanitizedParticipants: Participant[] = (Array.isArray(data.participants) ? data.participants : [])
-                    .filter((p: any) => p && typeof p === 'object' && p.email && typeof p.email === 'string')
-                    .map((p: any) => ({
+                try {
+                    const data = doc.data();
+                    
+                    const participants = (data.participants || []).map((p: any) => ({
                         name: p.name || 'Usuario Anónimo',
-                        email: p.email,
+                        email: p.email || '',
                         role: p.role || 'viewer',
-                        src: p.src || undefined,
-                        fallback: p.fallback || (String(p.name || 'U')).split(' ').map((n:string) => n[0]).join('').substring(0,2).toUpperCase(),
+                        src: p.src,
+                        fallback: p.fallback || (p.name ? String(p.name).substring(0, 2) : '??'),
                         contribution: p.contribution || 0,
                         share: p.share || 0,
                     }));
 
-                const sanitizedCategories: Category[] = (Array.isArray(data.categories) ? data.categories : [])
-                    .filter((c: any) => c && typeof c === 'object' && c.name && typeof c.name === 'string')
-                    .map((c: any) => ({
-                        name: c.name,
-                        budget: c.budget || 0,
-                    }));
+                    return {
+                        id: doc.id,
+                        name: data.name || 'Proyecto sin nombre',
+                        description: data.description || 'Sin descripción.',
+                        address: data.address || 'Sin dirección',
+                        status: data.status || 'Próximo',
+                        investment: data.investment || '0',
+                        googleSheetId: data.googleSheetId,
+                        participants: participants,
+                        participantEmails: data.participantEmails || [],
+                        progress: data.progress || 0,
+                        categories: data.categories || [],
+                        createdAt: data.createdAt || Timestamp.now(),
+                    } as Project;
+                } catch (e) {
+                    console.error(`Error processing project document with ID: ${doc.id}`, e);
+                    // Return null for any document that fails to process, so we can filter it out.
+                    return null;
+                }
+            }).filter(project => project !== null); // Filter out any malformed projects
 
-                return {
-                    id: doc.id,
-                    name: data.name || 'Proyecto sin nombre',
-                    description: data.description || 'Sin descripción.',
-                    address: data.address || 'Sin dirección',
-                    status: data.status || 'Próximo',
-                    investment: data.investment || '0',
-                    googleSheetId: data.googleSheetId || undefined,
-                    participants: sanitizedParticipants,
-                    participantEmails: Array.isArray(data.participantEmails) ? data.participantEmails.filter((e: any) => typeof e === 'string') : [],
-                    progress: data.progress || 0,
-                    categories: sanitizedCategories,
-                    createdAt: data.createdAt instanceof Timestamp ? data.createdAt : Timestamp.now(),
-                } as Project;
-            });
-            setProjects(projectsData);
+            setProjects(projectsData as Project[]);
             setLoading(false);
         }, (error) => {
             console.error("Error fetching projects:", error);
@@ -347,6 +345,3 @@ export const useProjects = () => {
     }
     return context;
 };
-
-    
-    
