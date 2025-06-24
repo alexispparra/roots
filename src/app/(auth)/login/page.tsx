@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,8 @@ import { LandingLogo } from "@/components/landing-logo"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useAuth } from "@/contexts/AuthContext"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -26,6 +28,15 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const { toast } = useToast()
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    // If the user is authenticated, redirect them to the projects page.
+    if (!loading && user) {
+      router.replace('/projects');
+    }
+  }, [user, loading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,7 +54,7 @@ export default function LoginPage() {
         title: "¡Bienvenido de nuevo!",
         description: "Redirigiendo a tus proyectos...",
       })
-      // The AuthLayout will handle the redirection.
+      // Redirection is handled by the useEffect hook.
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
@@ -73,7 +84,7 @@ export default function LoginPage() {
         title: "¡Bienvenido!",
         description: "Redirigiendo a tus proyectos...",
       })
-       // The AuthLayout will handle the redirection.
+       // Redirection is handled by the useEffect hook.
     } catch (err: any) {
         if (err.code !== 'auth/popup-closed-by-user') {
             if (err.code === 'auth/configuration-not-found') {
@@ -90,6 +101,16 @@ export default function LoginPage() {
         setIsGoogleLoading(false)
     }
   }
+  
+  // While checking auth state or if a redirect is imminent, show a loader.
+  if (loading || user) {
+    return (
+      <div className="flex items-center justify-center min-h-svh bg-background">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
 
   return (
     <div className="flex items-center justify-center min-h-svh bg-background">

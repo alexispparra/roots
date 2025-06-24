@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,8 @@ import { LandingLogo } from "@/components/landing-logo"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useAuth } from "@/contexts/AuthContext"
+import { useRouter } from "next/navigation"
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("")
@@ -27,6 +29,16 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // If the user is authenticated, redirect them to the projects page.
+    if (!loading && user) {
+      router.replace('/projects');
+    }
+  }, [user, loading, router]);
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,7 +67,7 @@ export default function RegisterPage() {
         title: "¡Cuenta Creada!",
         description: "Redirigiendo a tus proyectos...",
       })
-      // The AuthLayout will handle the redirection.
+      // Redirection is handled by the useEffect hook.
     } catch (err: any) {
         if (err.code === 'auth/email-already-in-use') {
             setError("Este correo electrónico ya está en uso. Por favor, inicia sesión o usa otro correo.");
@@ -68,6 +80,15 @@ export default function RegisterPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // While checking auth state or if a redirect is imminent, show a loader.
+  if (loading || user) {
+    return (
+      <div className="flex items-center justify-center min-h-svh bg-background">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (
