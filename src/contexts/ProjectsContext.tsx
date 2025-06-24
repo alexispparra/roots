@@ -87,7 +87,6 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     const { toast } = useToast();
 
     useEffect(() => {
-        // If there's no user or the database isn't configured, don't try to fetch data.
         if (!user || !db) {
             setProjects([]);
             setLoading(false);
@@ -100,11 +99,8 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         const projectsCol = collection(db, 'projects');
 
         if (isAppAdmin) {
-            // App admin can see all projects
             q = query(projectsCol);
         } else {
-            // For regular users, we MUST have an email to build the query.
-            // If the user object exists but email is not yet available, we wait.
             if (!user.email) {
                 setProjects([]);
                 setLoading(false);
@@ -117,21 +113,24 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
             const projectsData = snapshot.docs.map(doc => {
                 const data = doc.data();
 
-                // Deep sanitization to prevent runtime errors from malformed data
-                const sanitizedParticipants: Participant[] = (Array.isArray(data.participants) ? data.participants : []).map((p: any) => ({
-                    name: p?.name || 'Usuario Anónimo',
-                    email: p?.email || '',
-                    role: p?.role || 'viewer',
-                    src: p?.src || undefined,
-                    fallback: p?.fallback || p?.name?.split(' ').map((n:string) => n[0]).join('').substring(0,2).toUpperCase() || 'U',
-                    contribution: p?.contribution || 0,
-                    share: p?.share || 0,
-                })).filter((p: Participant) => p.email); // Filter out participants without an email
+                const sanitizedParticipants: Participant[] = (Array.isArray(data.participants) ? data.participants : [])
+                    .filter((p: any) => p && typeof p === 'object' && p.email && typeof p.email === 'string')
+                    .map((p: any) => ({
+                        name: p.name || 'Usuario Anónimo',
+                        email: p.email,
+                        role: p.role || 'viewer',
+                        src: p.src || undefined,
+                        fallback: p.fallback || (String(p.name || 'U')).split(' ').map((n:string) => n[0]).join('').substring(0,2).toUpperCase(),
+                        contribution: p.contribution || 0,
+                        share: p.share || 0,
+                    }));
 
-                const sanitizedCategories: Category[] = (Array.isArray(data.categories) ? data.categories : []).map((c: any) => ({
-                    name: c?.name || '',
-                    budget: c?.budget || 0,
-                })).filter((c: Category) => c.name); // Filter out categories without a name
+                const sanitizedCategories: Category[] = (Array.isArray(data.categories) ? data.categories : [])
+                    .filter((c: any) => c && typeof c === 'object' && c.name && typeof c.name === 'string')
+                    .map((c: any) => ({
+                        name: c.name,
+                        budget: c.budget || 0,
+                    }));
 
                 return {
                     id: doc.id,
@@ -349,4 +348,5 @@ export const useProjects = () => {
     return context;
 };
 
+    
     
