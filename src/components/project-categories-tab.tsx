@@ -2,8 +2,8 @@
 "use client"
 
 import { useState } from "react"
-import { useProjects, type AddCategoryInput, type UpdateCategoryInput } from "@/contexts/ProjectsContext"
-import type { Project, Category } from "@/contexts/ProjectsContext"
+import { useProjects } from "@/contexts/ProjectsContext"
+import type { Project, Category, AddCategoryInput, UpdateCategoryInput, PredefinedCategory } from "@/contexts/ProjectsContext"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -14,7 +14,6 @@ import { EditCategoryDialog } from "@/components/edit-category-dialog"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
 import { CategoryIcon } from "./category-icon"
 import { Progress } from "@/components/ui/progress"
-import type { PredefinedCategory } from "@/lib/predefined-categories"
 
 type ProjectCategoriesTabProps = {
   project: Project;
@@ -96,7 +95,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
                   <TableRow key={category.name}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
-                        <CategoryIcon name={category.icon} className="h-5 w-5 text-muted-foreground" />
+                        <CategoryIcon name={category.icon ?? undefined} className="h-5 w-5 text-muted-foreground" />
                         <span>{category.name}</span>
                       </div>
                     </TableCell>
