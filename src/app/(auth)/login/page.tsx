@@ -26,31 +26,36 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
-  const [isProcessingRedirect, setIsProcessingRedirect] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
+    // If auth is not configured, do nothing.
     if (!auth) {
-      setIsProcessingRedirect(false);
       return;
     }
+    
     // This effect runs on mount to handle the result of a Google sign-in redirect.
+    // It runs in the background. The AuthLayout's loader will cover the UI,
+    // so we don't need a local loader here.
     getRedirectResult(auth)
       .then((result) => {
         // If 'result' is not null, a user has successfully signed in.
         // The onAuthStateChanged listener in AuthContext will handle the state update
-        // and AuthLayout will handle the redirection.
+        // and AuthLayout will handle the redirection. We just show a success toast.
         if (result) {
           toast({ title: "Inicio de sesión exitoso." });
+          // At this point, the AuthLayout should be showing a loader and preparing to redirect.
         }
       })
       .catch((error) => {
-        console.error("Error from Google redirect:", error);
-        setError(`Hubo un problema con el inicio de sesión de Google: ${error.message}`);
-      })
-      .finally(() => {
-        setIsProcessingRedirect(false);
+        console.error("Error processing Google redirect:", error);
+        let errorMessage = `Hubo un problema al procesar el inicio de sesión de Google: ${error.message}`;
+        if (error.code === 'auth/popup-closed-by-user') {
+             errorMessage = `La ventana de inicio de sesión se cerró. Esto puede ocurrir si el dominio '${window.location.hostname}' no está autorizado en Firebase, o si tu navegador bloqueó la ventana emergente. Por favor, revisa tus dominios autorizados en la configuración de Firebase Authentication.`;
+        }
+        setError(errorMessage);
       });
+  // The empty dependency array ensures this effect runs only once when the component mounts.
   }, [toast]);
 
 
@@ -119,20 +124,10 @@ export default function LoginPage() {
       await signInWithRedirect(auth, provider);
     } catch (err: any) {
       console.error("Firebase Google Redirect Error:", err);
-      setError(`Error inesperado al intentar redirigir: ${err.message}`);
+      setError(`Error al iniciar con Google: ${err.message}. Asegúrate de que las ventanas emergentes no estén bloqueadas y que el dominio esté autorizado en Firebase.`);
       setIsGoogleLoading(false);
     }
   }
-
-  if (isProcessingRedirect) {
-    return (
-      <div className="flex items-center justify-center min-h-svh bg-background">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-4">Procesando inicio de sesión...</span>
-      </div>
-    )
-  }
-
 
   return (
     <div className="flex items-center justify-center min-h-svh bg-background">
