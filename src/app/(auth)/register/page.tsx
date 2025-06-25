@@ -16,7 +16,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { LandingLogo } from "@/components/landing-logo"
-import { useToast } from "@/hooks/use-toast"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -27,7 +26,6 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,11 +49,6 @@ export default function RegisterPage() {
               displayName: `${firstName} ${lastName}`.trim()
           });
       }
-
-      toast({
-        title: "¡Cuenta Creada!",
-        description: "Tu cuenta ha sido creada exitosamente. Redirigiendo...",
-      });
       // The (auth) layout will handle the redirect once the user state changes.
     } catch (err: any) {
         if (err.code === 'auth/email-already-in-use') {

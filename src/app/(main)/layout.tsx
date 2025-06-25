@@ -1,6 +1,10 @@
 
 "use client";
 
+import { useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,11 +17,9 @@ import {
 import { Navigation } from "@/components/navigation";
 import { Logo } from "@/components/logo";
 import { ProjectsProvider } from "@/contexts/ProjectsContext";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/firebase";
 import { LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
 export default function MainLayout({
@@ -26,8 +28,17 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user } = useAuth(); // No longer need loading here
+  const { user, loading } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // If auth state is confirmed and there is no user,
+    // they can't access the main app pages. Redirect to login.
+    if (!loading && !user) {
+      router.replace('/login');
+    }
+  }, [user, loading, router]);
+
 
   const handleLogout = async () => {
     if (!auth) {
@@ -41,7 +52,8 @@ export default function MainLayout({
     try {
         await auth.signOut();
         toast({ title: "Has cerrado sesión." });
-        router.push('/login'); 
+        // The redirect to /login is now handled by the useEffect above
+        // after the user state becomes null.
     } catch (error) {
         console.error("Error al cerrar sesión:", error);
         toast({
@@ -52,15 +64,17 @@ export default function MainLayout({
     }
   };
 
-  // The AuthRouterGuard now handles loading states and unauthorized access.
-  // We can assume if this component renders, the user is authenticated.
-  if (!user) {
-    // This case should theoretically not be hit if the guard works correctly,
-    // but it's a fallback to prevent rendering with a null user.
-    // The guard will handle the redirect.
-    return null;
+  // While checking auth state, or if there is no user (and about to be redirected),
+  // show a full-screen loader. This prevents flashing protected content.
+  if (loading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-svh bg-background">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
+  // If loading is done and we have a user, render the main app layout.
   return (
     <ProjectsProvider>
       <SidebarProvider>

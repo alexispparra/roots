@@ -1,15 +1,36 @@
 
 "use client";
 
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { LandingLogo } from "@/components/landing-logo";
 import Image from "next/image";
 import Link from "next/link";
+import { Loader2 } from 'lucide-react';
 
 export default function LandingPage() {
-  // This component is now a simple presentation layer.
-  // The AuthRouterGuard, which wraps this page in the root layout,
-  // is solely responsible for handling redirects for authenticated users.
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // If the user is already logged in, redirect them to the projects page.
+    if (!loading && user) {
+      router.replace('/projects');
+    }
+  }, [user, loading, router]);
+
+  // While checking for user auth, show a loader to prevent flashing the landing page.
+  if (loading || (!loading && user)) {
+     return (
+      <div className="flex items-center justify-center min-h-svh bg-background">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // If not loading and no user, show the landing page.
   return (
     <div className="flex flex-col min-h-svh bg-background text-foreground">
       <header className="container mx-auto flex h-24 items-center justify-between px-4">
