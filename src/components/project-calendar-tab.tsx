@@ -128,11 +128,7 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
   const selectedDayEvents = selectedDayItems.filter(item => item.type === 'event') as Extract<CalendarItem, {type: 'event'}>[];
 
   const handleAddEvent = (data: z.infer<typeof addEventFormSchema>) => {
-    addEvent(project.id, { 
-        ...data, 
-        date: Timestamp.fromDate(data.date), 
-        completed: false 
-    });
+    addEvent(project.id, { ...data, completed: false });
   };
   
   const handleToggleEventCompletion = (event: CalendarEvent) => {
@@ -246,7 +242,7 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
                                             <li key={category.name} className="flex flex-col p-2 rounded-md" style={{ borderLeft: `4px solid ${category.color}` }}>
                                                 <span className="font-semibold text-sm">{category.name}</span>
                                                 <span className="text-xs text-muted-foreground">
-                                                    {format(category.startDate!.toDate(), "d MMM", { locale: es })}
+                                                    {category.startDate ? format(category.startDate.toDate(), "d MMM", { locale: es }) : ''}
                                                     {category.endDate ? ` - ${format(category.endDate.toDate(), "d MMM", { locale: es })}` : ''}
                                                 </span>
                                                 <Button size="sm" variant="ghost" asChild className="mt-1 -ml-1 justify-start h-auto p-1 text-xs w-fit">

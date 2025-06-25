@@ -75,6 +75,27 @@ export type AddProjectData = {
 
 export type UpdateProjectData = Partial<Omit<Project, 'id' | 'ownerEmail' | 'participants' | 'createdAt'>>;
 
+
+// --- Input Type Definitions for functions ---
+// These types use JS Date objects for easier handling in components.
+// The context will handle the conversion to Firestore Timestamps.
+
+type AddTransactionInput = Omit<Transaction, 'id' | 'date'> & { date: Date };
+type UpdateTransactionInput = Partial<Omit<Transaction, 'id' | 'type' | 'date'>> & { date?: Date };
+type AddCategoryInput = Omit<Category, 'startDate' | 'endDate' | 'budget' | 'dependencies'> & {
+    budget?: number;
+    dependencies?: string[];
+    startDate?: Date | null;
+    endDate?: Date | null;
+};
+type UpdateCategoryInput = Partial<Omit<Category, 'startDate' | 'endDate'>> & {
+    startDate?: Date | null;
+    endDate?: Date | null;
+};
+type AddEventInput = Omit<Event, 'id' | 'date'> & { date: Date };
+type UpdateEventInput = Partial<Omit<Event, 'id' | 'date'>> & { date?: Date };
+
+
 // --- Context Definition ---
 
 type ProjectsContextType = {
@@ -85,14 +106,14 @@ type ProjectsContextType = {
   getUserRoleForProject: (projectId: string) => UserRole | null;
   updateProject: (projectId: string, projectData: UpdateProjectData) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
-  addTransaction: (projectId: string, transactionData: Omit<Transaction, 'id'>) => Promise<void>;
-  updateTransaction: (projectId: string, transactionId: string, transactionData: Partial<Omit<Transaction, 'id' | 'type'>>) => Promise<void>;
+  addTransaction: (projectId: string, transactionData: AddTransactionInput) => Promise<void>;
+  updateTransaction: (projectId: string, transactionId: string, transactionData: UpdateTransactionInput) => Promise<void>;
   deleteTransaction: (projectId: string, transactionId: string) => Promise<void>;
-  addCategory: (projectId: string, categoryData: Omit<Category, 'budget' | 'dependencies'> & { budget?: number, dependencies?: string[] }) => Promise<void>;
-  updateCategory: (projectId: string, oldName: string, categoryData: Partial<Category>) => Promise<void>;
+  addCategory: (projectId: string, categoryData: AddCategoryInput) => Promise<void>;
+  updateCategory: (projectId: string, oldName: string, categoryData: UpdateCategoryInput) => Promise<void>;
   deleteCategory: (projectId: string, categoryName: string) => Promise<void>;
-  addEvent: (projectId: string, eventData: Omit<Event, 'id'>) => Promise<void>;
-  updateEvent: (projectId: string, eventId: string, eventData: Partial<Omit<Event, 'id'>>) => Promise<void>;
+  addEvent: (projectId: string, eventData: AddEventInput) => Promise<void>;
+  updateEvent: (projectId: string, eventId: string, eventData: UpdateEventInput) => Promise<void>;
   deleteEvent: (projectId: string, eventId: string) => Promise<void>;
 };
 
@@ -229,7 +250,6 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     if (USE_MOCK_DATA) {
       setProjects(prev => prev.filter(p => p.id !== projectId));
       toast({ title: "Proyecto Eliminado (Modo Prueba)" });
-      // In a real app, you might want to redirect here
       return;
     }
     if (!db) return;
@@ -243,27 +263,16 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  const addTransaction = async (projectId: string, transactionData: Omit<Transaction, 'id'>) => {
-    if (USE_MOCK_DATA) {
-        const newTransaction = { 
-          ...transactionData,
-          date: transactionData.date instanceof Timestamp ? transactionData.date : Timestamp.fromDate(transactionData.date as unknown as Date),
-          id: `trans-${Date.now()}` 
-        };
-        setProjects(prev => prev.map(p => {
-            if (p.id === projectId) {
-                return { ...p, transactions: [newTransaction as Transaction, ...p.transactions] };
-            }
-            return p;
-        }));
-        toast({ title: "Transacción Añadida (Modo Prueba)" });
-        return;
-    }
+  const addTransaction = async (projectId: string, transactionData: AddTransactionInput) => {
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
     try {
-        const newTransaction = { ...transactionData, id: doc(collection(db, 'dummy')).id };
-        await updateDoc(projectRef, { transactions: arrayUnion(newTransaction) });
+        const transactionForDb = {
+            ...transactionData,
+            date: Timestamp.fromDate(transactionData.date),
+            id: doc(collection(db, 'dummy')).id 
+        };
+        await updateDoc(projectRef, { transactions: arrayUnion(transactionForDb) });
         toast({ title: "Transacción Añadida" });
     } catch (error) {
         console.error("Error adding transaction: ", error);
@@ -271,31 +280,20 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateTransaction = async (projectId: string, transactionId: string, transactionData: Partial<Omit<Transaction, 'id' | 'type'>>) => {
-      if (USE_MOCK_DATA) {
-          const updateData = { ...transactionData };
-
-          if (updateData.date && !(updateData.date instanceof Timestamp)) {
-            updateData.date = Timestamp.fromDate(updateData.date as unknown as Date);
-          }
-
-          setProjects(prev => prev.map(p => {
-              if (p.id === projectId) {
-                  const newTransactions = p.transactions.map(t => t.id === transactionId ? { ...t, ...updateData } as Transaction : t);
-                  return { ...p, transactions: newTransactions };
-              }
-              return p;
-          }));
-          toast({ title: "Transacción Actualizada (Modo Prueba)" });
-          return;
-      }
+  const updateTransaction = async (projectId: string, transactionId: string, transactionData: UpdateTransactionInput) => {
       if (!db) return;
       const projectRef = doc(db, 'projects', projectId);
       try {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
+          
+          const dataForDb = { ...transactionData } as any;
+          if (transactionData.date) {
+              dataForDb.date = Timestamp.fromDate(transactionData.date);
+          }
+
           const project = projectDoc.data() as Project;
-          const newTransactions = project.transactions.map(t => t.id === transactionId ? { ...t, ...transactionData } : t);
+          const newTransactions = project.transactions.map(t => t.id === transactionId ? { ...t, ...dataForDb } : t);
           await updateDoc(projectRef, { transactions: newTransactions });
           toast({ title: "Transacción Actualizada" });
       } catch (error) {
@@ -305,16 +303,6 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteTransaction = async (projectId: string, transactionId: string) => {
-      if (USE_MOCK_DATA) {
-          setProjects(prev => prev.map(p => {
-              if (p.id === projectId) {
-                  return { ...p, transactions: p.transactions.filter(t => t.id !== transactionId) };
-              }
-              return p;
-          }));
-          toast({ title: "Transacción Eliminada (Modo Prueba)" });
-          return;
-      }
       if (!db) return;
       const projectRef = doc(db, 'projects', projectId);
       try {
@@ -330,30 +318,22 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       }
   };
 
-  const addCategory = async (projectId: string, categoryData: Omit<Category, 'budget'> & { budget?: number }) => {
-    const newCategory: Category = {
-        budget: 0,
-        dependencies: [],
-        ...categoryData,
-    };
-    if (USE_MOCK_DATA) {
-        setProjects(prev => prev.map(p => {
-            if (p.id === projectId) {
-                // Evitar duplicados
-                if (p.categories.some(c => c.name === newCategory.name)) {
-                    return p;
-                }
-                return { ...p, categories: [...p.categories, newCategory] };
-            }
-            return p;
-        }));
-        toast({ title: "Categoría Añadida (Modo Prueba)" });
-        return;
-    }
+  const addCategory = async (projectId: string, categoryData: AddCategoryInput) => {
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
+    
+    const categoryForDb: Category = {
+        name: categoryData.name,
+        icon: categoryData.icon || 'Building',
+        budget: categoryData.budget ?? 0,
+        progress: categoryData.progress ?? 0,
+        dependencies: categoryData.dependencies ?? [],
+        startDate: categoryData.startDate ? Timestamp.fromDate(categoryData.startDate) : null,
+        endDate: categoryData.endDate ? Timestamp.fromDate(categoryData.endDate) : null,
+    };
+
     try {
-        await updateDoc(projectRef, { categories: arrayUnion(newCategory) });
+        await updateDoc(projectRef, { categories: arrayUnion(categoryForDb) });
         toast({ title: "Categoría Añadida" });
     } catch (error) {
         console.error("Error adding category: ", error);
@@ -361,50 +341,30 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  const updateCategory = async (projectId: string, oldName: string, categoryData: Partial<Category>) => {
-      if (USE_MOCK_DATA) {
-          const updatePayload = { ...categoryData };
-          if (updatePayload.startDate && !(updatePayload.startDate instanceof Timestamp)) {
-            updatePayload.startDate = Timestamp.fromDate(updatePayload.startDate as any);
-          }
-          if (updatePayload.endDate && !(updatePayload.endDate instanceof Timestamp)) {
-            updatePayload.endDate = Timestamp.fromDate(updatePayload.endDate as any);
-          }
-
-          setProjects(prev => prev.map(p => {
-              if (p.id === projectId) {
-                  const newCategories = p.categories.map(c => c.name === oldName ? { ...c, ...updatePayload } : c);
-                  let newTransactions = p.transactions;
-                  if (updatePayload.name && updatePayload.name !== oldName) {
-                      newTransactions = p.transactions.map(t => t.category === oldName ? { ...t, category: updatePayload.name } : t);
-                  }
-                  return { ...p, categories: newCategories, transactions: newTransactions };
-              }
-              return p;
-          }));
-          toast({ title: "Categoría Actualizada (Modo Prueba)" });
-          return;
-      }
+  const updateCategory = async (projectId: string, oldName: string, categoryData: UpdateCategoryInput) => {
       if (!db) return;
       const projectRef = doc(db, 'projects', projectId);
       try {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
-          const project = projectDoc.data() as Project;
           
-          const updatePayload = { ...categoryData };
-          if (updatePayload.startDate && !(updatePayload.startDate instanceof Timestamp)) {
-            updatePayload.startDate = Timestamp.fromDate(updatePayload.startDate as any);
+          const dataForDb = { ...categoryData } as any;
+          if (categoryData.startDate) {
+              dataForDb.startDate = Timestamp.fromDate(categoryData.startDate);
           }
-          if (updatePayload.endDate && !(updatePayload.endDate instanceof Timestamp)) {
-            updatePayload.endDate = Timestamp.fromDate(updatePayload.endDate as any);
+          if (categoryData.endDate) {
+              dataForDb.endDate = Timestamp.fromDate(categoryData.endDate);
           }
+          if (categoryData.startDate === null) dataForDb.startDate = null;
+          if (categoryData.endDate === null) dataForDb.endDate = null;
 
-          const newCategories = project.categories.map(c => c.name === oldName ? { ...c, ...updatePayload } : c);
+          const project = projectDoc.data() as Project;
+          const newCategories = project.categories.map(c => c.name === oldName ? { ...c, ...dataForDb } : c);
+          
           let newTransactions = project.transactions;
-          if (updatePayload.name && updatePayload.name !== oldName) {
+          if (dataForDb.name && dataForDb.name !== oldName) {
             newTransactions = project.transactions.map(t => 
-                t.category === oldName ? { ...t, category: updatePayload.name } : t
+                t.category === oldName ? { ...t, category: dataForDb.name } : t
             );
           }
           await updateDoc(projectRef, { categories: newCategories, transactions: newTransactions });
@@ -416,16 +376,6 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteCategory = async (projectId: string, categoryName: string) => {
-      if (USE_MOCK_DATA) {
-          setProjects(prev => prev.map(p => {
-              if (p.id === projectId) {
-                  return { ...p, categories: p.categories.filter(c => c.name !== categoryName) };
-              }
-              return p;
-          }));
-          toast({ title: "Categoría Eliminada (Modo Prueba)" });
-          return;
-      }
       if (!db) return;
       const projectRef = doc(db, 'projects', projectId);
        try {
@@ -441,25 +391,18 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       }
   };
 
-  const addEvent = async (projectId: string, eventData: Omit<Event, 'id'>) => {
-    const newEvent = {
-        ...eventData,
-        date: eventData.date instanceof Timestamp ? eventData.date : Timestamp.fromDate(eventData.date as unknown as Date),
-        id: USE_MOCK_DATA ? `evt-${Date.now()}` : doc(collection(db!, 'dummy')).id
-    };
-
-    if (USE_MOCK_DATA) {
-        setProjects(prev => prev.map(p => 
-            p.id === projectId ? { ...p, events: [...p.events, newEvent] } : p
-        ));
-        toast({ title: "Evento Añadido (Modo Prueba)" });
-        return;
-    }
-
+  const addEvent = async (projectId: string, eventData: AddEventInput) => {
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
+
+    const eventForDb: Event = {
+        ...eventData,
+        date: Timestamp.fromDate(eventData.date),
+        id: doc(collection(db, 'dummy')).id
+    };
+
     try {
-        await updateDoc(projectRef, { events: arrayUnion(newEvent) });
+        await updateDoc(projectRef, { events: arrayUnion(eventForDb) });
         toast({ title: "Evento Añadido" });
     } catch (error) {
         console.error("Error adding event: ", error);
@@ -467,23 +410,20 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateEvent = async (projectId: string, eventId: string, eventData: Partial<Omit<Event, 'id'>>) => {
-    if (USE_MOCK_DATA) {
-        setProjects(prev => prev.map(p => 
-            p.id === projectId 
-                ? { ...p, events: p.events.map(e => e.id === eventId ? { ...e, ...eventData } : e) } 
-                : p
-        ));
-        return;
-    }
-
+  const updateEvent = async (projectId: string, eventId: string, eventData: UpdateEventInput) => {
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
     try {
         const projectDoc = await getDoc(projectRef);
         if (!projectDoc.exists()) throw new Error("Project not found");
+
+        const dataForDb = { ...eventData } as any;
+        if (eventData.date) {
+            dataForDb.date = Timestamp.fromDate(eventData.date);
+        }
+
         const project = projectDoc.data() as Project;
-        const newEvents = project.events.map(e => e.id === eventId ? { ...e, ...eventData } : e);
+        const newEvents = project.events.map(e => e.id === eventId ? { ...e, ...dataForDb } : e);
         await updateDoc(projectRef, { events: newEvents });
     } catch (error) {
         console.error("Error updating event: ", error);
@@ -492,16 +432,6 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteEvent = async (projectId: string, eventId: string) => {
-    if (USE_MOCK_DATA) {
-        setProjects(prev => prev.map(p => 
-            p.id === projectId 
-                ? { ...p, events: p.events.filter(e => e.id !== eventId) } 
-                : p
-        ));
-        toast({ title: "Evento Eliminado (Modo Prueba)" });
-        return;
-    }
-
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
     try {
