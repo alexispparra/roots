@@ -63,12 +63,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     }
 
     const handleEditClick = (transaction: Transaction) => {
-        const transactionWithDate = {
-            ...transaction,
-            // @ts-ignore
-            date: transaction.date.toDate() // Convert Firestore Timestamp to JS Date for the form
-        };
-        setSelectedTransaction(transactionWithDate);
+        setSelectedTransaction(transaction);
 
         if (transaction.type === 'expense') {
             setIsEditExpenseDialogOpen(true)

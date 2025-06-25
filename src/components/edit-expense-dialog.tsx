@@ -40,6 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import type { Transaction } from "@/contexts/ProjectsContext"
 
 const formSchema = z.object({
   id: z.string(),
@@ -59,7 +60,7 @@ const formSchema = z.object({
 });
 
 type EditExpenseDialogProps = {
-  expense: any | null;
+  expense: Transaction | null;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   categories: { name: string }[]
@@ -83,7 +84,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
 
       form.reset({
         ...expense,
-        date: new Date(expense.date),
+        date: expense.date.toDate(),
         amountUSD,
       })
     }

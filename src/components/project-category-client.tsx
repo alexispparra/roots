@@ -62,11 +62,7 @@ export default function ProjectCategoryClient() {
   }
 
   const handleEditClick = (transaction: Transaction) => {
-    setSelectedTransaction({
-      ...transaction,
-      // @ts-ignore
-      date: transaction.date.toDate() // Convert Firestore Timestamp to JS Date for the form
-    })
+    setSelectedTransaction(transaction)
     setIsEditExpenseDialogOpen(true)
   }
 
@@ -211,7 +207,7 @@ export default function ProjectCategoryClient() {
           <EditExpenseDialog
               isOpen={isEditExpenseDialogOpen}
               onOpenChange={setIsEditExpenseDialogOpen}
-              expense={{...selectedTransaction, category: categoryName}}
+              expense={selectedTransaction}
               onUpdateExpense={handleUpdateTransaction}
               categories={[category]}
               participants={project.participants}
