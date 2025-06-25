@@ -105,6 +105,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
             onAddCustomCategory={handleAddCustomCategory} 
             onAddPredefinedCategories={handleAddPredefinedCategories}
             existingCategoryNames={project.categories.map(c => c.name)}
+            defaultStartDate={project.createdAt?.toDate()}
           />}
         </CardHeader>
         <CardContent>

@@ -46,7 +46,7 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      <main className="flex-grow container mx-auto flex items-center justify-center p-4">
+      <main className="flex-grow container mx-auto flex flex-col items-center justify-center p-4">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16 w-full max-w-6xl">
             <section className="text-center lg:text-left flex-1">
               <h1 className="font-headline text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
