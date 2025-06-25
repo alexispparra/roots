@@ -1,8 +1,8 @@
 
 "use client"
 
-import { useState } from "react"
-import { signInWithEmailAndPassword, signInWithRedirect, GoogleAuthProvider } from "firebase/auth"
+import { useState, useEffect } from "react"
+import { signInWithEmailAndPassword, signInWithRedirect, GoogleAuthProvider, getRedirectResult } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,7 +18,7 @@ import Link from "next/link"
 import { LandingLogo } from "@/components/landing-logo"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -26,7 +26,33 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
-  const router = useRouter();
+  const [isProcessingRedirect, setIsProcessingRedirect] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!auth) {
+      setIsProcessingRedirect(false);
+      return;
+    }
+    // This effect runs on mount to handle the result of a Google sign-in redirect.
+    getRedirectResult(auth)
+      .then((result) => {
+        // If 'result' is not null, a user has successfully signed in.
+        // The onAuthStateChanged listener in AuthContext will handle the state update
+        // and AuthLayout will handle the redirection.
+        if (result) {
+          toast({ title: "Inicio de sesión exitoso." });
+        }
+      })
+      .catch((error) => {
+        console.error("Error from Google redirect:", error);
+        setError(`Hubo un problema con el inicio de sesión de Google: ${error.message}`);
+      })
+      .finally(() => {
+        setIsProcessingRedirect(false);
+      });
+  }, [toast]);
+
 
   // Demo mode check
   if (!auth) {
@@ -66,7 +92,7 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // La redirección es manejada por AuthLayout
+      // The redirection is handled by AuthLayout
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
@@ -89,7 +115,7 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider()
     try {
       // This will navigate the user away to Google's sign-in page.
-      // The result is handled by getRedirectResult in AuthLayout on the return trip.
+      // The result is handled by the useEffect on the return trip.
       await signInWithRedirect(auth, provider);
     } catch (err: any) {
       console.error("Firebase Google Redirect Error:", err);
@@ -97,6 +123,16 @@ export default function LoginPage() {
       setIsGoogleLoading(false);
     }
   }
+
+  if (isProcessingRedirect) {
+    return (
+      <div className="flex items-center justify-center min-h-svh bg-background">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-4">Procesando inicio de sesión...</span>
+      </div>
+    )
+  }
+
 
   return (
     <div className="flex items-center justify-center min-h-svh bg-background">
