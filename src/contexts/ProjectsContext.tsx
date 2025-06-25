@@ -206,7 +206,12 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   
   const addTransaction = async (projectId: string, transactionData: Omit<Transaction, 'id'>) => {
     if (USE_MOCK_DATA) {
-        const newTransaction = { ...transactionData, id: `trans-${Date.now()}` };
+        const newTransaction = { 
+          ...transactionData,
+          // The incoming date is a JS Date from the form, so we convert it to a Timestamp for consistency.
+          date: Timestamp.fromDate(transactionData.date as unknown as Date),
+          id: `trans-${Date.now()}` 
+        };
         setProjects(prev => prev.map(p => {
             if (p.id === projectId) {
                 return { ...p, transactions: [newTransaction as Transaction, ...p.transactions] };
@@ -230,9 +235,16 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
 
   const updateTransaction = async (projectId: string, transactionId: string, transactionData: Partial<Omit<Transaction, 'id' | 'type'>>) => {
       if (USE_MOCK_DATA) {
+          const updateData = { ...transactionData };
+
+          // If the update includes a date, it will be a JS Date from the form. Convert it.
+          if (updateData.date) {
+            updateData.date = Timestamp.fromDate(updateData.date as unknown as Date);
+          }
+
           setProjects(prev => prev.map(p => {
               if (p.id === projectId) {
-                  const newTransactions = p.transactions.map(t => t.id === transactionId ? { ...t, ...transactionData } : t);
+                  const newTransactions = p.transactions.map(t => t.id === transactionId ? { ...t, ...updateData } : t);
                   return { ...p, transactions: newTransactions };
               }
               return p;
