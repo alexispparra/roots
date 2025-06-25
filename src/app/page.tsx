@@ -46,29 +46,31 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      <main className="flex-grow container mx-auto flex flex-col items-center justify-center py-16 text-center lg:flex-row lg:justify-between lg:text-left lg:gap-16">
-        <section className="px-4">
-          <h1 className="font-headline text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            Gestiona tus Proyectos, <span className="text-primary">Simplificado</span>.
-          </h1>
-          <p className="mt-6 mx-auto max-w-2xl text-lg text-muted-foreground lg:mx-0">
-            Desde el flujo de caja hasta la colaboración en equipo, Roots te da las herramientas para llevar tus emprendimientos al siguiente nivel.
-          </p>
-          <div className="mt-8 flex justify-center lg:justify-start gap-4">
-            <Button asChild size="lg">
-              <Link href="/register">Comienza Gratis</Link>
-            </Button>
-          </div>
-        </section>
-        <div className="mt-12 hidden lg:block lg:mt-0 lg:flex-shrink-0">
-            <Image
-                src="https://placehold.co/1200x800.png"
-                alt="Dashboard de Roots"
-                width={1200}
-                height={800}
-                className="rounded-xl shadow-2xl max-w-lg xl:max-w-2xl"
-                data-ai-hint="dashboard analytics"
-            />
+      <main className="flex-grow container mx-auto flex items-center justify-center p-4">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16 w-full max-w-6xl">
+            <section className="text-center lg:text-left flex-1">
+              <h1 className="font-headline text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+                Gestiona tus Proyectos, <span className="text-primary">Simplificado</span>.
+              </h1>
+              <p className="mt-6 max-w-2xl text-lg text-muted-foreground mx-auto lg:mx-0">
+                Desde el flujo de caja hasta la colaboración en equipo, Roots te da las herramientas para llevar tus emprendimientos al siguiente nivel.
+              </p>
+              <div className="mt-8 flex justify-center lg:justify-start gap-4">
+                <Button asChild size="lg">
+                  <Link href="/register">Comienza Gratis</Link>
+                </Button>
+              </div>
+            </section>
+            <section className="hidden lg:flex flex-1 justify-center items-center">
+              <Image
+                  src="https://placehold.co/1200x800.png"
+                  alt="Dashboard de Roots"
+                  width={1200}
+                  height={800}
+                  className="rounded-xl shadow-2xl w-full max-w-lg"
+                  data-ai-hint="dashboard analytics"
+              />
+            </section>
         </div>
       </main>
       
