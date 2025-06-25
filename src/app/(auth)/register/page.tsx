@@ -1,9 +1,10 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { auth } from "@/lib/firebase"
+import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -26,6 +27,15 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  
+  const { user, loading } = useAuth();
+
+  // Si el usuario ya está logueado, redirigirlo.
+  useEffect(() => {
+    if (!loading && user) {
+      window.location.replace('/projects');
+    }
+  }, [user, loading]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,7 +59,8 @@ export default function RegisterPage() {
               displayName: `${firstName} ${lastName}`.trim()
           });
       }
-      // The (auth) layout will handle the redirect once the user state changes.
+      // Forzamos una recarga completa para asegurar que el estado se propague.
+      window.location.assign('/projects');
     } catch (err: any) {
         if (err.code === 'auth/email-already-in-use') {
             setError("Este correo electrónico ya está en uso. Por favor, inicia sesión o usa otro correo.");
@@ -62,6 +73,15 @@ export default function RegisterPage() {
     } finally {
         setIsLoading(false)
     }
+  }
+  
+  // Mostrar loader mientras se verifica el estado o si el usuario está a punto de ser redirigido.
+  if (loading || user) {
+    return (
+      <div className="flex items-center justify-center min-h-svh bg-background">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (

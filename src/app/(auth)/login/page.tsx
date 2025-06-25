@@ -1,9 +1,10 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
 import { auth } from "@/lib/firebase"
+import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -25,6 +26,17 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  
+  const { user, loading } = useAuth();
+
+  // Si el usuario ya está logueado (por ejemplo, por una sesión persistente),
+  // redirigirlo directamente para evitar que vea la página de login.
+  useEffect(() => {
+    if (!loading && user) {
+      // Usamos replace para no añadir la página de login al historial del navegador.
+      window.location.replace('/projects');
+    }
+  }, [user, loading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,8 +49,9 @@ export default function LoginPage() {
     setIsFormLoading(true)
 
     try {
-      // The AuthLayout will handle the redirect once the user state changes.
-      await signInWithEmailAndPassword(auth, email, password)
+      await signInWithEmailAndPassword(auth, email, password);
+      // Forzamos una recarga completa de la página para asegurar que el estado de auth se propague correctamente.
+      window.location.assign('/projects');
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
@@ -63,10 +76,10 @@ export default function LoginPage() {
     setIsGoogleLoading(true)
     const provider = new GoogleAuthProvider()
     try {
-      // The AuthLayout will handle the redirect once the user state changes.
-      await signInWithPopup(auth, provider)
+      await signInWithPopup(auth, provider);
+      // Forzamos una recarga completa de la página para asegurar que el estado de auth se propague correctamente.
+      window.location.assign('/projects');
     } catch (err: any) {
-      // Don't show an error if the user closes the popup manually
       if (err.code === 'auth/popup-closed-by-user') {
           setIsGoogleLoading(false);
           return;
@@ -87,6 +100,17 @@ export default function LoginPage() {
     }
   }
   
+  // Mientras se comprueba el estado inicial o si el usuario ya está logueado y a punto de ser redirigido,
+  // mostrar un loader para evitar mostrar el formulario de login innecesariamente.
+  if (loading || user) {
+    return (
+      <div className="flex items-center justify-center min-h-svh bg-background">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+
   return (
     <div className="flex items-center justify-center min-h-svh bg-background">
       <Card className="mx-auto w-full max-w-sm bg-card text-card-foreground border-border">
