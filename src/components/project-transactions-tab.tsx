@@ -226,8 +226,9 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                     <TableHead>Fecha</TableHead>
                                     <TableHead>Descripción</TableHead>
                                     <TableHead>Categoría</TableHead>
+                                    <TableHead>Usuario</TableHead>
                                     <TableHead>Adjunto</TableHead>
-                                    <TableHead className="text-right">Monto (U$S)</TableHead>
+                                    <TableHead className="text-right">Monto (AR$)</TableHead>
                                     {canEdit && <TableHead className="w-[50px]"></TableHead>}
                                 </TableRow>
                             </TableHeader>
@@ -238,6 +239,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                             <TableCell>{t.date.toDate().toLocaleDateString('es-ES')}</TableCell>
                                             <TableCell className="font-medium">{t.description}</TableCell>
                                             <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
+                                            <TableCell>{t.user}</TableCell>
                                             <TableCell>
                                                 {t.attachmentDataUrl && (
                                                     <Button asChild variant="ghost" size="icon">
@@ -248,7 +250,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                                 )}
                                             </TableCell>
                                             <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                            {t.type === 'income' ? '+' : '-'}${(t.amountARS / (t.exchangeRate || 1)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                {t.type === 'income' ? '+' : '-'}{t.amountARS.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}
                                             </TableCell>
                                             {canEdit && <TableCell>
                                                 <DropdownMenu>
@@ -274,7 +276,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={canEdit ? 6 : 5} className="h-24 text-center text-muted-foreground">
+                                        <TableCell colSpan={canEdit ? 7 : 6} className="h-24 text-center text-muted-foreground">
                                             No hay transacciones para el período seleccionado.
                                         </TableCell>
                                     </TableRow>
