@@ -20,6 +20,7 @@ export type Participant = {
 export type Category = {
   name: string;
   budget: number;
+  icon?: string | null;
 };
 
 export type ProjectStatus = 'planning' | 'in-progress' | 'completed' | 'on-hold';
@@ -73,8 +74,8 @@ type ProjectsContextType = {
   addTransaction: (projectId: string, transactionData: Omit<Transaction, 'id'>) => Promise<void>;
   updateTransaction: (projectId: string, transactionId: string, transactionData: Partial<Omit<Transaction, 'id' | 'type'>>) => Promise<void>;
   deleteTransaction: (projectId: string, transactionId: string) => Promise<void>;
-  addCategory: (projectId: string, categoryData: Category) => Promise<void>;
-  updateCategory: (projectId: string, categoryName: string, categoryData: Partial<Category>) => Promise<void>;
+  addCategory: (projectId: string, categoryData: Omit<Category, 'budget'> & { budget?: number }) => Promise<void>;
+  updateCategory: (projectId: string, oldName: string, categoryData: Partial<Category>) => Promise<void>;
   deleteCategory: (projectId: string, categoryName: string) => Promise<void>;
 };
 
@@ -208,8 +209,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     if (USE_MOCK_DATA) {
         const newTransaction = { 
           ...transactionData,
-          // The incoming date is a JS Date from the form, so we convert it to a Timestamp for consistency.
-          date: Timestamp.fromDate(transactionData.date as unknown as Date),
+          date: transactionData.date instanceof Timestamp ? transactionData.date : Timestamp.fromDate(transactionData.date as unknown as Date),
           id: `trans-${Date.now()}` 
         };
         setProjects(prev => prev.map(p => {
@@ -237,7 +237,6 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       if (USE_MOCK_DATA) {
           const updateData = { ...transactionData };
 
-          // If the update includes a date, it will be a JS Date from the form. Convert it.
           if (updateData.date) {
             updateData.date = Timestamp.fromDate(updateData.date as unknown as Date);
           }
@@ -293,34 +292,46 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       }
   };
 
-  const addCategory = async (projectId: string, categoryData: Category) => {
-      if (USE_MOCK_DATA) {
-          setProjects(prev => prev.map(p => {
-              if (p.id === projectId) {
-                  return { ...p, categories: [...p.categories, categoryData] };
-              }
-              return p;
-          }));
-          toast({ title: "Categoría Añadida (Modo Prueba)" });
-          return;
-      }
-      if (!db) return;
-      const projectRef = doc(db, 'projects', projectId);
-      try {
-          await updateDoc(projectRef, { categories: arrayUnion(categoryData) });
-          toast({ title: "Categoría Añadida" });
-      } catch (error) {
-          console.error("Error adding category: ", error);
-          toast({ variant: "destructive", title: "Error", description: "No se pudo añadir la categoría." });
-      }
+  const addCategory = async (projectId: string, categoryData: Omit<Category, 'budget'> & { budget?: number }) => {
+    const newCategory: Category = {
+        budget: 0,
+        ...categoryData,
+    };
+    if (USE_MOCK_DATA) {
+        setProjects(prev => prev.map(p => {
+            if (p.id === projectId) {
+                // Evitar duplicados
+                if (p.categories.some(c => c.name === newCategory.name)) {
+                    return p;
+                }
+                return { ...p, categories: [...p.categories, newCategory] };
+            }
+            return p;
+        }));
+        toast({ title: "Categoría Añadida (Modo Prueba)" });
+        return;
+    }
+    if (!db) return;
+    const projectRef = doc(db, 'projects', projectId);
+    try {
+        await updateDoc(projectRef, { categories: arrayUnion(newCategory) });
+        toast({ title: "Categoría Añadida" });
+    } catch (error) {
+        console.error("Error adding category: ", error);
+        toast({ variant: "destructive", title: "Error", description: "No se pudo añadir la categoría." });
+    }
   };
   
-  const updateCategory = async (projectId: string, categoryName: string, categoryData: Partial<Category>) => {
+  const updateCategory = async (projectId: string, oldName: string, categoryData: Partial<Category>) => {
       if (USE_MOCK_DATA) {
           setProjects(prev => prev.map(p => {
               if (p.id === projectId) {
-                  const newCategories = p.categories.map(c => c.name === categoryName ? { ...c, ...categoryData } : c);
-                  return { ...p, categories: newCategories };
+                  const newCategories = p.categories.map(c => c.name === oldName ? { ...c, ...categoryData } : c);
+                  let newTransactions = p.transactions;
+                  if (categoryData.name && categoryData.name !== oldName) {
+                      newTransactions = p.transactions.map(t => t.category === oldName ? { ...t, category: categoryData.name } : t);
+                  }
+                  return { ...p, categories: newCategories, transactions: newTransactions };
               }
               return p;
           }));
@@ -333,8 +344,14 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
           const project = projectDoc.data() as Project;
-          const newCategories = project.categories.map(c => c.name === categoryName ? { ...c, ...categoryData } : c);
-          await updateDoc(projectRef, { categories: newCategories });
+          const newCategories = project.categories.map(c => c.name === oldName ? { ...c, ...categoryData } : c);
+          let newTransactions = project.transactions;
+          if (categoryData.name && categoryData.name !== oldName) {
+            newTransactions = project.transactions.map(t => 
+                t.category === oldName ? { ...t, category: categoryData.name } : t
+            );
+          }
+          await updateDoc(projectRef, { categories: newCategories, transactions: newTransactions });
           toast({ title: "Categoría Actualizada" });
       } catch (error) {
           console.error("Error updating category: ", error);

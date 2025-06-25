@@ -43,14 +43,14 @@ const participants: Participant[] = [
 ];
 
 const categoriesProject1: Category[] = [
-    { name: 'Marketing Digital', budget: 50000 },
-    { name: 'Diseño Gráfico', budget: 35000 },
-    { name: 'Infraestructura', budget: 120000 },
+    { name: 'Marketing Digital', budget: 50000, icon: 'Megaphone' },
+    { name: 'Diseño Gráfico', budget: 35000, icon: 'PenTool' },
+    { name: 'Infraestructura', budget: 120000, icon: 'Building' },
 ];
 
 const categoriesProject2: Category[] = [
-    { name: 'Materia Prima', budget: 250000 },
-    { name: 'Logística', budget: 80000 },
+    { name: 'Materia Prima', budget: 250000, icon: 'Layers' },
+    { name: 'Logística', budget: 80000, icon: 'Shovel' },
 ];
 
 const transactionsProject1: Transaction[] = [
@@ -99,7 +99,7 @@ export const mockProjects: Project[] = [
         googleSheetId: '',
         ownerEmail: 'testing@roots.app',
         participants: [participants[0]],
-        categories: [{ name: 'Consultoría', budget: 100000 }],
+        categories: [{ name: 'Consultoría', budget: 100000, icon: 'FileText' }],
         transactions: [
              { id: 't3-1', type: 'income', date: Timestamp.fromDate(new Date('2024-01-10')), description: 'Pago Cliente', amountARS: 200000, exchangeRate: 900 },
              { id: 't3-2', type: 'expense', date: Timestamp.fromDate(new Date('2024-01-15')), description: 'Software', amountARS: 15000, exchangeRate: 900, category: 'Consultoría', user: 'Usuario de Prueba', paymentMethod: 'Tarjeta' }

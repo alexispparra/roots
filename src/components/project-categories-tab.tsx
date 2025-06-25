@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -8,9 +9,11 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { CreateCategoryDialog } from "@/components/create-category-dialog"
+import { AddCategoryDialog } from "@/components/create-category-dialog"
 import { EditCategoryDialog } from "@/components/edit-category-dialog"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
+import { CategoryIcon } from "./category-icon"
+import { PredefinedCategory } from "@/lib/predefined-categories"
 
 type ProjectCategoriesTabProps = {
   project: Project;
@@ -24,9 +27,19 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
 
-  const handleAddCategory = (data: Omit<Category, "id">) => {
-    addCategory(project.id, data)
+  const handleAddCustomCategory = (data: Omit<Category, "id" | "icon">) => {
+    addCategory(project.id, { ...data, icon: 'Building' }) // 'Building' as default icon
   }
+  
+  const handleAddPredefinedCategories = (categories: PredefinedCategory[]) => {
+    categories.forEach(category => {
+      addCategory(project.id, {
+        name: category.name,
+        icon: category.icon,
+        budget: 0,
+      });
+    });
+  };
 
   const handleEditClick = (category: Category) => {
     setSelectedCategory(category)
@@ -62,7 +75,11 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
             <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
             <CardDescription>Gestiona las categorías y presupuestos para los gastos de tu proyecto.</CardDescription>
           </div>
-          {canEdit && <CreateCategoryDialog onAddCategory={handleAddCategory} />}
+          {canEdit && <AddCategoryDialog 
+            onAddCustomCategory={handleAddCustomCategory} 
+            onAddPredefinedCategories={handleAddPredefinedCategories}
+            existingCategoryNames={project.categories.map(c => c.name)}
+          />}
         </CardHeader>
         <CardContent>
           <Table>
@@ -77,7 +94,12 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
               {project.categories.length > 0 ? (
                 project.categories.map((category) => (
                   <TableRow key={category.name}>
-                    <TableCell className="font-medium">{category.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-3">
+                        <CategoryIcon name={category.icon} className="h-5 w-5 text-muted-foreground" />
+                        <span>{category.name}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">${category.budget.toLocaleString('es-AR')}</TableCell>
                     {canEdit && <TableCell>
                       <DropdownMenu>

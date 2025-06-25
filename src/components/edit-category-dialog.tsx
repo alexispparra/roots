@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect } from "react"
@@ -28,6 +29,7 @@ import type { Category } from "@/contexts/ProjectsContext"
 const formSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
   budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
+  icon: z.string().optional().nullable(),
 })
 
 type EditCategoryDialogProps = {
@@ -43,6 +45,7 @@ export function EditCategoryDialog({ category, isOpen, onOpenChange, onUpdateCat
     defaultValues: {
       name: "",
       budget: 0,
+      icon: null,
     },
   })
 
@@ -64,7 +67,7 @@ export function EditCategoryDialog({ category, isOpen, onOpenChange, onUpdateCat
             <DialogHeader>
               <DialogTitle>Editar Categoría</DialogTitle>
               <DialogDescription>
-                Actualiza el presupuesto para esta categoría. El nombre no se puede cambiar.
+                Actualiza los detalles de la categoría. El icono no se puede cambiar.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -75,7 +78,7 @@ export function EditCategoryDialog({ category, isOpen, onOpenChange, onUpdateCat
                   <FormItem>
                     <FormLabel>Nombre de la Categoría</FormLabel>
                     <FormControl>
-                      <Input {...field} disabled />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
