@@ -2,7 +2,7 @@
 "use client"
 
 import { useState } from "react"
-import { signInWithEmailAndPassword, signInWithRedirect, GoogleAuthProvider } from "firebase/auth"
+import { signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,7 +24,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
   // Demo mode check
   if (!auth) {
@@ -77,30 +76,6 @@ export default function LoginPage() {
     }
   }
 
-  const handleGoogleLogin = async () => {
-    if (!auth) {
-      setError("Error de Configuración: La autenticación de Firebase no está disponible.");
-      return;
-    }
-    setError(null)
-    setIsGoogleLoading(true)
-    const provider = new GoogleAuthProvider()
-    try {
-      // This will navigate the user away. The result is handled by AuthLayout.
-      await signInWithRedirect(auth, provider);
-    } catch (err: any) {
-      // This catch block might not even be reached in a redirect flow,
-      // but it's good practice to have it.
-      console.error("Firebase Google Redirect Error:", err);
-      let errorMessage = `Error al iniciar con Google: ${err.message}.`;
-       if (err.code === 'auth/popup-closed-by-user') {
-          errorMessage = `La ventana de inicio de sesión se cerró. Esto puede ocurrir si el dominio '${window.location.hostname}' no está autorizado en Firebase, o si tu navegador bloqueó la ventana emergente. Por favor, revisa tus dominios autorizados en la configuración de Firebase Authentication.`
-      }
-      setError(errorMessage);
-      setIsGoogleLoading(false); // Reset loading state if there's an immediate error
-    }
-  }
-
   return (
     <div className="flex items-center justify-center min-h-svh bg-background">
       <Card className="mx-auto w-full max-w-sm bg-card text-card-foreground border-border">
@@ -131,7 +106,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isFormLoading || isGoogleLoading}
+                disabled={isFormLoading}
               />
             </div>
             <div className="grid gap-2">
@@ -141,19 +116,11 @@ export default function LoginPage() {
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isFormLoading || isGoogleLoading}
+                disabled={isFormLoading}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isFormLoading || isGoogleLoading}>
+            <Button type="submit" className="w-full" disabled={isFormLoading}>
               {isFormLoading ? <Loader2 className="animate-spin" /> : "Ingresar"}
-            </Button>
-            <Button variant="outline" type="button" className="w-full" onClick={handleGoogleLogin} disabled={isFormLoading || isGoogleLoading}>
-              {isGoogleLoading ? <Loader2 className="animate-spin mr-2" /> : 
-                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                  <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 21.2 172.9 56.6l-69.8 69.8C322.2 106.3 287.9 96 248 96c-88.8 0-160.1 71.1-160.1 160.1s71.3 160.1 160.1 160.1c98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
-                </svg>
-              }
-              {isGoogleLoading ? 'Redirigiendo...' : 'Ingresar con Google'}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
