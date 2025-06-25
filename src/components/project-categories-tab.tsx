@@ -3,7 +3,8 @@
 
 import { useState } from "react"
 import { useProjects } from "@/contexts/ProjectsContext"
-import type { Project, Category, AddCategoryInput, UpdateCategoryInput, PredefinedCategory } from "@/contexts/ProjectsContext"
+import type { Project, Category, AddCategoryInput, UpdateCategoryInput } from "@/contexts/ProjectsContext"
+import type { PredefinedCategory } from "@/lib/predefined-categories"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
