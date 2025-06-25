@@ -84,7 +84,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
   }, [expense, form, isOpen])
 
   useEffect(() => {
-    const subscription = watch((value: Partial<UpdateExpenseInput>, { name }) => {
+    const subscription = watch((value: Partial<UpdateExpenseInput>, { name }: { name?: keyof UpdateExpenseInput }) => {
       if (isUpdating.current) return;
       
       const amountARS = value.amountARS ?? 0;
