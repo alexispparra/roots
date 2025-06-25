@@ -7,8 +7,9 @@ import { type Project, type Transaction } from "@/contexts/ProjectsContext"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from '@/components/ui/badge'
-import { ArrowUpRight, ArrowDownLeft, Scale } from 'lucide-react'
+import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
+import { Progress } from '@/components/ui/progress'
 
 type ProjectSummaryProps = {
   project: Project
@@ -24,7 +25,7 @@ const COLORS = [
 
 export function ProjectSummary({ project }: ProjectSummaryProps) {
 
-  const { totalIncome, totalExpenses, balance, expensesByCategory, recentTransactions } = useMemo(() => {
+  const { totalIncome, totalExpenses, balance, expensesByCategory, recentTransactions, overallProgress } = useMemo(() => {
     const income = project.transactions
       .filter(t => t.type === 'income')
       .reduce((acc, t) => acc + (t.amountARS / t.exchangeRate), 0)
@@ -55,14 +56,24 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
         .sort((a, b) => b.date.toMillis() - a.date.toMillis())
         .slice(0, 5)
 
+    const totalBudget = project.categories.reduce((acc, cat) => acc + (cat.budget || 0), 0);
+    const weightedProgressSum = project.categories.reduce((acc, cat) => {
+        const progress = cat.progress ?? 0;
+        const budget = cat.budget || 0;
+        return acc + (budget * progress);
+    }, 0);
+    
+    const progress = totalBudget > 0 ? weightedProgressSum / totalBudget : 0;
+
     return { 
       totalIncome: income,
       totalExpenses: expenses,
       balance: bal,
       expensesByCategory: expByCategory,
       recentTransactions: recTransactions,
+      overallProgress: progress,
     }
-  }, [project.transactions])
+  }, [project])
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -70,7 +81,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
 
   return (
     <div className="grid gap-6">
-       <div className="grid gap-6 md:grid-cols-3">
+       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Ingresos</CardTitle>
@@ -98,6 +109,16 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <div className={`text-2xl font-bold ${balance >= 0 ? 'text-foreground' : 'text-destructive'}`}>{formatCurrency(balance)}</div>
             </CardContent>
           </Card>
+           <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Avance Total de Obra</CardTitle>
+                  <Percent className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                  <div className="text-2xl font-bold">{`${overallProgress.toFixed(1)}%`}</div>
+                  <Progress value={overallProgress} className="mt-2" />
+              </CardContent>
+            </Card>
        </div>
 
        <div className="grid gap-6 md:grid-cols-2">
