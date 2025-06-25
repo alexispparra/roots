@@ -18,7 +18,7 @@ export const predefinedCategories: PredefinedCategory[] = [
     { name: 'INSTALACION SANITARIA, GAS Y RIEGO', icon: 'Wrench' },
     { name: 'HERRERIA', icon: 'Anvil' },
     { name: 'CALEFACCION', icon: 'ThermometerSun' },
-    { name: 'YESERIA', icon: 'PaintRoller' },
+    { name: 'YESERIA', icon: 'Grab' },
     { name: 'COLOCACIONES', icon: 'LayoutGrid' },
     { name: 'SOLADOS', icon: 'Grid' },
     { name: 'REVESTIMIENTO', icon: 'PanelTop' },
