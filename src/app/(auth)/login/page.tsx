@@ -18,6 +18,7 @@ import Link from "next/link"
 import { LandingLogo } from "@/components/landing-logo"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -25,6 +26,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const router = useRouter();
 
   // Demo mode check
   if (!auth) {
@@ -89,22 +91,19 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider);
        // La redirección es manejada por AuthLayout
     } catch (err: any) {
-      if (err.code === 'auth/popup-closed-by-user') {
-          // No es un error, el usuario simplemente cerró la ventana.
-          setIsGoogleLoading(false);
-          return;
-      }
-      
-      console.error("Firebase Google Auth Error:", err);
+      console.error("Firebase Google Auth Error:", err); // Log the full error for debugging
 
+      // Handle specific, common errors with user-friendly messages
       if (err.code === 'auth/unauthorized-domain') {
-        const hostname = window.location.hostname;
-        setError(`Error de Dominio no Autorizado: El dominio '${hostname}' no está en la lista de dominios permitidos de Firebase. Ve a tu Consola de Firebase -> Authentication -> Settings -> Dominios autorizados y añádelo.`);
-      } else if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-blocked') {
-        setError("El popup de inicio de sesión fue bloqueado por el navegador. Por favor, habilita los popups para este sitio e inténtalo de nuevo.")
-      }
-      else {
-        setError(`Error inesperado: ${err.message} (Código: ${err.code})`);
+          const hostname = window.location.hostname;
+          setError(`Error de Dominio no Autorizado: El dominio '${hostname}' no está en la lista de dominios permitidos de Firebase. Ve a tu Consola de Firebase -> Authentication -> Settings -> Dominios autorizados y añádelo.`);
+      } else if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+          setError("La ventana de inicio de sesión se cerró. Esto puede ocurrir si el dominio de la aplicación no está autorizado en Firebase. Asegúrate de que 'cloudworkstations.dev' está en la lista de dominios autorizados de tu proyecto.");
+      } else if (err.code === 'auth/popup-blocked') {
+          setError("El popup de inicio de sesión fue bloqueado por el navegador. Por favor, habilita los popups para este sitio e inténtalo de nuevo.");
+      } else {
+          // Generic fallback error
+          setError(`Error inesperado: ${err.message} (Código: ${err.code})`);
       }
     } finally {
         setIsGoogleLoading(false)
