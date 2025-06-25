@@ -2,7 +2,7 @@
 "use client"
 
 import { useState } from "react"
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
+import { signInWithEmailAndPassword, signInWithRedirect, GoogleAuthProvider } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import {
@@ -88,25 +88,13 @@ export default function LoginPage() {
     setIsGoogleLoading(true)
     const provider = new GoogleAuthProvider()
     try {
-      await signInWithPopup(auth, provider);
-       // La redirección es manejada por AuthLayout
+      // This will navigate the user away to Google's sign-in page.
+      // The result is handled by getRedirectResult in AuthLayout on the return trip.
+      await signInWithRedirect(auth, provider);
     } catch (err: any) {
-      console.error("Firebase Google Auth Error:", err); // Log the full error for debugging
-      const hostname = typeof window !== 'undefined' ? window.location.hostname : 'tu-dominio.com';
-
-      // Handle specific, common errors with user-friendly messages
-      if (err.code === 'auth/unauthorized-domain') {
-          setError(`Error de Dominio no Autorizado: El dominio '${hostname}' no está en la lista de dominios permitidos de Firebase. Ve a tu Consola de Firebase -> Authentication -> Settings -> Dominios autorizados y añádelo.`);
-      } else if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-          setError(`La ventana de inicio de sesión se cerró. Esto puede ocurrir si el dominio '${hostname}' no está autorizado en Firebase, o si tu navegador bloqueó la ventana emergente. Por favor, revisa tus dominios autorizados en la configuración de Firebase Authentication.`);
-      } else if (err.code === 'auth/popup-blocked') {
-          setError("El popup de inicio de sesión fue bloqueado por el navegador. Por favor, habilita los popups para este sitio e inténtalo de nuevo.");
-      } else {
-          // Generic fallback error
-          setError(`Error inesperado: ${err.message} (Código: ${err.code})`);
-      }
-    } finally {
-        setIsGoogleLoading(false)
+      console.error("Firebase Google Redirect Error:", err);
+      setError(`Error inesperado al intentar redirigir: ${err.message}`);
+      setIsGoogleLoading(false);
     }
   }
 
@@ -162,7 +150,7 @@ export default function LoginPage() {
                   <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 21.2 172.9 56.6l-69.8 69.8C322.2 106.3 287.9 96 248 96c-88.8 0-160.1 71.1-160.1 160.1s71.3 160.1 160.1 160.1c98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
                 </svg>
               }
-              Ingresar con Google
+              {isGoogleLoading ? 'Redirigiendo...' : 'Ingresar con Google'}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
