@@ -89,6 +89,9 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider);
        // La redirección es manejada por AuthLayout
     } catch (err: any) {
+      // Temporary alert for diagnostics
+      alert(`Google login failed. Error code: ${err.code}. Message: ${err.message}`);
+
       if (err.code === 'auth/popup-closed-by-user') {
           // No es un error, el usuario simplemente cerró la ventana.
           setIsGoogleLoading(false);

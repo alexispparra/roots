@@ -46,8 +46,8 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      <main className="flex-grow">
-        <section className="container mx-auto flex flex-col items-center px-4 pt-16 pb-24 text-center">
+      <main className="flex-grow grid grid-cols-1 lg:grid-cols-2 container mx-auto items-center">
+        <section className="flex flex-col items-center lg:items-start px-4 pt-16 pb-24 text-center lg:text-left">
           <h1 className="font-headline text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
             Gestiona tus Proyectos, <span className="text-primary">Simplificado</span>.
           </h1>
@@ -60,6 +60,16 @@ export default function LandingPage() {
             </Button>
           </div>
         </section>
+        <div className="hidden lg:flex items-center justify-center p-8">
+            <Image
+                src="https://placehold.co/1200x800.png"
+                alt="Dashboard de Roots"
+                width={1200}
+                height={800}
+                className="rounded-xl shadow-2xl"
+                data-ai-hint="dashboard analytics"
+            />
+        </div>
       </main>
       
       <footer className="container mx-auto border-t py-6 text-center text-sm text-muted-foreground">
