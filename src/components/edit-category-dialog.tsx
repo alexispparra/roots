@@ -21,6 +21,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -32,6 +33,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import type { Category } from "@/contexts/ProjectsContext"
+import { ScrollArea } from "./ui/scroll-area"
+import { Checkbox } from "./ui/checkbox"
 
 const formSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
@@ -40,6 +43,7 @@ const formSchema = z.object({
   progress: z.coerce.number().min(0).max(100).optional().nullable(),
   startDate: z.date().optional().nullable(),
   endDate: z.date().optional().nullable(),
+  dependencies: z.array(z.string()).optional(),
 }).refine(data => {
     if (data.startDate && data.endDate) {
         return data.endDate >= data.startDate
@@ -53,12 +57,13 @@ const formSchema = z.object({
 
 type EditCategoryDialogProps = {
   category: Category | null;
+  allCategories: Category[];
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onUpdateCategory: (data: z.infer<typeof formSchema>) => void;
 }
 
-export function EditCategoryDialog({ category, isOpen, onOpenChange, onUpdateCategory }: EditCategoryDialogProps) {
+export function EditCategoryDialog({ category, allCategories, isOpen, onOpenChange, onUpdateCategory }: EditCategoryDialogProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -68,6 +73,7 @@ export function EditCategoryDialog({ category, isOpen, onOpenChange, onUpdateCat
       progress: 0,
       startDate: null,
       endDate: null,
+      dependencies: [],
     },
   })
 
@@ -75,6 +81,7 @@ export function EditCategoryDialog({ category, isOpen, onOpenChange, onUpdateCat
     if (category) {
       form.reset({
         ...category,
+        dependencies: category.dependencies ?? [],
         startDate: category.startDate ? category.startDate.toDate() : null,
         endDate: category.endDate ? category.endDate.toDate() : null,
       })
@@ -220,6 +227,65 @@ export function EditCategoryDialog({ category, isOpen, onOpenChange, onUpdateCat
                         )}
                     />
                  </div>
+                 <FormField
+                    control={form.control}
+                    name="dependencies"
+                    render={() => (
+                        <FormItem>
+                        <FormLabel>Dependencias</FormLabel>
+                        <FormDescription>
+                            Selecciona las tareas que deben completarse antes de que esta pueda comenzar.
+                        </FormDescription>
+                        <ScrollArea className="h-32 w-full rounded-md border">
+                            <div className="p-4">
+                            {allCategories
+                                .filter((c) => c.name !== category?.name)
+                                .map((depCategory) => (
+                                <FormField
+                                    key={depCategory.name}
+                                    control={form.control}
+                                    name="dependencies"
+                                    render={({ field }) => {
+                                    return (
+                                        <FormItem
+                                        key={depCategory.name}
+                                        className="flex flex-row items-start space-x-3 space-y-0 py-1"
+                                        >
+                                        <FormControl>
+                                            <Checkbox
+                                            checked={field.value?.includes(depCategory.name)}
+                                            onCheckedChange={(checked) => {
+                                                const currentDeps = field.value ?? [];
+                                                return checked
+                                                ? field.onChange([
+                                                    ...currentDeps,
+                                                    depCategory.name,
+                                                ])
+                                                : field.onChange(
+                                                    currentDeps?.filter(
+                                                        (value) => value !== depCategory.name
+                                                    )
+                                                    );
+                                            }}
+                                            />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">
+                                            {depCategory.name}
+                                        </FormLabel>
+                                        </FormItem>
+                                    );
+                                    }}
+                                />
+                                ))}
+                                {allCategories.filter((c) => c.name !== category?.name).length === 0 && (
+                                    <p className="text-sm text-muted-foreground text-center py-4">No hay otras categorías para establecer dependencias.</p>
+                                )}
+                            </div>
+                        </ScrollArea>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
             </div>
             <DialogFooter>
               <Button type="submit">Guardar Cambios</Button>

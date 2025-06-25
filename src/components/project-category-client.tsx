@@ -17,6 +17,7 @@ import { EditExpenseDialog } from "@/components/edit-expense-dialog"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
 import { CategorySpendingChart } from '@/components/category-spending-chart'
 import { z } from 'zod'
+import { Progress } from './ui/progress'
 
 const expenseFormSchema = z.object({
   id: z.string().optional(),
@@ -74,12 +75,12 @@ export default function ProjectCategoryClient() {
     if (!project || !category) return;
     let { amountARS, amountUSD, exchangeRate, ...rest } = data;
 
-    if (amountARS === 0 && amountUSD > 0) {
-        amountARS = amountUSD;
-        exchangeRate = 1;
-    }
-    if (exchangeRate === 0) {
-        exchangeRate = 1;
+    if (amountARS === 0 && amountUSD > 0 && exchangeRate > 0) {
+        amountARS = amountUSD * exchangeRate;
+    } else if (amountARS > 0 && exchangeRate > 0) {
+       // This case is implicitly handled by the form logic
+    } else {
+       exchangeRate = 1;
     }
 
     addTransaction(project.id, { ...rest, type: "expense", category: category.name, amountARS, exchangeRate })
@@ -94,12 +95,10 @@ export default function ProjectCategoryClient() {
     if (selectedTransaction && project) {
         let { amountARS, amountUSD, exchangeRate, ...rest } = data;
 
-        if (amountARS === 0 && amountUSD > 0) {
-            amountARS = amountUSD;
-            exchangeRate = 1;
-        }
-        if (exchangeRate === 0) {
-            exchangeRate = 1;
+        if (amountARS === 0 && amountUSD > 0 && exchangeRate > 0) {
+            amountARS = amountUSD * exchangeRate;
+        } else {
+           exchangeRate = exchangeRate || 1;
         }
         
         updateTransaction(project.id, selectedTransaction.id, { ...rest, amountARS, exchangeRate });
@@ -162,12 +161,46 @@ export default function ProjectCategoryClient() {
       </Card>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-1">
+        <div className="md:col-span-1 flex flex-col gap-6">
           <CategorySpendingChart 
             categorySpent={categorySpent} 
             totalProjectExpenses={totalProjectExpenses} 
             categoryName={category.name}
           />
+           <Card>
+              <CardHeader>
+                <CardTitle>Detalles de Tarea</CardTitle>
+                <CardDescription>Progreso, fechas y dependencias de esta categoría.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium">Progreso</span>
+                    <span className="text-sm text-muted-foreground">{category.progress ?? 0}%</span>
+                  </div>
+                  <Progress value={category.progress ?? 0} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Fechas Clave</h4>
+                  <div className="text-sm text-muted-foreground">
+                    <p><strong>Inicio:</strong> {category.startDate ? category.startDate.toDate().toLocaleDateString('es-ES') : 'No definida'}</p>
+                    <p><strong>Fin:</strong> {category.endDate ? category.endDate.toDate().toLocaleDateString('es-ES') : 'No definida'}</p>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Dependencias</h4>
+                  <div className="text-sm text-muted-foreground">
+                    {category.dependencies && category.dependencies.length > 0 ? (
+                      <ul className="list-disc pl-5">
+                        {category.dependencies.map(dep => <li key={dep}>{dep}</li>)}
+                      </ul>
+                    ) : (
+                      <p>Esta tarea no tiene dependencias.</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
         </div>
         <div className="md:col-span-2">
           <Card>

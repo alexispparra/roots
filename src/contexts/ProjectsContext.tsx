@@ -24,6 +24,7 @@ export type Category = {
   progress?: number; // From 0 to 100
   startDate?: Timestamp | null;
   endDate?: Timestamp | null;
+  dependencies?: string[];
 };
 
 export type ProjectStatus = 'planning' | 'in-progress' | 'completed' | 'on-hold';
@@ -78,7 +79,7 @@ type ProjectsContextType = {
   addTransaction: (projectId: string, transactionData: Omit<Transaction, 'id'>) => Promise<void>;
   updateTransaction: (projectId: string, transactionId: string, transactionData: Partial<Omit<Transaction, 'id' | 'type'>>) => Promise<void>;
   deleteTransaction: (projectId: string, transactionId: string) => Promise<void>;
-  addCategory: (projectId: string, categoryData: Omit<Category, 'budget'> & { budget?: number }) => Promise<void>;
+  addCategory: (projectId: string, categoryData: Omit<Category, 'budget' | 'dependencies'> & { budget?: number, dependencies?: string[] }) => Promise<void>;
   updateCategory: (projectId: string, oldName: string, categoryData: Partial<Category>) => Promise<void>;
   deleteCategory: (projectId: string, categoryName: string) => Promise<void>;
 };
@@ -317,6 +318,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   const addCategory = async (projectId: string, categoryData: Omit<Category, 'budget'> & { budget?: number }) => {
     const newCategory: Category = {
         budget: 0,
+        dependencies: [],
         ...categoryData,
     };
     if (USE_MOCK_DATA) {

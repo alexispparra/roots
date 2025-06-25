@@ -37,7 +37,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
 
   const handleAddCustomCategory = (data: z.infer<typeof customFormSchema>) => {
-    addCategory(project.id, { ...data, icon: 'Building', progress: 0 }) // 'Building' as default icon
+    addCategory(project.id, { ...data, icon: 'Building', progress: 0, dependencies: [] }) // 'Building' as default icon
   }
   
   const handleAddPredefinedCategories = (categories: PredefinedCategory[]) => {
@@ -49,6 +49,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
         progress: 0,
         startDate: null,
         endDate: null,
+        dependencies: [],
       });
     });
   };
@@ -167,6 +168,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
           onOpenChange={setIsEditDialogOpen}
           category={selectedCategory}
           onUpdateCategory={handleUpdateCategory}
+          allCategories={project.categories}
         />
         <DeleteConfirmationDialog
           isOpen={isDeleteDialogOpen}

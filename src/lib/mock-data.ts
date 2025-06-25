@@ -43,14 +43,14 @@ const participants: Participant[] = [
 ];
 
 const categoriesProject1: Category[] = [
-    { name: 'Marketing Digital', budget: 50000, icon: 'Megaphone', progress: 75, startDate: Timestamp.fromDate(new Date('2024-07-10')), endDate: Timestamp.fromDate(new Date('2024-08-10')) },
-    { name: 'Diseño Gráfico', budget: 35000, icon: 'PenTool', progress: 50, startDate: Timestamp.fromDate(new Date('2024-07-15')), endDate: Timestamp.fromDate(new Date('2024-08-15')) },
-    { name: 'Infraestructura', budget: 120000, icon: 'Building', progress: 20, startDate: Timestamp.fromDate(new Date('2024-08-01')), endDate: Timestamp.fromDate(new Date('2024-09-30')) },
+    { name: 'Marketing Digital', budget: 50000, icon: 'Megaphone', progress: 75, startDate: Timestamp.fromDate(new Date('2024-07-10')), endDate: Timestamp.fromDate(new Date('2024-08-10')), dependencies: [] },
+    { name: 'Diseño Gráfico', budget: 35000, icon: 'PenTool', progress: 50, startDate: Timestamp.fromDate(new Date('2024-07-15')), endDate: Timestamp.fromDate(new Date('2024-08-15')), dependencies: ['Marketing Digital'] },
+    { name: 'Infraestructura', budget: 120000, icon: 'Building', progress: 20, startDate: Timestamp.fromDate(new Date('2024-08-01')), endDate: Timestamp.fromDate(new Date('2024-09-30')), dependencies: [] },
 ];
 
 const categoriesProject2: Category[] = [
-    { name: 'Materia Prima', budget: 250000, icon: 'Layers', progress: 100, startDate: Timestamp.fromDate(new Date('2024-06-01')), endDate: Timestamp.fromDate(new Date('2024-06-30')) },
-    { name: 'Logística', budget: 80000, icon: 'Shovel', progress: 10, startDate: Timestamp.fromDate(new Date('2024-07-01')), endDate: Timestamp.fromDate(new Date('2024-07-15')) },
+    { name: 'Materia Prima', budget: 250000, icon: 'Layers', progress: 100, startDate: Timestamp.fromDate(new Date('2024-06-01')), endDate: Timestamp.fromDate(new Date('2024-06-30')), dependencies: [] },
+    { name: 'Logística', budget: 80000, icon: 'Shovel', progress: 10, startDate: Timestamp.fromDate(new Date('2024-07-01')), endDate: Timestamp.fromDate(new Date('2024-07-15')), dependencies: ['Materia Prima'] },
 ];
 
 const transactionsProject1: Transaction[] = [
@@ -99,7 +99,7 @@ export const mockProjects: Project[] = [
         googleSheetId: '',
         ownerEmail: 'testing@roots.app',
         participants: [participants[0]],
-        categories: [{ name: 'Consultoría', budget: 100000, icon: 'FileText', progress: 100, startDate: null, endDate: null }],
+        categories: [{ name: 'Consultoría', budget: 100000, icon: 'FileText', progress: 100, startDate: null, endDate: null, dependencies: [] }],
         transactions: [
              { id: 't3-1', type: 'income', date: Timestamp.fromDate(new Date('2024-01-10')), description: 'Pago Cliente', amountARS: 200000, exchangeRate: 900 },
              { id: 't3-2', type: 'expense', date: Timestamp.fromDate(new Date('2024-01-15')), description: 'Software', amountARS: 15000, exchangeRate: 900, category: 'Consultoría', user: 'Usuario de Prueba', paymentMethod: 'Tarjeta' }
