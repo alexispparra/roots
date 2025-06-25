@@ -77,7 +77,7 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
   const isUpdating = useRef(false);
 
   useEffect(() => {
-    const subscription = watch((value, { name }) => {
+    const subscription = watch((value: AddExpenseInput, { name }) => {
       if (isUpdating.current) return;
       
       const { amountARS = 0, amountUSD = 0, exchangeRate = 1 } = value;

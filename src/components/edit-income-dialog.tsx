@@ -33,7 +33,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { useProjects, type Transaction, UpdateIncomeFormSchema, type UpdateIncomeInput } from "@/contexts/ProjectsContext"
+import { type Transaction, UpdateIncomeFormSchema, type UpdateIncomeInput } from "@/contexts/ProjectsContext"
 
 
 type EditIncomeDialogProps = {
@@ -67,7 +67,7 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
   }, [income, form, isOpen])
 
   useEffect(() => {
-    const subscription = watch((value, { name }) => {
+    const subscription = watch((value: UpdateIncomeInput, { name }) => {
       if (isUpdating.current) return;
       
       const { amountARS = 0, amountUSD = 0, exchangeRate = 0 } = value;

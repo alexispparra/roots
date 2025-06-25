@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useProjects, type Transaction, UpdateExpenseFormSchema, type UpdateExpenseInput } from "@/contexts/ProjectsContext"
+import { type Transaction, UpdateExpenseFormSchema, type UpdateExpenseInput } from "@/contexts/ProjectsContext"
 import { CameraCaptureDialog } from "./camera-capture-dialog"
 import Image from "next/image"
 import { Separator } from "./ui/separator"
@@ -84,7 +84,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
   }, [expense, form, isOpen])
 
   useEffect(() => {
-    const subscription = watch((value, { name }) => {
+    const subscription = watch((value: UpdateExpenseInput, { name }) => {
       if (isUpdating.current) return;
       
       const { amountARS = 0, amountUSD = 0, exchangeRate = 1 } = value;
