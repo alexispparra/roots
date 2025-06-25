@@ -5,6 +5,7 @@ import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { z } from "zod";
+import { Timestamp } from "firebase/firestore";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, GanttChartSquare, CalendarPlus, MoreHorizontal, Trash2, Bell } from "lucide-react";
@@ -127,7 +128,11 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
   const selectedDayEvents = selectedDayItems.filter(item => item.type === 'event') as Extract<CalendarItem, {type: 'event'}>[];
 
   const handleAddEvent = (data: z.infer<typeof addEventFormSchema>) => {
-    addEvent(project.id, { ...data, completed: false });
+    addEvent(project.id, { 
+        ...data, 
+        date: Timestamp.fromDate(data.date), 
+        completed: false 
+    });
   };
   
   const handleToggleEventCompletion = (event: CalendarEvent) => {
