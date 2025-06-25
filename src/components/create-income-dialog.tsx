@@ -57,10 +57,12 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
   const isUpdating = useRef(false);
 
   useEffect(() => {
-    const subscription = watch((value: AddIncomeInput, { name }) => {
+    const subscription = watch((value, { name }) => {
       if (isUpdating.current) return;
       
-      const { amountARS = 0, amountUSD = 0, exchangeRate = 0 } = value;
+      const amountARS = value.amountARS ?? 0;
+      const amountUSD = value.amountUSD ?? 0;
+      const exchangeRate = value.exchangeRate ?? 1;
 
       isUpdating.current = true;
       

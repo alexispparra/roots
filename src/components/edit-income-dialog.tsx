@@ -67,10 +67,12 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
   }, [income, form, isOpen])
 
   useEffect(() => {
-    const subscription = watch((value: UpdateIncomeInput, { name }) => {
+    const subscription = watch((value, { name }) => {
       if (isUpdating.current) return;
       
-      const { amountARS = 0, amountUSD = 0, exchangeRate = 0 } = value;
+      const amountARS = value.amountARS ?? 0;
+      const amountUSD = value.amountUSD ?? 0;
+      const exchangeRate = value.exchangeRate ?? 1;
 
       isUpdating.current = true;
       
