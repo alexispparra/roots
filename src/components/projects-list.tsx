@@ -2,19 +2,21 @@
 
 import { useProjects } from "@/contexts/ProjectsContext";
 import type { ProjectStatus } from "@/contexts/ProjectsContext";
+import type { VariantProps } from "class-variance-authority";
 import { Loader2, Briefcase } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge, badgeVariants } from "@/components/ui/badge";
 import { CreateProjectDialog } from "@/components/create-project-dialog";
 
-const statusTranslations: Record<ProjectStatus, string> = {
-    'planning': 'Planeación',
-    'in-progress': 'En Progreso',
-    'completed': 'Completado',
-    'on-hold': 'En Pausa',
+const statusConfig: Record<ProjectStatus, { text: string; variant: VariantProps<typeof badgeVariants>["variant"] }> = {
+    'planning': { text: 'Planeación', variant: 'secondary' },
+    'in-progress': { text: 'En Progreso', variant: 'default' },
+    'completed': { text: 'Completado', variant: 'success' },
+    'on-hold': { text: 'En Pausa', variant: 'outline' },
 };
+
 
 export function ProjectsList() {
     const { projects, loading } = useProjects();
@@ -44,24 +46,27 @@ export function ProjectsList() {
 
     return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project) => (
-                <Card key={project.id} className="flex flex-col">
-                    <CardHeader>
-                        <CardTitle className="font-headline">{project.name}</CardTitle>
-                        <CardDescription className="line-clamp-2 h-[40px]">{project.description || "Sin descripción."}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                       <Badge variant="secondary">{statusTranslations[project.status] || project.status}</Badge>
-                    </CardContent>
-                    <CardFooter>
-                         <Button asChild className="w-full">
-                            <Link href={`/project-detail?id=${project.id}`}>
-                                Ver Proyecto
-                            </Link>
-                        </Button>
-                    </CardFooter>
-                </Card>
-            ))}
+            {projects.map((project) => {
+                const currentStatus = statusConfig[project.status] ?? { text: project.status, variant: 'secondary' };
+                return (
+                    <Card key={project.id} className="flex flex-col">
+                        <CardHeader>
+                            <CardTitle className="font-headline">{project.name}</CardTitle>
+                            <CardDescription className="line-clamp-2 h-[40px]">{project.description || "Sin descripción."}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-grow">
+                        <Badge variant={currentStatus.variant}>{currentStatus.text}</Badge>
+                        </CardContent>
+                        <CardFooter>
+                            <Button asChild className="w-full">
+                                <Link href={`/project-detail?id=${project.id}`}>
+                                    Ver Proyecto
+                                </Link>
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                );
+            })}
         </div>
     )
 }
