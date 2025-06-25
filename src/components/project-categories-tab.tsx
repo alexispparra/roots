@@ -24,6 +24,19 @@ const customFormSchema = z.object({
   endDate: z.date().optional().nullable(),
 });
 
+// This schema must match the one inside EditCategoryDialog.
+// It ensures that the data passed from the dialog to this component is type-safe.
+const updateCategoryFormSchema = z.object({
+  name: z.string().min(1, "El nombre es requerido."),
+  budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
+  icon: z.string().optional().nullable(),
+  progress: z.coerce.number().min(0).max(100).optional().nullable(),
+  startDate: z.date().optional().nullable(),
+  endDate: z.date().optional().nullable(),
+  dependencies: z.array(z.string()).optional(),
+});
+
+
 type ProjectCategoriesTabProps = {
   project: Project;
   canEdit: boolean;
@@ -59,7 +72,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
     setIsEditDialogOpen(true)
   }
 
-  const handleUpdateCategory = (data: Partial<Category>) => {
+  const handleUpdateCategory = (data: z.infer<typeof updateCategoryFormSchema>) => {
     if (selectedCategory) {
       updateCategory(project.id, selectedCategory.name, data)
       setIsEditDialogOpen(false)
