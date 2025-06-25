@@ -54,6 +54,10 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!auth) {
+      setError("Error de Configuración: La autenticación de Firebase no está disponible.");
+      return;
+    }
     if (password.length < 6) {
         setError("La contraseña debe tener al menos 6 caracteres.");
         return;

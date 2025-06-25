@@ -54,6 +54,11 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!auth) {
+      setError("Error de Configuración: La autenticación de Firebase no está disponible.");
+      return;
+    }
+
     setError(null)
     setIsFormLoading(true)
 
@@ -73,6 +78,10 @@ export default function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
+    if (!auth) {
+      setError("Error de Configuración: La autenticación de Firebase no está disponible.");
+      return;
+    }
     setError(null)
     setIsGoogleLoading(true)
     const provider = new GoogleAuthProvider()
