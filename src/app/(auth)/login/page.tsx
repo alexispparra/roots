@@ -1,8 +1,8 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
-import { signInWithEmailAndPassword, signInWithRedirect, GoogleAuthProvider, getRedirectResult } from "firebase/auth"
+import { useState } from "react"
+import { signInWithEmailAndPassword, signInWithRedirect, GoogleAuthProvider } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,7 +18,6 @@ import Link from "next/link"
 import { LandingLogo } from "@/components/landing-logo"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useToast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -26,38 +25,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
-  const { toast } = useToast();
-
-  useEffect(() => {
-    // If auth is not configured, do nothing.
-    if (!auth) {
-      return;
-    }
-    
-    // This effect runs on mount to handle the result of a Google sign-in redirect.
-    // It runs in the background. The AuthLayout's loader will cover the UI,
-    // so we don't need a local loader here.
-    getRedirectResult(auth)
-      .then((result) => {
-        // If 'result' is not null, a user has successfully signed in.
-        // The onAuthStateChanged listener in AuthContext will handle the state update
-        // and AuthLayout will handle the redirection. We just show a success toast.
-        if (result) {
-          toast({ title: "Inicio de sesión exitoso." });
-          // At this point, the AuthLayout should be showing a loader and preparing to redirect.
-        }
-      })
-      .catch((error) => {
-        console.error("Error processing Google redirect:", error);
-        let errorMessage = `Hubo un problema al procesar el inicio de sesión de Google: ${error.message}`;
-        if (error.code === 'auth/popup-closed-by-user') {
-             errorMessage = `La ventana de inicio de sesión se cerró. Esto puede ocurrir si el dominio '${window.location.hostname}' no está autorizado en Firebase, o si tu navegador bloqueó la ventana emergente. Por favor, revisa tus dominios autorizados en la configuración de Firebase Authentication.`;
-        }
-        setError(errorMessage);
-      });
-  // The empty dependency array ensures this effect runs only once when the component mounts.
-  }, [toast]);
-
 
   // Demo mode check
   if (!auth) {
@@ -120,11 +87,15 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider()
     try {
       // This will navigate the user away to Google's sign-in page.
-      // The result is handled by the useEffect on the return trip.
+      // The result is handled by the AuthLayout on the return trip.
       await signInWithRedirect(auth, provider);
     } catch (err: any) {
       console.error("Firebase Google Redirect Error:", err);
-      setError(`Error al iniciar con Google: ${err.message}. Asegúrate de que las ventanas emergentes no estén bloqueadas y que el dominio esté autorizado en Firebase.`);
+      let errorMessage = `Error al iniciar con Google: ${err.message}.`;
+       if (err.code === 'auth/popup-closed-by-user') {
+          errorMessage = `La ventana de inicio de sesión se cerró. Esto puede ocurrir si el dominio '${window.location.hostname}' no está autorizado en Firebase, o si tu navegador bloqueó la ventana emergente. Por favor, revisa tus dominios autorizados en la configuración de Firebase Authentication.`
+      }
+      setError(errorMessage);
       setIsGoogleLoading(false);
     }
   }
