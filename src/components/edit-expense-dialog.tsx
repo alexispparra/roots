@@ -84,7 +84,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
   }, [expense, form, isOpen])
 
   useEffect(() => {
-    const subscription = watch((value, { name }) => {
+    const subscription = watch((value: Partial<UpdateExpenseInput>, { name }) => {
       if (isUpdating.current) return;
       
       const amountARS = value.amountARS ?? 0;
@@ -139,6 +139,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
 
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl">
         <Form {...form}>
@@ -362,11 +363,12 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
           </form>
         </Form>
       </DialogContent>
+    </Dialog>
       <CameraCaptureDialog
         isOpen={isCameraOpen}
         onOpenChange={setIsCameraOpen}
         onCapture={(dataUrl) => setValue("attachmentDataUrl", dataUrl, { shouldValidate: true })}
       />
-    </Dialog>
+    </>
   )
 }
