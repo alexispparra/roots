@@ -7,7 +7,7 @@ import type { Project, Transaction } from "@/contexts/ProjectsContext"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, Paperclip } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { CreateExpenseDialog } from "@/components/create-expense-dialog"
 import { CreateIncomeDialog } from "@/components/create-income-dialog"
@@ -29,6 +29,7 @@ const expenseFormSchema = z.object({
   amountARS: z.coerce.number(),
   exchangeRate: z.coerce.number(),
   amountUSD: z.coerce.number(),
+  attachmentDataUrl: z.string().optional(),
 });
 
 const incomeFormSchema = z.object({
@@ -38,6 +39,7 @@ const incomeFormSchema = z.object({
   amountARS: z.coerce.number(),
   exchangeRate: z.coerce.number(),
   amountUSD: z.coerce.number(),
+  attachmentDataUrl: z.string().optional(),
 });
 
 type ExpenseFormData = z.infer<typeof expenseFormSchema>;
@@ -107,11 +109,10 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     const handleAddExpense = (data: ExpenseFormData) => {
         let { amountARS, amountUSD, exchangeRate, ...rest } = data;
 
-        if (amountARS === 0 && amountUSD > 0) {
-            amountARS = amountUSD;
-            exchangeRate = 1;
+        if (amountARS === 0 && amountUSD > 0 && exchangeRate && exchangeRate > 0) {
+            amountARS = amountUSD * exchangeRate;
         }
-        if (exchangeRate === 0) {
+        if (!exchangeRate || exchangeRate === 0) {
             exchangeRate = 1;
         }
 
@@ -121,11 +122,10 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     const handleAddIncome = (data: IncomeFormData) => {
         let { amountARS, amountUSD, exchangeRate, ...rest } = data;
 
-        if (amountARS === 0 && amountUSD > 0) {
-            amountARS = amountUSD;
-            exchangeRate = 1;
+        if (amountARS === 0 && amountUSD > 0 && exchangeRate && exchangeRate > 0) {
+            amountARS = amountUSD * exchangeRate;
         }
-        if (exchangeRate === 0) {
+        if (!exchangeRate || exchangeRate === 0) {
             exchangeRate = 1;
         }
 
@@ -145,12 +145,11 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     const handleUpdateTransaction = (data: ExpenseFormData | IncomeFormData) => {
         if (selectedTransaction) {
             let { amountARS, amountUSD, exchangeRate, ...rest } = data;
-
-            if (amountARS === 0 && amountUSD > 0) {
-                amountARS = amountUSD;
-                exchangeRate = 1;
+            
+            if (amountARS === 0 && amountUSD > 0 && exchangeRate && exchangeRate > 0) {
+                amountARS = amountUSD * exchangeRate;
             }
-            if (exchangeRate === 0) {
+             if (!exchangeRate || exchangeRate === 0) {
                 exchangeRate = 1;
             }
 
@@ -227,9 +226,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                     <TableHead>Fecha</TableHead>
                                     <TableHead>Descripción</TableHead>
                                     <TableHead>Categoría</TableHead>
-                                    <TableHead>Usuario</TableHead>
-                                    <TableHead>Medio de Pago</TableHead>
-                                    <TableHead className="text-right">Monto (AR$)</TableHead>
+                                    <TableHead>Adjunto</TableHead>
                                     <TableHead className="text-right">Monto (U$S)</TableHead>
                                     {canEdit && <TableHead className="w-[50px]"></TableHead>}
                                 </TableRow>
@@ -241,10 +238,14 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                             <TableCell>{t.date.toDate().toLocaleDateString('es-ES')}</TableCell>
                                             <TableCell className="font-medium">{t.description}</TableCell>
                                             <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
-                                            <TableCell>{t.user}</TableCell>
-                                            <TableCell>{t.paymentMethod}</TableCell>
-                                            <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                            {t.type === 'income' ? '+' : '-'}${t.amountARS.toLocaleString('es-AR')}
+                                            <TableCell>
+                                                {t.attachmentDataUrl && (
+                                                    <Button asChild variant="ghost" size="icon">
+                                                        <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer" title="Ver adjunto">
+                                                            <Paperclip className="h-4 w-4" />
+                                                        </a>
+                                                    </Button>
+                                                )}
                                             </TableCell>
                                             <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
                                             {t.type === 'income' ? '+' : '-'}${(t.amountARS / (t.exchangeRate || 1)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -273,7 +274,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={canEdit ? 8 : 7} className="h-24 text-center text-muted-foreground">
+                                        <TableCell colSpan={canEdit ? 6 : 5} className="h-24 text-center text-muted-foreground">
                                             No hay transacciones para el período seleccionado.
                                         </TableCell>
                                     </TableRow>

@@ -1,13 +1,13 @@
 
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, Upload, Camera, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -42,6 +42,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { Transaction } from "@/contexts/ProjectsContext"
+import { CameraCaptureDialog } from "./camera-capture-dialog"
+import Image from "next/image"
+import { Separator } from "./ui/separator"
 
 const formSchema = z.object({
   id: z.string(),
@@ -53,8 +56,9 @@ const formSchema = z.object({
   user: z.string().min(1, "El usuario es requerido."),
   paymentMethod: z.string().min(1, "El medio de pago es requerido."),
   amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
-  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo."),
+  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").default(1),
   amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
+  attachmentDataUrl: z.string().optional(),
 }).refine(data => data.amountARS > 0 || data.amountUSD > 0, {
   message: "Debes ingresar un monto en AR$ o U$S.",
   path: ["amountARS"],
@@ -70,11 +74,15 @@ type EditExpenseDialogProps = {
 }
 
 export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, participants, onUpdateExpense }: EditExpenseDialogProps) {
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   })
 
   const { watch, setValue } = form;
+  const attachment = watch("attachmentDataUrl");
   const isUpdating = useRef(false);
 
   useEffect(() => {
@@ -89,6 +97,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
         date: expense.date.toDate(),
         exchangeRate,
         amountUSD,
+        attachmentDataUrl: expense.attachmentDataUrl || "",
       })
     }
   }, [expense, form, isOpen])
@@ -97,7 +106,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
     const subscription = watch((value, { name }) => {
       if (isUpdating.current) return;
       
-      const { amountARS = 0, amountUSD = 0, exchangeRate = 0 } = value;
+      const { amountARS = 0, amountUSD = 0, exchangeRate = 1 } = value;
 
       isUpdating.current = true;
       
@@ -125,8 +134,26 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
   }, [watch, setValue]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    let { amountARS, amountUSD, exchangeRate } = values;
+    if (amountUSD > 0 && amountARS === 0 && exchangeRate > 0) {
+      values.amountARS = amountUSD * exchangeRate;
+    } else if (amountARS > 0 && (exchangeRate === 0 || !exchangeRate)) {
+      values.exchangeRate = 1;
+    }
     onUpdateExpense(values);
   }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue("attachmentDataUrl", reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -262,7 +289,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
                   <FormItem>
                     <FormLabel>Cambio (a U$S)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="1050" {...field} />
+                      <Input type="number" placeholder="1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -307,12 +334,56 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
               />
 
             </div>
-            <DialogFooter>
+
+             <Separator className="my-4" />
+
+              <div className="grid gap-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Adjuntar Comprobante (Opcional)</h3>
+                {attachment ? (
+                  <div className="relative w-48 h-48 border rounded-md">
+                    <Image src={attachment} alt="Vista previa del comprobante" layout="fill" objectFit="contain" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                      onClick={() => setValue("attachmentDataUrl", "", { shouldValidate: true })}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*,application/pdf"
+                      onChange={handleFileChange}
+                    />
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Subir Archivo
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setIsCameraOpen(true)}>
+                      <Camera className="mr-2 h-4 w-4" />
+                      Tomar Foto
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+            <DialogFooter className="pt-8">
               <Button type="submit">Guardar Cambios</Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
+      <CameraCaptureDialog
+        isOpen={isCameraOpen}
+        onOpenChange={setIsCameraOpen}
+        onCapture={(dataUrl) => setValue("attachmentDataUrl", dataUrl, { shouldValidate: true })}
+      />
     </Dialog>
   )
 }

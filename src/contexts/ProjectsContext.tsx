@@ -43,6 +43,7 @@ export type Transaction = {
   description: string;
   amountARS: number;
   exchangeRate: number;
+  attachmentDataUrl?: string;
   // Expense-specific fields
   category?: string;
   user?: string;

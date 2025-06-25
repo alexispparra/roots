@@ -55,7 +55,7 @@ const categoriesProject2: Category[] = [
 
 const transactionsProject1: Transaction[] = [
     { id: 't1-1', type: 'income', date: Timestamp.fromDate(new Date('2024-07-20')), description: 'Aporte inicial', amountARS: 500000, exchangeRate: 1050 },
-    { id: 't1-2', type: 'expense', date: Timestamp.fromDate(new Date('2024-07-22')), description: 'Campaña en Redes Sociales', amountARS: 25000, exchangeRate: 1055, category: 'Marketing Digital', user: 'Usuario de Prueba', paymentMethod: 'Banco' },
+    { id: 't1-2', type: 'expense', date: Timestamp.fromDate(new Date('2024-07-22')), description: 'Campaña en Redes Sociales', amountARS: 25000, exchangeRate: 1055, category: 'Marketing Digital', user: 'Usuario de Prueba', paymentMethod: 'Banco', attachmentDataUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' },
     { id: 't1-3', type: 'expense', date: Timestamp.fromDate(new Date('2024-07-25')), description: 'Hosting y Dominio', amountARS: 45000, exchangeRate: 1060, category: 'Infraestructura', user: 'Usuario de Prueba', paymentMethod: 'Tarjeta' },
 ];
 

@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { CalendarIcon, PlusCircle } from "lucide-react"
+import { CalendarIcon, PlusCircle, Upload, Camera, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -42,6 +42,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { CameraCaptureDialog } from "./camera-capture-dialog"
+import Image from 'next/image'
+import { Separator } from "./ui/separator"
 
 const formSchema = z.object({
   date: z.date({
@@ -52,8 +55,9 @@ const formSchema = z.object({
   user: z.string().min(1, "El usuario es requerido."),
   paymentMethod: z.string().min(1, "El medio de pago es requerido."),
   amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
-  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo."),
+  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").default(1),
   amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
+  attachmentDataUrl: z.string().optional(),
 }).refine(data => data.amountARS > 0 || data.amountUSD > 0, {
   message: "Debes ingresar un monto en AR$ o U$S.",
   path: ["amountARS"],
@@ -67,6 +71,9 @@ type CreateExpenseDialogProps = {
 
 export function CreateExpenseDialog({ categories, participants, onAddExpense }: CreateExpenseDialogProps) {
   const [open, setOpen] = useState(false)
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -78,17 +85,19 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
       amountARS: 0,
       exchangeRate: 1,
       amountUSD: 0,
+      attachmentDataUrl: "",
     },
   })
 
   const { watch, setValue } = form;
+  const attachment = watch("attachmentDataUrl");
   const isUpdating = useRef(false);
 
   useEffect(() => {
     const subscription = watch((value, { name }) => {
       if (isUpdating.current) return;
       
-      const { amountARS = 0, amountUSD = 0, exchangeRate = 0 } = value;
+      const { amountARS = 0, amountUSD = 0, exchangeRate = 1 } = value;
 
       isUpdating.current = true;
       
@@ -117,6 +126,12 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
 
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    let { amountARS, amountUSD, exchangeRate } = values;
+    if (amountUSD > 0 && amountARS === 0 && exchangeRate > 0) {
+      values.amountARS = amountUSD * exchangeRate;
+    } else if (amountARS > 0 && (exchangeRate === 0 || !exchangeRate)) {
+      values.exchangeRate = 1;
+    }
     onAddExpense(values);
     setOpen(false)
     form.reset({
@@ -128,200 +143,257 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
       amountARS: 0,
       exchangeRate: 1,
       amountUSD: 0,
+      attachmentDataUrl: "",
     })
   }
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue("attachmentDataUrl", reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="ml-auto gap-1">
-          <PlusCircle className="h-4 w-4" />
-          Registrar Gasto
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-3xl">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <DialogHeader>
-              <DialogTitle>Registrar Nuevo Gasto</DialogTitle>
-              <DialogDescription>
-                Añade un nuevo movimiento a las finanzas del proyecto.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
-               <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem className="md:col-span-3">
-                    <FormLabel>Descripción</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej: Publicidad en Instagram" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Fecha del Gasto</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button size="sm" className="ml-auto gap-1">
+            <PlusCircle className="h-4 w-4" />
+            Registrar Gasto
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-3xl">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <DialogHeader>
+                <DialogTitle>Registrar Nuevo Gasto</DialogTitle>
+                <DialogDescription>
+                  Añade un nuevo movimiento a las finanzas del proyecto.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-3">
+                      <FormLabel>Descripción</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej: Publicidad en Instagram" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Fecha del Gasto</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP", { locale: es })
+                              ) : (
+                                <span>Elige una fecha</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="user"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Usuario</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP", { locale: es })
-                            ) : (
-                              <span>Elige una fecha</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona un usuario" />
+                          </SelectTrigger>
                         </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                        <SelectContent>
+                          {participants.map(p => (
+                            <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="user"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Usuario</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categoría</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={categories.length === 1}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona una categoría" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categories.map(c => (
+                            <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="amountARS"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monto (AR$)</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona un usuario" />
-                        </SelectTrigger>
+                        <Input type="number" placeholder="0.00" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        {participants.map(p => (
-                          <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Categoría</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={categories.length === 1}>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="exchangeRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cambio (a U$S)</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona una categoría" />
-                        </SelectTrigger>
+                        <Input type="number" placeholder="1" {...field} />
                       </FormControl>
-                      <SelectContent>
-                         {categories.map(c => (
-                          <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="amountARS"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto (AR$)</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0.00" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="exchangeRate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cambio (a U$S)</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="1050" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="amountUSD"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto (U$S)</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0.00" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="paymentMethod"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Medio de Pago</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="amountUSD"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monto (U$S)</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona un medio" />
-                        </SelectTrigger>
+                        <Input type="number" placeholder="0.00" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Efectivo">Efectivo</SelectItem>
-                        <SelectItem value="Banco">Banco</SelectItem>
-                        <SelectItem value="Factura">Factura</SelectItem>
-                        <SelectItem value="Otro">Otro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            </div>
-            <DialogFooter>
-              <Button type="submit">Registrar Gasto</Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+                <FormField
+                  control={form.control}
+                  name="paymentMethod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Medio de Pago</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona un medio" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Efectivo">Efectivo</SelectItem>
+                          <SelectItem value="Banco">Banco</SelectItem>
+                          <SelectItem value="Factura">Factura</SelectItem>
+                          <SelectItem value="Otro">Otro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <Separator className="my-4" />
+
+              <div className="grid gap-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Adjuntar Comprobante (Opcional)</h3>
+                {attachment ? (
+                  <div className="relative w-48 h-48 border rounded-md">
+                    <Image src={attachment} alt="Vista previa del comprobante" layout="fill" objectFit="contain" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                      onClick={() => setValue("attachmentDataUrl", "", { shouldValidate: true })}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*,application/pdf"
+                      onChange={handleFileChange}
+                    />
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Subir Archivo
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setIsCameraOpen(true)}>
+                      <Camera className="mr-2 h-4 w-4" />
+                      Tomar Foto
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter className="pt-8">
+                <Button type="submit">Registrar Gasto</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      <CameraCaptureDialog
+        isOpen={isCameraOpen}
+        onOpenChange={setIsCameraOpen}
+        onCapture={(dataUrl) => setValue("attachmentDataUrl", dataUrl, { shouldValidate: true })}
+      />
+    </>
   )
 }
