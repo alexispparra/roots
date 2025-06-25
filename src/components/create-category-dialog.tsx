@@ -5,7 +5,9 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { PlusCircle } from "lucide-react"
+import { PlusCircle, CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -31,11 +33,25 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
 import { predefinedCategories, type PredefinedCategory } from "@/lib/predefined-categories"
 import { CategoryIcon } from "./category-icon"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { Calendar } from "./ui/calendar"
+import { cn } from "@/lib/utils"
 
 const customFormSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
   budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
-})
+  startDate: z.date().optional().nullable(),
+  endDate: z.date().optional().nullable(),
+}).refine(data => {
+    if (data.startDate && data.endDate) {
+        return data.endDate >= data.startDate
+    }
+    return true
+}, {
+    message: "La fecha de fin no puede ser anterior a la fecha de inicio.",
+    path: ["endDate"],
+});
+
 
 type AddCategoryDialogProps = {
   onAddCustomCategory: (data: z.infer<typeof customFormSchema>) => void;
@@ -52,6 +68,8 @@ export function AddCategoryDialog({ onAddCustomCategory, onAddPredefinedCategori
     defaultValues: {
       name: "",
       budget: 0,
+      startDate: null,
+      endDate: null,
     },
   })
 
@@ -161,6 +179,82 @@ export function AddCategoryDialog({ onAddCustomCategory, onAddPredefinedCategori
                         <FormControl>
                           <Input type="number" placeholder="Ej: 5000" {...field} />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Fecha de Inicio</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP", { locale: es })
+                                ) : (
+                                  <span>Elige una fecha</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Fecha de Fin</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP", { locale: es })
+                                ) : (
+                                  <span>Elige una fecha</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}

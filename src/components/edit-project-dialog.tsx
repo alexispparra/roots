@@ -1,9 +1,11 @@
+
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -24,6 +26,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Project, UpdateProjectData } from "@/contexts/ProjectsContext"
 
 const formSchema = z.object({
@@ -31,6 +34,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   address: z.string().min(1, "La dirección es requerida."),
   googleSheetId: z.string().optional(),
+  status: z.enum(['planning', 'in-progress', 'completed', 'on-hold']),
 })
 
 type EditProjectDialogProps = {
@@ -41,6 +45,8 @@ type EditProjectDialogProps = {
 }
 
 export function EditProjectDialog({ project, isOpen, onOpenChange, onUpdateProject }: EditProjectDialogProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   })
@@ -49,16 +55,18 @@ export function EditProjectDialog({ project, isOpen, onOpenChange, onUpdateProje
     if (project) {
       form.reset({
         name: project.name,
-        description: project.description,
+        description: project.description ?? "",
         address: project.address,
-        googleSheetId: project.googleSheetId,
+        googleSheetId: project.googleSheetId ?? "",
+        status: project.status,
       })
     }
   }, [project, form, isOpen])
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
     onUpdateProject(values);
-    onOpenChange(false);
+    setIsSubmitting(false);
   }
 
   return (
@@ -128,9 +136,36 @@ export function EditProjectDialog({ project, isOpen, onOpenChange, onUpdateProje
                   </FormItem>
                 )}
               />
+               <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                  <FormItem>
+                      <FormLabel>Estado del Proyecto</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                              <SelectTrigger>
+                                  <SelectValue placeholder="Selecciona un estado" />
+                              </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                              <SelectItem value="planning">Planeación</SelectItem>
+                              <SelectItem value="in-progress">En Progreso</SelectItem>
+                              <SelectItem value="completed">Completado</SelectItem>
+                              <SelectItem value="on-hold">En Pausa</SelectItem>
+                          </SelectContent>
+                      </Select>
+                      <FormMessage />
+                  </FormItem>
+                  )}
+              />
             </div>
             <DialogFooter>
-              <Button type="submit">Guardar Cambios</Button>
+               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+               <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Guardar Cambios
+              </Button>
             </DialogFooter>
           </form>
         </Form>

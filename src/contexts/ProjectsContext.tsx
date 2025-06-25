@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp, arrayUnion, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp, arrayUnion, getDoc, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { USE_MOCK_DATA, mockProjects } from '@/lib/mock-data';
 
@@ -21,6 +21,9 @@ export type Category = {
   name: string;
   budget: number;
   icon?: string | null;
+  progress?: number; // From 0 to 100
+  startDate?: Timestamp | null;
+  endDate?: Timestamp | null;
 };
 
 export type ProjectStatus = 'planning' | 'in-progress' | 'completed' | 'on-hold';
@@ -71,6 +74,7 @@ type ProjectsContextType = {
   getProjectById: (id: string | null) => Project | undefined;
   getUserRoleForProject: (projectId: string) => UserRole | null;
   updateProject: (projectId: string, projectData: UpdateProjectData) => Promise<void>;
+  deleteProject: (projectId: string) => Promise<void>;
   addTransaction: (projectId: string, transactionData: Omit<Transaction, 'id'>) => Promise<void>;
   updateTransaction: (projectId: string, transactionId: string, transactionData: Partial<Omit<Transaction, 'id' | 'type'>>) => Promise<void>;
   deleteTransaction: (projectId: string, transactionId: string) => Promise<void>;
@@ -204,6 +208,24 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         toast({ variant: "destructive", title: "Error", description: "No se pudo actualizar el proyecto." });
     }
   };
+
+  const deleteProject = async (projectId: string) => {
+    if (USE_MOCK_DATA) {
+      setProjects(prev => prev.filter(p => p.id !== projectId));
+      toast({ title: "Proyecto Eliminado (Modo Prueba)" });
+      // In a real app, you might want to redirect here
+      return;
+    }
+    if (!db) return;
+    const projectRef = doc(db, 'projects', projectId);
+    try {
+      await deleteDoc(projectRef);
+      toast({ title: "Proyecto eliminado" });
+    } catch (error) {
+      console.error("Error deleting project: ", error);
+      toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar el proyecto." });
+    }
+  };
   
   const addTransaction = async (projectId: string, transactionData: Omit<Transaction, 'id'>) => {
     if (USE_MOCK_DATA) {
@@ -237,13 +259,13 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       if (USE_MOCK_DATA) {
           const updateData = { ...transactionData };
 
-          if (updateData.date) {
+          if (updateData.date && !(updateData.date instanceof Timestamp)) {
             updateData.date = Timestamp.fromDate(updateData.date as unknown as Date);
           }
 
           setProjects(prev => prev.map(p => {
               if (p.id === projectId) {
-                  const newTransactions = p.transactions.map(t => t.id === transactionId ? { ...t, ...updateData } : t);
+                  const newTransactions = p.transactions.map(t => t.id === transactionId ? { ...t, ...updateData } as Transaction : t);
                   return { ...p, transactions: newTransactions };
               }
               return p;
@@ -324,12 +346,20 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   
   const updateCategory = async (projectId: string, oldName: string, categoryData: Partial<Category>) => {
       if (USE_MOCK_DATA) {
+          const updatePayload = { ...categoryData };
+          if (updatePayload.startDate && !(updatePayload.startDate instanceof Timestamp)) {
+            updatePayload.startDate = Timestamp.fromDate(updatePayload.startDate as any);
+          }
+          if (updatePayload.endDate && !(updatePayload.endDate instanceof Timestamp)) {
+            updatePayload.endDate = Timestamp.fromDate(updatePayload.endDate as any);
+          }
+
           setProjects(prev => prev.map(p => {
               if (p.id === projectId) {
-                  const newCategories = p.categories.map(c => c.name === oldName ? { ...c, ...categoryData } : c);
+                  const newCategories = p.categories.map(c => c.name === oldName ? { ...c, ...updatePayload } : c);
                   let newTransactions = p.transactions;
-                  if (categoryData.name && categoryData.name !== oldName) {
-                      newTransactions = p.transactions.map(t => t.category === oldName ? { ...t, category: categoryData.name } : t);
+                  if (updatePayload.name && updatePayload.name !== oldName) {
+                      newTransactions = p.transactions.map(t => t.category === oldName ? { ...t, category: updatePayload.name } : t);
                   }
                   return { ...p, categories: newCategories, transactions: newTransactions };
               }
@@ -344,11 +374,20 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
           const project = projectDoc.data() as Project;
-          const newCategories = project.categories.map(c => c.name === oldName ? { ...c, ...categoryData } : c);
+          
+          const updatePayload = { ...categoryData };
+          if (updatePayload.startDate && !(updatePayload.startDate instanceof Timestamp)) {
+            updatePayload.startDate = Timestamp.fromDate(updatePayload.startDate as any);
+          }
+          if (updatePayload.endDate && !(updatePayload.endDate instanceof Timestamp)) {
+            updatePayload.endDate = Timestamp.fromDate(updatePayload.endDate as any);
+          }
+
+          const newCategories = project.categories.map(c => c.name === oldName ? { ...c, ...updatePayload } : c);
           let newTransactions = project.transactions;
-          if (categoryData.name && categoryData.name !== oldName) {
+          if (updatePayload.name && updatePayload.name !== oldName) {
             newTransactions = project.transactions.map(t => 
-                t.category === oldName ? { ...t, category: categoryData.name } : t
+                t.category === oldName ? { ...t, category: updatePayload.name } : t
             );
           }
           await updateDoc(projectRef, { categories: newCategories, transactions: newTransactions });
@@ -393,6 +432,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     getProjectById,
     getUserRoleForProject,
     updateProject,
+    deleteProject,
     addTransaction,
     updateTransaction,
     deleteTransaction,

@@ -13,7 +13,16 @@ import { AddCategoryDialog } from "@/components/create-category-dialog"
 import { EditCategoryDialog } from "@/components/edit-category-dialog"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
 import { CategoryIcon } from "./category-icon"
+import { Progress } from "@/components/ui/progress"
 import { PredefinedCategory } from "@/lib/predefined-categories"
+import { z } from "zod"
+
+const customFormSchema = z.object({
+  name: z.string().min(1, "El nombre es requerido."),
+  budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
+  startDate: z.date().optional().nullable(),
+  endDate: z.date().optional().nullable(),
+});
 
 type ProjectCategoriesTabProps = {
   project: Project;
@@ -27,8 +36,8 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
 
-  const handleAddCustomCategory = (data: Omit<Category, "id" | "icon">) => {
-    addCategory(project.id, { ...data, icon: 'Building' }) // 'Building' as default icon
+  const handleAddCustomCategory = (data: z.infer<typeof customFormSchema>) => {
+    addCategory(project.id, { ...data, icon: 'Building', progress: 0 }) // 'Building' as default icon
   }
   
   const handleAddPredefinedCategories = (categories: PredefinedCategory[]) => {
@@ -37,6 +46,9 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
         name: category.name,
         icon: category.icon,
         budget: 0,
+        progress: 0,
+        startDate: null,
+        endDate: null,
       });
     });
   };
@@ -46,7 +58,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
     setIsEditDialogOpen(true)
   }
 
-  const handleUpdateCategory = (data: Category) => {
+  const handleUpdateCategory = (data: Partial<Category>) => {
     if (selectedCategory) {
       updateCategory(project.id, selectedCategory.name, data)
       setIsEditDialogOpen(false)
@@ -73,7 +85,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
-            <CardDescription>Gestiona las categorías y presupuestos para los gastos de tu proyecto.</CardDescription>
+            <CardDescription>Gestiona las categorías, presupuestos y progreso para los gastos de tu proyecto.</CardDescription>
           </div>
           {canEdit && <AddCategoryDialog 
             onAddCustomCategory={handleAddCustomCategory} 
@@ -85,7 +97,9 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nombre</TableHead>
+                <TableHead className="w-[250px]">Nombre</TableHead>
+                <TableHead>Progreso</TableHead>
+                <TableHead>Fechas</TableHead>
                 <TableHead className="text-right">Presupuesto</TableHead>
                 {canEdit && <TableHead className="w-[50px]"></TableHead>}
               </TableRow>
@@ -98,6 +112,18 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
                       <div className="flex items-center gap-3">
                         <CategoryIcon name={category.icon} className="h-5 w-5 text-muted-foreground" />
                         <span>{category.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                         <Progress value={category.progress ?? 0} className="h-2 w-24" />
+                         <span className="text-xs text-muted-foreground">{category.progress ?? 0}%</span>
+                      </div>
+                    </TableCell>
+                     <TableCell>
+                      <div className="text-xs">
+                        <div>Inicio: {category.startDate ? category.startDate.toDate().toLocaleDateString('es-ES') : 'N/A'}</div>
+                        <div>Fin: {category.endDate ? category.endDate.toDate().toLocaleDateString('es-ES') : 'N/A'}</div>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">${category.budget.toLocaleString('es-AR')}</TableCell>
@@ -125,7 +151,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={canEdit ? 3 : 2} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={canEdit ? 5 : 4} className="h-24 text-center text-muted-foreground">
                     No hay categorías.
                     {canEdit && " ¡Añade la primera!"}
                   </TableCell>
