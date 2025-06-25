@@ -1,6 +1,6 @@
 
 import { Timestamp } from 'firebase/firestore';
-import type { Project, Participant, UserRole, Category, Transaction, ProjectStatus } from '@/contexts/ProjectsContext';
+import type { Project, Participant, UserRole, Category, Transaction, ProjectStatus, Event } from '@/contexts/ProjectsContext';
 import type { User } from 'firebase/auth';
 
 // --- CONFIGURATION ---
@@ -64,6 +64,12 @@ const transactionsProject2: Transaction[] = [
     { id: 't2-2', type: 'expense', date: Timestamp.fromDate(new Date('2024-06-18')), description: 'Compra de telas', amountARS: 95000, exchangeRate: 1025, category: 'Materia Prima', user: 'Usuario de Prueba', paymentMethod: 'Efectivo' },
 ];
 
+const eventsProject1: Event[] = [
+    { id: 'evt-1', title: 'Reunión de kickoff', date: Timestamp.fromDate(new Date('2024-07-29')), completed: true },
+    { id: 'evt-2', title: 'Llamar a agencia de marketing', date: Timestamp.fromDate(new Date('2024-08-05')), completed: false },
+    { id: 'evt-3', title: 'Revisión de entregable de diseño', date: Timestamp.fromDate(new Date('2024-08-05')), completed: false },
+]
+
 export const mockProjects: Project[] = [
     {
         id: 'proj-1',
@@ -75,6 +81,7 @@ export const mockProjects: Project[] = [
         participants,
         categories: categoriesProject1,
         transactions: transactionsProject1,
+        events: eventsProject1,
         status: 'in-progress',
         createdAt: Timestamp.fromDate(new Date('2024-07-01')),
     },
@@ -88,6 +95,7 @@ export const mockProjects: Project[] = [
         participants,
         categories: categoriesProject2,
         transactions: transactionsProject2,
+        events: [],
         status: 'planning',
         createdAt: Timestamp.fromDate(new Date('2024-06-01')),
     },
@@ -104,6 +112,7 @@ export const mockProjects: Project[] = [
              { id: 't3-1', type: 'income', date: Timestamp.fromDate(new Date('2024-01-10')), description: 'Pago Cliente', amountARS: 200000, exchangeRate: 900 },
              { id: 't3-2', type: 'expense', date: Timestamp.fromDate(new Date('2024-01-15')), description: 'Software', amountARS: 15000, exchangeRate: 900, category: 'Consultoría', user: 'Usuario de Prueba', paymentMethod: 'Tarjeta' }
         ],
+        events: [],
         status: 'completed',
         createdAt: Timestamp.fromDate(new Date('2024-01-01')),
     }

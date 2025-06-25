@@ -27,6 +27,13 @@ export type Category = {
   dependencies?: string[];
 };
 
+export type Event = {
+  id: string;
+  title: string;
+  date: Timestamp;
+  completed: boolean;
+};
+
 export type ProjectStatus = 'planning' | 'in-progress' | 'completed' | 'on-hold';
 
 export type Transaction = {
@@ -52,6 +59,7 @@ export type Project = {
   participants: Participant[];
   categories: Category[];
   transactions: Transaction[];
+  events: Event[];
   status: ProjectStatus;
   createdAt: Timestamp;
 };
@@ -82,6 +90,9 @@ type ProjectsContextType = {
   addCategory: (projectId: string, categoryData: Omit<Category, 'budget' | 'dependencies'> & { budget?: number, dependencies?: string[] }) => Promise<void>;
   updateCategory: (projectId: string, oldName: string, categoryData: Partial<Category>) => Promise<void>;
   deleteCategory: (projectId: string, categoryName: string) => Promise<void>;
+  addEvent: (projectId: string, eventData: Omit<Event, 'id'>) => Promise<void>;
+  updateEvent: (projectId: string, eventId: string, eventData: Partial<Omit<Event, 'id'>>) => Promise<void>;
+  deleteEvent: (projectId: string, eventId: string) => Promise<void>;
 };
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -121,7 +132,8 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           const data = doc.data();
           userProjects.push({
             id: doc.id,
-            ...data
+            ...data,
+            events: data.events || [], // Ensure events array exists
           } as Project);
       });
       userProjects.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
@@ -162,6 +174,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         participants: [{ email: 'testing@roots.app', name: 'Usuario de Prueba', role: 'admin' }],
         categories: [],
         transactions: [],
+        events: [],
         createdAt: Timestamp.now(),
       };
       setProjects(prev => [newProject, ...prev]);
@@ -182,6 +195,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         participantsEmails: [user.email],
         categories: [],
         transactions: [],
+        events: [],
         createdAt: Timestamp.now(),
       });
       toast({ title: "¡Proyecto Creado!", description: `El proyecto "${projectData.name}" ha sido creado.` });
@@ -426,6 +440,82 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       }
   };
 
+  const addEvent = async (projectId: string, eventData: Omit<Event, 'id'>) => {
+    const newEvent = {
+        ...eventData,
+        date: eventData.date instanceof Timestamp ? eventData.date : Timestamp.fromDate(eventData.date as unknown as Date),
+        id: USE_MOCK_DATA ? `evt-${Date.now()}` : doc(collection(db!, 'dummy')).id
+    };
+
+    if (USE_MOCK_DATA) {
+        setProjects(prev => prev.map(p => 
+            p.id === projectId ? { ...p, events: [...p.events, newEvent] } : p
+        ));
+        toast({ title: "Evento Añadido (Modo Prueba)" });
+        return;
+    }
+
+    if (!db) return;
+    const projectRef = doc(db, 'projects', projectId);
+    try {
+        await updateDoc(projectRef, { events: arrayUnion(newEvent) });
+        toast({ title: "Evento Añadido" });
+    } catch (error) {
+        console.error("Error adding event: ", error);
+        toast({ variant: "destructive", title: "Error", description: "No se pudo añadir el evento." });
+    }
+  };
+
+  const updateEvent = async (projectId: string, eventId: string, eventData: Partial<Omit<Event, 'id'>>) => {
+    if (USE_MOCK_DATA) {
+        setProjects(prev => prev.map(p => 
+            p.id === projectId 
+                ? { ...p, events: p.events.map(e => e.id === eventId ? { ...e, ...eventData } : e) } 
+                : p
+        ));
+        return;
+    }
+
+    if (!db) return;
+    const projectRef = doc(db, 'projects', projectId);
+    try {
+        const projectDoc = await getDoc(projectRef);
+        if (!projectDoc.exists()) throw new Error("Project not found");
+        const project = projectDoc.data() as Project;
+        const newEvents = project.events.map(e => e.id === eventId ? { ...e, ...eventData } : e);
+        await updateDoc(projectRef, { events: newEvents });
+    } catch (error) {
+        console.error("Error updating event: ", error);
+        toast({ variant: "destructive", title: "Error", description: "No se pudo actualizar el evento." });
+    }
+  };
+
+  const deleteEvent = async (projectId: string, eventId: string) => {
+    if (USE_MOCK_DATA) {
+        setProjects(prev => prev.map(p => 
+            p.id === projectId 
+                ? { ...p, events: p.events.filter(e => e.id !== eventId) } 
+                : p
+        ));
+        toast({ title: "Evento Eliminado (Modo Prueba)" });
+        return;
+    }
+
+    if (!db) return;
+    const projectRef = doc(db, 'projects', projectId);
+    try {
+        const projectDoc = await getDoc(projectRef);
+        if (!projectDoc.exists()) throw new Error("Project not found");
+        const project = projectDoc.data() as Project;
+        const newEvents = project.events.filter(e => e.id !== eventId);
+        await updateDoc(projectRef, { events: newEvents });
+        toast({ title: "Evento Eliminado" });
+    } catch (error) {
+        console.error("Error deleting event: ", error);
+        toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar el evento." });
+    }
+  };
+
 
   const contextValue: ProjectsContextType = {
     projects,
@@ -441,6 +531,9 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     addCategory,
     updateCategory,
     deleteCategory,
+    addEvent,
+    updateEvent,
+    deleteEvent,
   };
 
   return (

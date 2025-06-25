@@ -8,24 +8,26 @@ import { z } from "zod";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CalendarDays, GanttChartSquare, CalendarPlus } from "lucide-react";
-import { type Project, type Category } from "@/contexts/ProjectsContext";
+import { CalendarDays, GanttChartSquare, CalendarPlus, MoreHorizontal, Trash2, Bell } from "lucide-react";
+import { type Project, type Category, type Event } from "@/contexts/ProjectsContext";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { AddCategoryDialog } from "@/components/create-category-dialog";
 import { useProjects } from "@/contexts/ProjectsContext";
-import { type PredefinedCategory } from "@/lib/predefined-categories";
+import { CreateEventDialog } from "@/components/create-event-dialog";
+import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
-// Helper to generate a Google Calendar "Add Event" link
-function generateGoogleCalendarLink(category: Category, project: Project): string {
+
+function generateGoogleCalendarLinkForCategory(category: Category, project: Project): string {
     const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
     const text = encodeURIComponent(`[${project.name}] ${category.name}`);
     
     const startDate = category.startDate?.toDate();
     if (!startDate) return '#';
 
-    // For all-day events, Google Calendar uses YYYYMMDD format for start and end dates.
-    // The end date is exclusive, so we add one day to the actual end date.
     const startDateFormat = format(startDate, "yyyyMMdd");
     const endDate = category.endDate?.toDate();
     const endDateFormat = endDate 
@@ -39,93 +41,115 @@ function generateGoogleCalendarLink(category: Category, project: Project): strin
     return `${baseUrl}&text=${text}&dates=${dates}&details=${details}&location=${location}`;
 }
 
-type EventCategory = Category & { color: string };
+function generateGoogleCalendarLinkForEvent(event: Event, project: Project): string {
+    const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
+    const text = encodeURIComponent(`[${project.name}] ${event.title}`);
+    
+    const startDate = event.date.toDate();
+    const startDateFormat = format(startDate, "yyyyMMdd");
+    const endDateFormat = format(new Date(startDate.getTime() + 24 * 60 * 60 * 1000), "yyyyMMdd")
+    
+    const dates = encodeURIComponent(`${startDateFormat}/${endDateFormat}`);
+    const details = encodeURIComponent(`Evento: ${event.title}\nProyecto: ${project.name}\n\nEste evento fue generado desde Roots.`);
+    const location = encodeURIComponent(project.address);
 
-const customFormSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido."),
-  budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
-  startDate: z.date().optional().nullable(),
-  endDate: z.date().optional().nullable(),
-});
+    return `${baseUrl}&text=${text}&dates=${dates}&details=${details}&location=${location}`;
+}
+
+
+type CalendarCategory = Category & { color: string };
+type CalendarEvent = Event;
+
+type CalendarItem = 
+    | { type: 'category'; data: CalendarCategory }
+    | { type: 'event'; data: CalendarEvent };
+
 
 type ProjectCalendarViewProps = {
   project: Project;
   canEdit: boolean;
 };
 
+const addEventFormSchema = z.object({
+  title: z.string().min(1, "El título es requerido."),
+  date: z.date(),
+});
+
+
 function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
-  const { addCategory } = useProjects();
+  const { addEvent, updateEvent, deleteEvent } = useProjects();
   const [month, setMonth] = useState<Date>(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | undefined>();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedItemToDelete, setSelectedItemToDelete] = useState<CalendarEvent | null>(null);
 
-  const events = useMemo(() => {
+  const itemsByDay = useMemo(() => {
+    const byDay: Record<string, CalendarItem[]> = {};
     const colors = ["--chart-1", "--chart-2", "--chart-3", "--chart-4", "--chart-5"];
-    return project.categories
+
+    // Process categories
+    project.categories
       .filter(c => c.startDate)
-      .map((c, index) => ({
-        ...c,
-        color: `hsl(var(${colors[index % colors.length]}))` 
-      }));
-  }, [project.categories]);
+      .forEach((category, index) => {
+        const calendarCategory: CalendarCategory = { ...category, color: `hsl(var(${colors[index % colors.length]}))` };
+        let current = category.startDate!.toDate();
+        const end = category.endDate?.toDate() ?? current;
+        
+        let loopGuard = 0;
+        while (current <= end && loopGuard < 365) {
+          const dayKey = format(current, 'yyyy-MM-dd');
+          if (!byDay[dayKey]) byDay[dayKey] = [];
+          byDay[dayKey].push({ type: 'category', data: calendarCategory });
+          
+          const nextDay = new Date(current);
+          nextDay.setDate(nextDay.getDate() + 1);
+          current = nextDay;
+          loopGuard++;
+        }
+      });
+
+    // Process events
+    (project.events || []).forEach(event => {
+        const dayKey = format(event.date.toDate(), 'yyyy-MM-dd');
+        if (!byDay[dayKey]) byDay[dayKey] = [];
+        byDay[dayKey].push({ type: 'event', data: event });
+    });
+
+    return byDay;
+  }, [project.categories, project.events]);
 
   const eventDays = useMemo(() => {
-    const days: Date[] = [];
-    events.forEach(event => {
-      let current = event.startDate!.toDate();
-      const end = event.endDate?.toDate() ?? current;
-      
-      let loopGuard = 0; // Avoid infinite loops
-      while (current <= end && loopGuard < 365) {
-        days.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-        loopGuard++;
-      }
-    });
-    return days;
-  }, [events]);
+    return Object.keys(itemsByDay).map(dayKey => new Date(dayKey + 'T12:00:00'));
+  }, [itemsByDay]);
 
-  const eventsByDay = useMemo(() => {
-    const byDay: Record<string, EventCategory[]> = {};
-    events.forEach(event => {
-      let current = event.startDate!.toDate();
-      const end = event.endDate?.toDate() ?? current;
-      
-      let loopGuard = 0;
-      while (current <= end && loopGuard < 365) {
-        const dayKey = format(current, 'yyyy-MM-dd');
-        if (!byDay[dayKey]) byDay[dayKey] = [];
-        byDay[dayKey].push(event);
-        
-        const nextDay = new Date(current);
-        nextDay.setDate(nextDay.getDate() + 1);
-        current = nextDay;
-        loopGuard++;
-      }
-    });
-    return byDay;
-  }, [events]);
+  const selectedDayItems = selectedDay ? itemsByDay[format(selectedDay, 'yyyy-MM-dd')] ?? [] : [];
+  const selectedDayCategories = selectedDayItems.filter(item => item.type === 'category') as Extract<CalendarItem, {type: 'category'}>[];
+  const selectedDayEvents = selectedDayItems.filter(item => item.type === 'event') as Extract<CalendarItem, {type: 'event'}>[];
 
-  const selectedDayEvents = selectedDay ? eventsByDay[format(selectedDay, 'yyyy-MM-dd')] ?? [] : [];
-
-  const handleAddCustomCategory = (data: z.infer<typeof customFormSchema>) => {
-    addCategory(project.id, { ...data, icon: 'Building', progress: 0, dependencies: [] });
+  const handleAddEvent = (data: z.infer<typeof addEventFormSchema>) => {
+    addEvent(project.id, { ...data, completed: false });
+  };
+  
+  const handleToggleEventCompletion = (event: CalendarEvent) => {
+    updateEvent(project.id, event.id, { completed: !event.completed });
   };
 
-  const handleAddPredefinedCategories = (categories: PredefinedCategory[]) => {
-      categories.forEach(category => {
-          addCategory(project.id, {
-              name: category.name,
-              icon: category.icon,
-              budget: 0,
-              progress: 0,
-              startDate: selectedDay,
-              endDate: null,
-              dependencies: [],
-          });
-      });
+  const handleDeleteEventClick = (event: CalendarEvent) => {
+    setSelectedItemToDelete(event);
+    setIsDeleteDialogOpen(true);
   };
+
+  const handleConfirmDelete = () => {
+    if (selectedItemToDelete) {
+      deleteEvent(project.id, selectedItemToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setSelectedItemToDelete(null);
+    }
+  };
+
 
   return (
+    <>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         <div className="md:col-span-2 flex justify-center">
             <Calendar
@@ -151,46 +175,91 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
                       <CardTitle className="text-lg">
                           {selectedDay ? format(selectedDay, "d 'de' MMMM", { locale: es }) : "Actividades"}
                       </CardTitle>
-                      <CardDescription>Eventos programados.</CardDescription>
+                      <CardDescription>Eventos y tareas.</CardDescription>
                     </div>
                      {canEdit && (
-                        <AddCategoryDialog
-                            onAddCustomCategory={handleAddCustomCategory}
-                            onAddPredefinedCategories={handleAddPredefinedCategories}
-                            existingCategoryNames={project.categories.map(c => c.name)}
-                            defaultStartDate={selectedDay}
-                            trigger={
-                                <Button variant="outline" size="sm">
-                                    <CalendarPlus className="mr-2 h-4 w-4" />
-                                    Añadir Actividad
-                                </Button>
-                            }
+                        <CreateEventDialog
+                            onAddEvent={handleAddEvent}
+                            defaultDate={selectedDay}
                         />
                     )}
                 </CardHeader>
-                <CardContent className="min-h-[240px]">
-                    {selectedDayEvents.length > 0 ? (
-                        <ul className="space-y-3">
-                            {selectedDayEvents.map((event) => (
-                                <li key={event.name} className="flex flex-col p-2 rounded-md" style={{ borderLeft: `4px solid ${event.color}` }}>
-                                    <span className="font-semibold text-sm">{event.name}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                        {format(event.startDate!.toDate(), "d MMM", { locale: es })}
-                                        {event.endDate ? ` - ${format(event.endDate.toDate(), "d MMM", { locale: es })}` : ''}
-                                    </span>
-                                    <Button size="sm" variant="ghost" asChild className="mt-1 -ml-1 justify-start h-auto p-1 text-xs w-fit">
-                                        <a href={generateGoogleCalendarLink(event, project)} target="_blank" rel="noopener noreferrer">
-                                            <CalendarPlus className="mr-1.5 h-3 w-3"/>
-                                            Añadir a Google
-                                        </a>
-                                    </Button>
-                                </li>
-                            ))}
-                        </ul>
+                <CardContent className="min-h-[240px] max-h-[500px] overflow-y-auto">
+                    {selectedDayItems.length > 0 ? (
+                        <div className="space-y-4">
+                            {selectedDayEvents.length > 0 && (
+                                <div>
+                                    <h4 className="text-sm font-semibold mb-2">Eventos del Día</h4>
+                                    <ul className="space-y-2">
+                                        {selectedDayEvents.map(({ data: event }) => (
+                                            <li key={event.id} className="flex items-center gap-2 text-sm p-2 rounded-md bg-muted/50">
+                                                {canEdit ? (
+                                                    <Checkbox 
+                                                        id={`event-${event.id}`} 
+                                                        checked={event.completed} 
+                                                        onCheckedChange={() => handleToggleEventCompletion(event)}
+                                                    />
+                                                ) : (
+                                                    <Bell className="h-4 w-4 text-muted-foreground" />
+                                                )}
+                                                <label htmlFor={`event-${event.id}`} className={cn("flex-1", event.completed && "line-through text-muted-foreground")}>
+                                                    {event.title}
+                                                </label>
+                                                {canEdit && (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-6 w-6">
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent>
+                                                            <DropdownMenuItem onClick={() => handleDeleteEventClick(event)} className="text-destructive">
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                Eliminar
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
+                                                <Button size="sm" variant="ghost" asChild className="h-auto p-1 text-xs w-fit">
+                                                    <a href={generateGoogleCalendarLinkForEvent(event, project)} target="_blank" rel="noopener noreferrer">
+                                                        <CalendarPlus className="mr-1.5 h-3 w-3"/>
+                                                    </a>
+                                                </Button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {selectedDayCategories.length > 0 && selectedDayEvents.length > 0 && <Separator />}
+
+                            {selectedDayCategories.length > 0 && (
+                                <div>
+                                    <h4 className="text-sm font-semibold mb-2">Tareas de Proyecto</h4>
+                                    <ul className="space-y-3">
+                                        {selectedDayCategories.map(({ data: category }) => (
+                                            <li key={category.name} className="flex flex-col p-2 rounded-md" style={{ borderLeft: `4px solid ${category.color}` }}>
+                                                <span className="font-semibold text-sm">{category.name}</span>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {format(category.startDate!.toDate(), "d MMM", { locale: es })}
+                                                    {category.endDate ? ` - ${format(category.endDate.toDate(), "d MMM", { locale: es })}` : ''}
+                                                </span>
+                                                <Button size="sm" variant="ghost" asChild className="mt-1 -ml-1 justify-start h-auto p-1 text-xs w-fit">
+                                                    <a href={generateGoogleCalendarLinkForCategory(category, project)} target="_blank" rel="noopener noreferrer">
+                                                        <CalendarPlus className="mr-1.5 h-3 w-3"/>
+                                                        Añadir a Google
+                                                    </a>
+                                                </Button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
                     ) : (
                         <div className="flex items-center justify-center h-full">
                             <p className="text-sm text-muted-foreground text-center py-10">
-                                {selectedDay ? 'No hay actividades para este día.' : 'Selecciona un día en el calendario.'}
+                                {selectedDay ? 'No hay nada programado para este día.' : 'Selecciona un día en el calendario.'}
                             </p>
                         </div>
                     )}
@@ -198,6 +267,16 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
              </Card>
         </div>
     </div>
+    {canEdit && (
+        <DeleteConfirmationDialog 
+            isOpen={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
+            onConfirm={handleConfirmDelete}
+            title="¿Eliminar este evento?"
+            description="Esta acción no se puede deshacer. El evento se eliminará permanentemente del calendario del proyecto."
+        />
+    )}
+    </>
   );
 }
 
@@ -210,7 +289,7 @@ export function ProjectCalendarTab({ project, canEdit }: { project: Project, can
             <CalendarDays /> Calendario de Actividades
           </CardTitle>
           <CardDescription>
-            Visualiza las actividades y fechas clave del proyecto en un calendario mensual. Haz clic en un día para ver los detalles o añadir una nueva actividad.
+            Visualiza las actividades y fechas clave del proyecto. Haz clic en un día para ver los detalles o añadir un nuevo evento.
           </CardDescription>
         </CardHeader>
         <CardContent>
