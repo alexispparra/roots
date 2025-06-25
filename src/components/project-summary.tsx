@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from '@/components/ui/badge'
 import { ArrowUpRight, ArrowDownLeft, Scale } from 'lucide-react'
+import { Separator } from '@/components/ui/separator'
 
 type ProjectSummaryProps = {
   project: Project
@@ -107,28 +108,47 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
             </CardHeader>
             <CardContent>
               {expensesByCategory.length > 0 ? (
-                <div className="h-[250px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={expensesByCategory}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        nameKey="name"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {expensesByCategory.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
+                <>
+                  <div className="h-[250px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={expensesByCategory}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          nameKey="name"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {expensesByCategory.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <Separator className="my-4" />
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Categoría</TableHead>
+                        <TableHead className="text-right">Gasto (U$S)</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {expensesByCategory.map((category) => (
+                        <TableRow key={category.name}>
+                          <TableCell className="font-medium">{category.name}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(category.value)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </>
                  ) : (
                 <div className="flex items-center justify-center h-[250px] text-muted-foreground">
                     No hay gastos para mostrar.

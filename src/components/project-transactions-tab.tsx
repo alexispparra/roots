@@ -86,7 +86,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     }
 
     const handleEditClick = (transaction: Transaction) => {
-        setSelectedTransaction(transaction)
+        setSelectedTransaction(transaction);
 
         if (transaction.type === 'expense') {
             setIsEditExpenseDialogOpen(true)

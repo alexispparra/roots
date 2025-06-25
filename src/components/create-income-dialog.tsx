@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -41,12 +41,17 @@ const formSchema = z.object({
     required_error: "La fecha es requerida.",
   }),
   description: z.string().min(1, "La descripción es requerida."),
-  amountARS: z.coerce.number().positive("El monto debe ser positivo."),
-  exchangeRate: z.coerce.number().positive("El cambio debe ser positivo."),
-})
+  amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
+  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo."),
+  amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
+}).refine(data => data.amountARS > 0 || data.amountUSD > 0, {
+  message: "Debes ingresar un monto en AR$ o U$S.",
+  path: ["amountARS"],
+});
+
 
 type CreateIncomeDialogProps = {
-  onAddIncome: (data: z.infer<typeof formSchema>) => void;
+  onAddIncome: (data: Omit<z.infer<typeof formSchema>, 'amountUSD'>) => void;
 }
 
 export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
@@ -56,17 +61,63 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
     defaultValues: {
       date: new Date(),
       description: "",
+      amountARS: 0,
       exchangeRate: 1,
+      amountUSD: 0,
     },
   })
 
+  const { watch, setValue } = form;
+  const isUpdating = useRef(false);
+
+  useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      if (isUpdating.current) return;
+      
+      const { amountARS = 0, amountUSD = 0, exchangeRate = 0 } = value;
+
+      isUpdating.current = true;
+      
+      if (name === 'amountARS') {
+        if (exchangeRate > 0) {
+          setValue('amountUSD', amountARS / exchangeRate, { shouldValidate: true });
+        }
+      } else if (name === 'amountUSD') {
+        if (exchangeRate > 0) {
+          setValue('amountARS', amountUSD * exchangeRate, { shouldValidate: true });
+        }
+      } else if (name === 'exchangeRate') {
+        if (amountARS > 0 && exchangeRate > 0) {
+          setValue('amountUSD', amountARS / exchangeRate, { shouldValidate: true });
+        } else if (amountUSD > 0 && exchangeRate > 0) {
+          setValue('amountARS', amountUSD * exchangeRate, { shouldValidate: true });
+        }
+      }
+      
+      requestAnimationFrame(() => {
+        isUpdating.current = false;
+      });
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, setValue]);
+
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    onAddIncome(values)
+    const { amountARS, amountUSD, exchangeRate, ...rest } = values;
+    let finalExchangeRate = exchangeRate;
+
+    if ((!finalExchangeRate || finalExchangeRate <= 0) && amountARS > 0 && amountUSD > 0) {
+        finalExchangeRate = amountARS / amountUSD;
+    }
+
+    onAddIncome({ ...rest, amountARS, exchangeRate: finalExchangeRate });
     setOpen(false)
     form.reset({
       date: new Date(),
       description: "",
+      amountARS: 0,
       exchangeRate: 1,
+      amountUSD: 0,
     })
   }
 
@@ -150,7 +201,7 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
                   <FormItem>
                     <FormLabel>Monto (AR$)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="Ej: 50000" {...field} />
+                      <Input type="number" placeholder="Ej: 100000" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -164,6 +215,19 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
                     <FormLabel>Cambio (a U$S)</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="Ej: 1050" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="amountUSD"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monto (U$S)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0.00" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
