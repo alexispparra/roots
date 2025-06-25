@@ -118,8 +118,12 @@ export default function ProjectCategoryClient() {
     <div className="grid gap-6">
        <Card>
         <CardHeader>
-          <CardTitle className="font-headline text-3xl">{project.name}</CardTitle>
-          <CardDescription>Detalle de la categoría: <span className="font-semibold">{category.name}</span></CardDescription>
+          <CardTitle className="font-headline text-3xl">{category.name}</CardTitle>
+          <CardDescription>
+             <Link href={`/project-detail?id=${project.id}`} className="hover:underline text-base">
+                Proyecto: {project.name}
+            </Link>
+          </CardDescription>
         </CardHeader>
       </Card>
 
