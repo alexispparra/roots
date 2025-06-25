@@ -15,14 +15,15 @@ export default function LandingPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // If the user is already logged in, redirect them to the projects page.
+    // Si el usuario ya está logueado, redirigirlo a la página de proyectos.
     if (!loading && user) {
       router.replace('/projects');
     }
   }, [user, loading, router]);
 
-  // While checking for user auth, show a loader to prevent flashing the landing page.
-  if (loading || (!loading && user)) {
+  // Mientras se comprueba el estado de auth, o si ya hay un usuario y está a punto
+  // de ser redirigido, mostrar un loader para evitar el parpadeo de la landing page.
+  if (loading || user) {
      return (
       <div className="flex items-center justify-center min-h-svh bg-background">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -30,7 +31,7 @@ export default function LandingPage() {
     );
   }
 
-  // If not loading and no user, show the landing page.
+  // Si no está cargando y no hay usuario, mostrar la landing page.
   return (
     <div className="flex flex-col min-h-svh bg-background text-foreground">
       <header className="container mx-auto flex h-24 items-center justify-between px-4">

@@ -32,8 +32,8 @@ export default function MainLayout({
   const { toast } = useToast();
 
   useEffect(() => {
-    // If auth state is confirmed and there is no user,
-    // they can't access the main app pages. Redirect to login.
+    // Si el chequeo de auth terminó y NO hay un usuario,
+    // no puede estar en la app. Lo redirigimos a login.
     if (!loading && !user) {
       router.replace('/login');
     }
@@ -52,8 +52,8 @@ export default function MainLayout({
     try {
         await auth.signOut();
         toast({ title: "Has cerrado sesión." });
-        // The redirect to /login is now handled by the useEffect above
-        // after the user state becomes null.
+        // La redirección a /login es manejada por el useEffect de arriba
+        // cuando el estado del usuario se vuelve nulo.
     } catch (error) {
         console.error("Error al cerrar sesión:", error);
         toast({
@@ -64,8 +64,8 @@ export default function MainLayout({
     }
   };
 
-  // While checking auth state, or if there is no user (and about to be redirected),
-  // show a full-screen loader. This prevents flashing protected content.
+  // Mientras se comprueba el estado de auth, o si no hay usuario (y estamos a punto de redirigir),
+  // mostramos un loader a pantalla completa. Esto previene el "parpadeo" de contenido protegido.
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-svh bg-background">
@@ -74,7 +74,7 @@ export default function MainLayout({
     );
   }
 
-  // If loading is done and we have a user, render the main app layout.
+  // Si el chequeo de auth terminó y tenemos un usuario, renderizamos el layout de la app.
   return (
     <ProjectsProvider>
       <SidebarProvider>
