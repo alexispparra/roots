@@ -33,8 +33,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import type { Transaction } from "@/contexts/ProjectsContext"
-import { UpdateIncomeFormSchema, type UpdateIncomeInput } from "@/contexts/ProjectsContext"
+import { useProjects, type Transaction, UpdateIncomeFormSchema, type UpdateIncomeInput } from "@/contexts/ProjectsContext"
 
 
 type EditIncomeDialogProps = {

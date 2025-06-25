@@ -40,8 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { Transaction } from "@/contexts/ProjectsContext"
-import { UpdateExpenseFormSchema, type UpdateExpenseInput } from "@/contexts/ProjectsContext"
+import { useProjects, type Transaction, UpdateExpenseFormSchema, type UpdateExpenseInput } from "@/contexts/ProjectsContext"
 import { CameraCaptureDialog } from "./camera-capture-dialog"
 import Image from "next/image"
 import { Separator } from "./ui/separator"

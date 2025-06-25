@@ -14,7 +14,7 @@ import { EditCategoryDialog } from "@/components/edit-category-dialog"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
 import { CategoryIcon } from "./category-icon"
 import { Progress } from "@/components/ui/progress"
-import { PredefinedCategory } from "@/lib/predefined-categories"
+import type { PredefinedCategory } from "@/lib/predefined-categories"
 
 type ProjectCategoriesTabProps = {
   project: Project;
@@ -34,7 +34,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
   
   const handleAddPredefinedCategories = (categories: PredefinedCategory[]) => {
     categories.forEach(category => {
-      addCategory(project.id, { name: category.name, budget: 0 }, category.icon);
+      addCategory(project.id, { name: category.name, budget: 0, startDate: null, endDate: null }, category.icon);
     });
   };
 

@@ -296,17 +296,11 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
     try {
-        const transactionForDb: Omit<Transaction, 'id'> = {
-            ...(type === 'expense' ? transactionData as AddExpenseInput : {}),
+        const transactionForDb = {
+            ...transactionData,
             type: type,
             date: Timestamp.fromDate(transactionData.date),
-            description: transactionData.description,
-            amountARS: transactionData.amountARS,
-            exchangeRate: transactionData.exchangeRate,
-            attachmentDataUrl: transactionData.attachmentDataUrl,
             category: type === 'income' ? 'Ingreso' : (transactionData as AddExpenseInput).category,
-            user: type === 'income' ? 'N/A' : (transactionData as AddExpenseInput).user,
-            paymentMethod: type === 'income' ? 'N/A' : (transactionData as AddExpenseInput).paymentMethod,
         };
         
         await updateDoc(projectRef, { 
@@ -326,7 +320,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
           
-          const dataForDb = { ...transactionData } as any;
+          const dataForDb: any = { ...transactionData };
           if (transactionData.date) {
               dataForDb.date = Timestamp.fromDate(transactionData.date);
           }
@@ -388,7 +382,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
           
-          const dataForDb = { ...categoryData } as any;
+          const dataForDb: any = { ...categoryData };
           if (categoryData.startDate) dataForDb.startDate = Timestamp.fromDate(categoryData.startDate);
           if (categoryData.endDate) dataForDb.endDate = Timestamp.fromDate(categoryData.endDate);
           if (categoryData.startDate === null) dataForDb.startDate = null;
@@ -431,14 +425,15 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
 
-    const eventForDb: Omit<Event, 'id' | 'completed'> = {
+    const eventForDb = {
         title: eventData.title,
         date: Timestamp.fromDate(eventData.date),
+        completed: false,
     };
 
     try {
         await updateDoc(projectRef, { 
-            events: arrayUnion({ ...eventForDb, id: doc(collection(db, 'dummy')).id, completed: false }) 
+            events: arrayUnion({ ...eventForDb, id: doc(collection(db, 'dummy')).id }) 
         });
         toast({ title: "Evento Añadido" });
     } catch (error) {
@@ -454,7 +449,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         const projectDoc = await getDoc(projectRef);
         if (!projectDoc.exists()) throw new Error("Project not found");
 
-        const dataForDb = { ...eventData } as any;
+        const dataForDb: any = { ...eventData };
         if (eventData.date) {
             dataForDb.date = Timestamp.fromDate(eventData.date);
         }
