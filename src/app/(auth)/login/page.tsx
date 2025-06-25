@@ -92,13 +92,13 @@ export default function LoginPage() {
        // La redirección es manejada por AuthLayout
     } catch (err: any) {
       console.error("Firebase Google Auth Error:", err); // Log the full error for debugging
+      const hostname = typeof window !== 'undefined' ? window.location.hostname : 'tu-dominio.com';
 
       // Handle specific, common errors with user-friendly messages
       if (err.code === 'auth/unauthorized-domain') {
-          const hostname = window.location.hostname;
           setError(`Error de Dominio no Autorizado: El dominio '${hostname}' no está en la lista de dominios permitidos de Firebase. Ve a tu Consola de Firebase -> Authentication -> Settings -> Dominios autorizados y añádelo.`);
       } else if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-          setError("La ventana de inicio de sesión se cerró. Esto puede ocurrir si el dominio de la aplicación no está autorizado en Firebase. Asegúrate de que 'cloudworkstations.dev' está en la lista de dominios autorizados de tu proyecto.");
+          setError(`La ventana de inicio de sesión se cerró. Esto puede ocurrir si el dominio '${hostname}' no está autorizado en Firebase, o si tu navegador bloqueó la ventana emergente. Por favor, revisa tus dominios autorizados en la configuración de Firebase Authentication.`);
       } else if (err.code === 'auth/popup-blocked') {
           setError("El popup de inicio de sesión fue bloqueado por el navegador. Por favor, habilita los popups para este sitio e inténtalo de nuevo.");
       } else {
