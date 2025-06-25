@@ -5,7 +5,7 @@ import type { User } from 'firebase/auth';
 
 // --- CONFIGURATION ---
 // Set this to false to switch back to live Firebase data.
-export const USE_MOCK_DATA = true;
+export const USE_MOCK_DATA = false;
 
 // --- MOCK USER ---
 export const mockUser: User = {
