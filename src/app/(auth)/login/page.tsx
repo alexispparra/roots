@@ -51,9 +51,9 @@ export default function LoginPage() {
       } else if (err.code === 'auth/configuration-not-found') {
         setError("Error de configuración de Firebase. Asegúrate de haber habilitado los proveedores de inicio de sesión (Email/Contraseña y Google) en tu consola de Firebase.");
       } else {
-        setError("Ocurrió un error inesperado. Por favor, intentalo de nuevo más tarde.");
+        setError(`Error al iniciar sesión: ${err.message} (código: ${err.code})`);
       }
-      console.error(err)
+      console.error("Firebase Auth Error:", err);
     } finally {
         setIsFormLoading(false)
     }
@@ -76,17 +76,23 @@ export default function LoginPage() {
       })
        // The AuthRouterGuard in the root layout will handle the redirect.
     } catch (err: any) {
-        if (err.code !== 'auth/popup-closed-by-user') {
-            if (err.code === 'auth/configuration-not-found') {
-              setError("Error de configuración de Firebase. Asegúrate de haber habilitado el proveedor de inicio de sesión de Google en tu consola de Firebase.");
-            } else if (err.code === 'auth/unauthorized-domain') {
-              const hostname = window.location.hostname;
-              setError(`Este dominio (${hostname}) no está autorizado. Ve a tu Consola de Firebase -> Authentication -> Settings -> Dominios autorizados y añádelo a la lista.`);
-            } else {
-              setError("No se pudo iniciar sesión con Google. Por favor, intentalo de nuevo.")
-            }
-        }
-        console.error(err)
+      // Don't show an error if the user closes the popup manually
+      if (err.code === 'auth/popup-closed-by-user') {
+          setIsGoogleLoading(false);
+          return;
+      }
+      
+      console.error("Firebase Google Auth Error:", err);
+
+      if (err.code === 'auth/unauthorized-domain') {
+        const hostname = window.location.hostname;
+        setError(`Error: Este dominio (${hostname}) no está autorizado. Por favor, ve a tu Consola de Firebase -> Authentication -> Settings -> Dominios autorizados y añádelo a la lista.`);
+      } else if (err.code === 'auth/configuration-not-found') {
+        setError("Error de configuración de Firebase. Asegúrate de haber habilitado el proveedor de inicio de sesión de Google en tu consola de Firebase.");
+      } else {
+        // Display the actual error from Firebase for better debugging
+        setError(`Error al iniciar sesión con Google: ${err.message} (código: ${err.code})`);
+      }
     } finally {
         setIsGoogleLoading(false)
     }
