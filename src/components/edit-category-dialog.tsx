@@ -31,7 +31,7 @@ import { Slider } from "@/components/ui/slider"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
-import { useProjects, type Category, UpdateCategoryFormSchema, type UpdateCategoryInput } from "@/contexts/ProjectsContext"
+import { type Category, UpdateCategoryFormSchema, type UpdateCategoryInput } from "@/contexts/ProjectsContext"
 import { ScrollArea } from "./ui/scroll-area"
 import { Checkbox } from "./ui/checkbox"
 
@@ -70,6 +70,7 @@ export function EditCategoryDialog({ category, allCategories, isOpen, onOpenChan
 
   function onSubmit(values: UpdateCategoryInput) {
     onUpdateCategory(values)
+    onOpenChange(false)
   }
 
   return (
@@ -243,7 +244,7 @@ export function EditCategoryDialog({ category, allCategories, isOpen, onOpenChan
                                                 ])
                                                 : field.onChange(
                                                     currentDeps?.filter(
-                                                        (value) => value !== depCategory.name
+                                                        (value: string) => value !== depCategory.name
                                                     )
                                                     );
                                             }}
