@@ -46,27 +46,27 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      <main className="flex-grow grid grid-cols-1 lg:grid-cols-2 container mx-auto items-center">
-        <section className="flex flex-col items-center lg:items-start px-4 pt-16 pb-24 text-center lg:text-left">
+      <main className="flex-grow container mx-auto flex flex-col items-center justify-center py-16 text-center lg:flex-row lg:justify-between lg:text-left lg:gap-16">
+        <section className="px-4">
           <h1 className="font-headline text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
             Gestiona tus Proyectos, <span className="text-primary">Simplificado</span>.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
+          <p className="mt-6 mx-auto max-w-2xl text-lg text-muted-foreground lg:mx-0">
             Desde el flujo de caja hasta la colaboración en equipo, Roots te da las herramientas para llevar tus emprendimientos al siguiente nivel.
           </p>
-          <div className="mt-8 flex gap-4">
+          <div className="mt-8 flex justify-center lg:justify-start gap-4">
             <Button asChild size="lg">
               <Link href="/register">Comienza Gratis</Link>
             </Button>
           </div>
         </section>
-        <div className="hidden lg:flex items-center justify-center p-8">
+        <div className="mt-12 hidden lg:block lg:mt-0 lg:flex-shrink-0">
             <Image
                 src="https://placehold.co/1200x800.png"
                 alt="Dashboard de Roots"
                 width={1200}
                 height={800}
-                className="rounded-xl shadow-2xl"
+                className="rounded-xl shadow-2xl max-w-lg xl:max-w-2xl"
                 data-ai-hint="dashboard analytics"
             />
         </div>
