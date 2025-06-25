@@ -7,7 +7,6 @@ import { es } from "date-fns/locale";
 import { z } from "zod";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CalendarDays, GanttChartSquare, CalendarPlus, MoreHorizontal, Trash2, Bell } from "lucide-react";
 import { type Project, type Category, type Event } from "@/contexts/ProjectsContext";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { ProjectGanttChart } from "./project-gantt-chart";
 
 
 function generateGoogleCalendarLinkForCategory(category: Category, project: Project): string {
@@ -302,17 +302,11 @@ export function ProjectCalendarTab({ project, canEdit }: { project: Project, can
             <GanttChartSquare /> Diagrama de Gantt
           </CardTitle>
           <CardDescription>
-            Planifica la duración y dependencias de cada categoría para estimar la duración total de la obra.
+            Visualiza la línea de tiempo de tus categorías de proyecto.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Alert>
-            <GanttChartSquare className="h-4 w-4" />
-            <AlertTitle>Función en Desarrollo</AlertTitle>
-            <AlertDescription>
-              El diagrama de Gantt interactivo para la planificación de tareas y dependencias estará disponible próximamente.
-            </AlertDescription>
-          </Alert>
+          <ProjectGanttChart categories={project.categories} />
         </CardContent>
       </Card>
     </div>
