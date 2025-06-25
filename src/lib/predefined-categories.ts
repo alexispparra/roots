@@ -27,7 +27,7 @@ export const predefinedCategories: PredefinedCategory[] = [
     { name: 'ZINGUERIA', icon: 'Sheet' },
     { name: 'HERRAJES', icon: 'Grab' },
     { name: 'A/C', icon: 'AirVent' },
-    { name: 'MESADAS', icon: 'Tablets' },
+    { name: 'MESADAS', icon: 'Table2' },
     { name: 'ASCENSOR', icon: 'ArrowUpDown' },
     { name: 'COCINAS', icon: 'CookingPot' },
     { name: 'MUEBLES', icon: 'Sofa' },

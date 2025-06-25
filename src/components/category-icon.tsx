@@ -6,7 +6,7 @@ import {
   LandPlot, Building, Hammer, Shovel, Layers, Paintbrush, BrickWall,
   PlugZap, Wrench, Anvil, ThermometerSun, PaintRoller, LayoutGrid,
   Grid, PanelTop, Paintbrush2, DoorOpen, Sheet, Grab, AirVent,
-  Tablets, ArrowUpDown, CookingPot, Sofa, DoorClosed, FlameKindling,
+  Table2, ArrowUpDown, CookingPot, Sofa, DoorClosed, FlameKindling,
   Trees, Square as SquareIcon, PenTool, Calculator, Megaphone, Tag, Landmark, FileText,
   LucideProps
 } from 'lucide-react';
@@ -32,7 +32,7 @@ export const iconMap = {
   Sheet,
   Grab,
   AirVent,
-  Tablets,
+  Table2,
   ArrowUpDown,
   CookingPot,
   Sofa,
