@@ -39,6 +39,10 @@ export function Navigation() {
   
   const currentProjectId = searchParams.get('id') ?? searchParams.get('projectId');
 
+  const activeProjects = projects.filter(
+    (project) => project.status === 'planning' || project.status === 'in-progress'
+  );
+
   return (
     <>
       <SidebarMenu>
@@ -104,9 +108,9 @@ export function Navigation() {
           <SidebarMenuSkeleton showIcon />
           <SidebarMenuSkeleton showIcon />
         </div>
-      ) : projects.length > 0 ? (
+      ) : activeProjects.length > 0 ? (
         <Accordion type="single" collapsible className="w-full px-2" defaultValue={currentProjectId ?? undefined}>
-          {projects.map((project) => (
+          {activeProjects.map((project) => (
             <AccordionItem value={project.id} key={project.id} className="border-none">
                <AccordionTrigger 
                   className="p-2 justify-start gap-2 text-sm rounded-md hover:bg-sidebar-accent hover:no-underline [&>svg]:size-4"
@@ -135,7 +139,7 @@ export function Navigation() {
         </Accordion>
       ) : (
         <div className="p-4 text-center text-sm text-sidebar-foreground/70">
-          No has creado proyectos.
+          No hay proyectos activos.
         </div>
       )}
 
