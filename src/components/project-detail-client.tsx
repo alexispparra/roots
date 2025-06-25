@@ -128,7 +128,7 @@ export default function ProjectDetailClient() {
         </TabsContent>
         
         <TabsContent value="calendar">
-          <ProjectCalendarTab project={project} />
+          <ProjectCalendarTab project={project} canEdit={canEdit} />
         </TabsContent>
 
         {isAdmin && <TabsContent value="team">

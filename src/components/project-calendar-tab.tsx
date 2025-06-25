@@ -4,6 +4,7 @@
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { z } from "zod";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -11,6 +12,9 @@ import { CalendarDays, GanttChartSquare, CalendarPlus } from "lucide-react";
 import { type Project, type Category } from "@/contexts/ProjectsContext";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { AddCategoryDialog } from "@/components/create-category-dialog";
+import { useProjects } from "@/contexts/ProjectsContext";
+import { type PredefinedCategory } from "@/lib/predefined-categories";
 
 // Helper to generate a Google Calendar "Add Event" link
 function generateGoogleCalendarLink(category: Category, project: Project): string {
@@ -37,11 +41,20 @@ function generateGoogleCalendarLink(category: Category, project: Project): strin
 
 type EventCategory = Category & { color: string };
 
+const customFormSchema = z.object({
+  name: z.string().min(1, "El nombre es requerido."),
+  budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
+  startDate: z.date().optional().nullable(),
+  endDate: z.date().optional().nullable(),
+});
+
 type ProjectCalendarViewProps = {
   project: Project;
+  canEdit: boolean;
 };
 
-function ProjectCalendarView({ project }: ProjectCalendarViewProps) {
+function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
+  const { addCategory } = useProjects();
   const [month, setMonth] = useState<Date>(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | undefined>();
 
@@ -94,6 +107,24 @@ function ProjectCalendarView({ project }: ProjectCalendarViewProps) {
 
   const selectedDayEvents = selectedDay ? eventsByDay[format(selectedDay, 'yyyy-MM-dd')] ?? [] : [];
 
+  const handleAddCustomCategory = (data: z.infer<typeof customFormSchema>) => {
+    addCategory(project.id, { ...data, icon: 'Building', progress: 0, dependencies: [] });
+  };
+
+  const handleAddPredefinedCategories = (categories: PredefinedCategory[]) => {
+      categories.forEach(category => {
+          addCategory(project.id, {
+              name: category.name,
+              icon: category.icon,
+              budget: 0,
+              progress: 0,
+              startDate: selectedDay,
+              endDate: null,
+              dependencies: [],
+          });
+      });
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         <div className="md:col-span-2 flex justify-center">
@@ -115,11 +146,27 @@ function ProjectCalendarView({ project }: ProjectCalendarViewProps) {
         </div>
         <div className="md:col-span-1">
              <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">
-                        {selectedDay ? format(selectedDay, "d 'de' MMMM", { locale: es }) : "Actividades"}
-                    </CardTitle>
-                    <CardDescription>Eventos programados.</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between gap-2">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">
+                          {selectedDay ? format(selectedDay, "d 'de' MMMM", { locale: es }) : "Actividades"}
+                      </CardTitle>
+                      <CardDescription>Eventos programados.</CardDescription>
+                    </div>
+                     {canEdit && (
+                        <AddCategoryDialog
+                            onAddCustomCategory={handleAddCustomCategory}
+                            onAddPredefinedCategories={handleAddPredefinedCategories}
+                            existingCategoryNames={project.categories.map(c => c.name)}
+                            defaultStartDate={selectedDay}
+                            trigger={
+                                <Button variant="outline" size="sm">
+                                    <CalendarPlus className="mr-2 h-4 w-4" />
+                                    Añadir Actividad
+                                </Button>
+                            }
+                        />
+                    )}
                 </CardHeader>
                 <CardContent className="min-h-[240px]">
                     {selectedDayEvents.length > 0 ? (
@@ -154,7 +201,7 @@ function ProjectCalendarView({ project }: ProjectCalendarViewProps) {
   );
 }
 
-export function ProjectCalendarTab({ project }: { project: Project }) {
+export function ProjectCalendarTab({ project, canEdit }: { project: Project, canEdit: boolean }) {
   return (
     <div className="grid gap-6">
       <Card>
@@ -163,11 +210,11 @@ export function ProjectCalendarTab({ project }: { project: Project }) {
             <CalendarDays /> Calendario de Actividades
           </CardTitle>
           <CardDescription>
-            Visualiza las actividades y fechas clave del proyecto en un calendario mensual. Haz clic en un día para ver los detalles.
+            Visualiza las actividades y fechas clave del proyecto en un calendario mensual. Haz clic en un día para ver los detalles o añadir una nueva actividad.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ProjectCalendarView project={project} />
+          <ProjectCalendarView project={project} canEdit={canEdit} />
         </CardContent>
       </Card>
       <Card>

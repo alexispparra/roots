@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -57,9 +57,17 @@ type AddCategoryDialogProps = {
   onAddCustomCategory: (data: z.infer<typeof customFormSchema>) => void;
   onAddPredefinedCategories: (categories: PredefinedCategory[]) => void;
   existingCategoryNames: string[];
+  trigger?: React.ReactNode;
+  defaultStartDate?: Date | null;
 }
 
-export function AddCategoryDialog({ onAddCustomCategory, onAddPredefinedCategories, existingCategoryNames }: AddCategoryDialogProps) {
+export function AddCategoryDialog({ 
+  onAddCustomCategory, 
+  onAddPredefinedCategories, 
+  existingCategoryNames, 
+  trigger, 
+  defaultStartDate = null 
+}: AddCategoryDialogProps) {
   const [open, setOpen] = useState(false)
   const [selectedCategories, setSelectedCategories] = useState<Record<string, boolean>>({})
   
@@ -68,15 +76,27 @@ export function AddCategoryDialog({ onAddCustomCategory, onAddPredefinedCategori
     defaultValues: {
       name: "",
       budget: 0,
-      startDate: null,
+      startDate: defaultStartDate,
       endDate: null,
     },
   })
 
+  // When dialog opens, reset form values, especially the start date.
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: "",
+        budget: 0,
+        startDate: defaultStartDate,
+        endDate: null,
+      });
+    }
+  }, [open, defaultStartDate, form]);
+
+
   function handleCustomSubmit(values: z.infer<typeof customFormSchema>) {
     onAddCustomCategory(values)
     setOpen(false)
-    form.reset()
   }
 
   function handlePredefinedSubmit() {
@@ -85,26 +105,29 @@ export function AddCategoryDialog({ onAddCustomCategory, onAddPredefinedCategori
       onAddPredefinedCategories(categoriesToAdd)
     }
     setOpen(false)
-    setSelectedCategories({})
   }
+
+  const onOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      setSelectedCategories({});
+    }
+    setOpen(isOpen);
+  };
+
 
   const availablePredefinedCategories = predefinedCategories.filter(
     (pc) => !existingCategoryNames.includes(pc.name)
   );
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (!isOpen) {
-            form.reset();
-            setSelectedCategories({});
-        }
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Añadir Categoría
-        </Button>
+        {trigger ?? (
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Añadir Categoría
+            </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -211,7 +234,7 @@ export function AddCategoryDialog({ onAddCustomCategory, onAddPredefinedCategori
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                               mode="single"
-                              selected={field.value}
+                              selected={field.value ?? undefined}
                               onSelect={field.onChange}
                               initialFocus
                             />
@@ -249,7 +272,7 @@ export function AddCategoryDialog({ onAddCustomCategory, onAddPredefinedCategori
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                               mode="single"
-                              selected={field.value}
+                              selected={field.value ?? undefined}
                               onSelect={field.onChange}
                               initialFocus
                             />
