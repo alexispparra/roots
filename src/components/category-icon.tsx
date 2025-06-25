@@ -8,6 +8,7 @@ import {
   Grid, PanelTop, Paintbrush2, DoorOpen, Sheet, Grab, AirVent,
   Table2, ArrowUpDown, CookingPot, Sofa, DoorClosed, FlameKindling,
   Trees, Square as SquareIcon, PenTool, Calculator, Megaphone, Tag, Landmark, FileText,
+  KeyRound,
   LucideProps
 } from 'lucide-react';
 
@@ -46,6 +47,7 @@ export const iconMap = {
   Tag,
   Landmark,
   FileText,
+  KeyRound,
   default: Building,
 };
 
