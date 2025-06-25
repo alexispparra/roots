@@ -63,12 +63,16 @@ export default function LandingPage() {
 
         <section className="container mx-auto px-4 pb-24">
           <div className="relative mx-auto w-full max-w-5xl">
-            <div className="absolute -inset-2 rounded-xl bg-primary/10 blur-2xl" />
-            <div
-              className="relative aspect-[3/2] w-full rounded-xl bg-card shadow-2xl ring-1 ring-white/10"
-              data-ai-hint="finance dashboard"
-            >
-            </div>
+             <div className="absolute -inset-2 rounded-xl bg-primary/10 blur-2xl" />
+             <Image
+                src="https://placehold.co/1200x800.png"
+                alt="Panel de control de la aplicación"
+                width={1200}
+                height={800}
+                className="relative aspect-[3/2] w-full rounded-xl bg-card shadow-2xl ring-1 ring-white/10"
+                data-ai-hint="finance dashboard"
+                priority
+            />
           </div>
         </section>
       </main>

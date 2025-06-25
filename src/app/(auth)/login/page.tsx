@@ -26,27 +26,45 @@ export default function LoginPage() {
   const [isFormLoading, setIsFormLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
+  // Demo mode check
+  if (!auth) {
+    return (
+       <div className="flex items-center justify-center min-h-svh bg-background">
+          <Card className="mx-auto w-full max-w-md bg-card text-card-foreground border-border">
+            <CardHeader>
+                <CardTitle className="text-2xl font-headline text-center">Modo Demostración</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error de Configuración</AlertTitle>
+                    <AlertDescription>
+                    La autenticación de Firebase no está configurada. Para habilitarla, crea un archivo `.env` en la raíz de tu proyecto y añade las variables de entorno de tu proyecto de Firebase (NEXT_PUBLIC_FIREBASE_...).
+                    </AlertDescription>
+                </Alert>
+                 <Button asChild className="w-full mt-4">
+                  <Link href="/">Volver al Inicio</Link>
+                </Button>
+            </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!auth) {
-        setError("La autenticación no está configurada. Ejecutando en modo demostración.");
-        return;
-    }
-
     setError(null)
     setIsFormLoading(true)
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // La redirección ahora es manejada por el AuthLayout.
-      // No es necesario hacer nada aquí.
+      // La redirección es manejada por AuthLayout
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
-      } else if (err.code === 'auth/configuration-not-found') {
-        setError("Error de configuración de Firebase. Asegúrate de haber habilitado los proveedores de inicio de sesión (Email/Contraseña y Google) en tu consola de Firebase.");
       } else {
-        setError(`Error al iniciar sesión: ${err.message} (código: ${err.code})`);
+        setError(`Error: ${err.message} (código: ${err.code})`);
       }
       console.error("Firebase Auth Error:", err);
     } finally {
@@ -55,20 +73,15 @@ export default function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
-    if (!auth) {
-        setError("La autenticación no está configurada. Ejecutando en modo demostración.");
-        return;
-    };
-
     setError(null)
     setIsGoogleLoading(true)
     const provider = new GoogleAuthProvider()
     try {
       await signInWithPopup(auth, provider);
-      // La redirección ahora es manejada por el AuthLayout.
-      // No es necesario hacer nada aquí.
+       // La redirección es manejada por AuthLayout
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
+          // No es un error, el usuario simplemente cerró la ventana.
           setIsGoogleLoading(false);
           return;
       }
@@ -77,10 +90,11 @@ export default function LoginPage() {
 
       if (err.code === 'auth/unauthorized-domain') {
         const hostname = window.location.hostname;
-        setError(`Error de Dominio no Autorizado: El dominio '${hostname}' no está permitido. Por favor, ve a tu Consola de Firebase -> Authentication -> Settings -> Dominios autorizados y añádelo.`);
-      } else if (err.code === 'auth/configuration-not-found') {
-        setError("Error de Configuración: Revisa que el proveedor de Google esté habilitado en tu Consola de Firebase y que las credenciales en el archivo .env sean correctas.");
-      } else {
+        setError(`Error de Dominio no Autorizado: El dominio '${hostname}' no está en la lista de dominios permitidos de Firebase. Ve a tu Consola de Firebase -> Authentication -> Settings -> Dominios autorizados y añádelo.`);
+      } else if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-blocked') {
+        setError("El popup de inicio de sesión fue bloqueado por el navegador. Por favor, habilita los popups para este sitio e inténtalo de nuevo.")
+      }
+      else {
         setError(`Error inesperado: ${err.message} (Código: ${err.code})`);
       }
     } finally {

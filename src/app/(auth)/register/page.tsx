@@ -27,13 +27,33 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  // Demo mode check
+  if (!auth) {
+    return (
+       <div className="flex items-center justify-center min-h-svh bg-background">
+          <Card className="mx-auto w-full max-w-md bg-card text-card-foreground border-border">
+            <CardHeader>
+                <CardTitle className="text-2xl font-headline text-center">Modo Demostración</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error de Configuración</AlertTitle>
+                    <AlertDescription>
+                    La autenticación de Firebase no está configurada. Para habilitarla, crea un archivo `.env` en la raíz de tu proyecto y añade las variables de entorno de tu proyecto de Firebase (NEXT_PUBLIC_FIREBASE_...).
+                    </AlertDescription>
+                </Alert>
+                <Button asChild className="w-full mt-4">
+                  <Link href="/">Volver al Inicio</Link>
+                </Button>
+            </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!auth) {
-        setError("La autenticación no está configurada. Ejecutando en modo demostración.");
-        return;
-    }
-    
     if (password.length < 6) {
         setError("La contraseña debe tener al menos 6 caracteres.");
         return;
@@ -49,15 +69,12 @@ export default function RegisterPage() {
               displayName: `${firstName} ${lastName}`.trim()
           });
       }
-      // La redirección ahora es manejada por el AuthLayout.
-      // No es necesario hacer nada aquí.
+      // La redirección es manejada por AuthLayout
     } catch (err: any) {
         if (err.code === 'auth/email-already-in-use') {
             setError("Este correo electrónico ya está en uso. Por favor, inicia sesión o usa otro correo.");
-        } else if (err.code === 'auth/configuration-not-found') {
-            setError("Error de configuración de Firebase. Asegúrate de haber habilitado el proveedor de inicio de sesión (Email/Contraseña) en tu consola de Firebase.");
         } else {
-            setError("Ocurrió un error inesperado al crear tu cuenta.");
+            setError(`Error: ${err.message} (código: ${err.code})`);
         }
         console.error(err);
     } finally {
