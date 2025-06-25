@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from 'next/navigation';
 import { useEffect } from "react";
 import { Loader2, Shield } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 export default function AdminPage() {
@@ -39,10 +40,14 @@ export default function AdminPage() {
             Gestiona los roles de todos los participantes en todos los proyectos de la aplicación.
           </CardDescription>
         </CardHeader>
-         <CardContent className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
-            <Shield className="h-16 w-16 mb-4" />
-            <p>La administración global de usuarios estará disponible aquí pronto.</p>
-            <p className="text-xs mt-2">Esta función se habilitará en una futura actualización.</p>
+         <CardContent>
+            <Alert>
+                <Shield className="h-4 w-4" />
+                <AlertTitle>Función en Desarrollo</AlertTitle>
+                <AlertDescription>
+                    El panel de administración global para gestionar usuarios y proyectos en toda la aplicación está en construcción y se habilitará en una futura actualización.
+                </AlertDescription>
+            </Alert>
         </CardContent>
       </Card>
     </div>

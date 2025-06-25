@@ -12,6 +12,7 @@ import { ProjectSettingsForm } from '@/components/project-settings-form'
 import { ProjectCategoriesTab } from '@/components/project-categories-tab'
 import { ProjectTransactionsTab } from '@/components/project-transactions-tab'
 import { ProjectSummary } from '@/components/project-summary'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function ProjectDetailClient() {
   const searchParams = useSearchParams()
@@ -86,9 +87,14 @@ export default function ProjectDetailClient() {
                 <CardTitle className="font-headline">Equipo del Proyecto</CardTitle>
                 <CardDescription>Gestiona los participantes y sus permisos en este proyecto.</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
-                <Users className="h-16 w-16 mb-4" />
-                <p>La gestión de equipo estará disponible aquí pronto.</p>
+            <CardContent>
+                <Alert>
+                    <Users className="h-4 w-4" />
+                    <AlertTitle>Función en Desarrollo</AlertTitle>
+                    <AlertDescription>
+                        La capacidad para añadir, editar y eliminar miembros del equipo y gestionar sus permisos estará disponible en una futura actualización.
+                    </AlertDescription>
+                </Alert>
             </CardContent>
           </Card>
         </TabsContent>}
