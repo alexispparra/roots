@@ -4,12 +4,11 @@
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { z } from "zod";
 import { Timestamp } from "firebase/firestore";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, GanttChartSquare, CalendarPlus, MoreHorizontal, Trash2, Bell } from "lucide-react";
-import { type Project, type Category, type Event } from "@/contexts/ProjectsContext";
+import { type Project, type Category, type Event, type AddEventInput } from "@/contexts/ProjectsContext";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { useProjects } from "@/contexts/ProjectsContext";
@@ -71,12 +70,6 @@ type ProjectCalendarViewProps = {
   canEdit: boolean;
 };
 
-const addEventFormSchema = z.object({
-  title: z.string().min(1, "El título es requerido."),
-  date: z.date(),
-});
-
-
 function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
   const { addEvent, updateEvent, deleteEvent } = useProjects();
   const [month, setMonth] = useState<Date>(new Date());
@@ -127,12 +120,12 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
   const selectedDayCategories = selectedDayItems.filter(item => item.type === 'category') as Extract<CalendarItem, {type: 'category'}>[];
   const selectedDayEvents = selectedDayItems.filter(item => item.type === 'event') as Extract<CalendarItem, {type: 'event'}>[];
 
-  const handleAddEvent = (data: z.infer<typeof addEventFormSchema>) => {
-    addEvent(project.id, { ...data, completed: false });
+  const handleAddEvent = (data: AddEventInput) => {
+    addEvent(project.id, data);
   };
   
   const handleToggleEventCompletion = (event: CalendarEvent) => {
-    updateEvent(project.id, event.id, { completed: !event.completed });
+    updateEvent(project.id, event.id, { title: event.title, date: event.date.toDate(), completed: !event.completed });
   };
 
   const handleDeleteEventClick = (event: CalendarEvent) => {

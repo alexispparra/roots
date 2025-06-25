@@ -4,7 +4,6 @@
 import { useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
@@ -35,31 +34,19 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import type { Transaction } from "@/contexts/ProjectsContext"
+import { UpdateIncomeFormSchema, type UpdateIncomeInput } from "@/contexts/ProjectsContext"
 
-const formSchema = z.object({
-  id: z.string(),
-  date: z.date({
-    required_error: "La fecha es requerida.",
-  }),
-  description: z.string().min(1, "La descripción es requerida."),
-  amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
-  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo."),
-  amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
-}).refine(data => data.amountARS > 0 || data.amountUSD > 0, {
-  message: "Debes ingresar un monto en AR$ o U$S.",
-  path: ["amountARS"],
-});
 
 type EditIncomeDialogProps = {
   income: Transaction | null;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onUpdateIncome: (data: z.infer<typeof formSchema>) => void;
+  onUpdateIncome: (data: UpdateIncomeInput) => void;
 }
 
 export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome }: EditIncomeDialogProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<UpdateIncomeInput>({
+    resolver: zodResolver(UpdateIncomeFormSchema),
   })
 
   const { watch, setValue } = form;
@@ -111,7 +98,7 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
     return () => subscription.unsubscribe();
   }, [watch, setValue]);
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: UpdateIncomeInput) {
     onUpdateIncome(values);
   }
 

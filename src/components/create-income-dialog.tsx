@@ -4,7 +4,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { CalendarIcon, PlusCircle } from "lucide-react"
@@ -35,29 +34,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-
-const formSchema = z.object({
-  date: z.date({
-    required_error: "La fecha es requerida.",
-  }),
-  description: z.string().min(1, "La descripción es requerida."),
-  amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
-  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo."),
-  amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
-}).refine(data => data.amountARS > 0 || data.amountUSD > 0, {
-  message: "Debes ingresar un monto en AR$ o U$S.",
-  path: ["amountARS"],
-});
-
+import { AddIncomeFormSchema, type AddIncomeInput } from "@/contexts/ProjectsContext"
 
 type CreateIncomeDialogProps = {
-  onAddIncome: (data: z.infer<typeof formSchema>) => void;
+  onAddIncome: (data: AddIncomeInput) => void;
 }
 
 export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
   const [open, setOpen] = useState(false)
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<AddIncomeInput>({
+    resolver: zodResolver(AddIncomeFormSchema),
     defaultValues: {
       date: new Date(),
       description: "",
@@ -102,7 +88,7 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
   }, [watch, setValue]);
 
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: AddIncomeInput) {
     onAddIncome(values);
     setOpen(false)
     form.reset({

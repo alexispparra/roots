@@ -4,7 +4,6 @@
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { PlusCircle, CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -36,25 +35,10 @@ import { CategoryIcon } from "./category-icon"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Calendar } from "./ui/calendar"
 import { cn } from "@/lib/utils"
-
-const customFormSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido."),
-  budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
-  startDate: z.date().optional().nullable(),
-  endDate: z.date().optional().nullable(),
-}).refine(data => {
-    if (data.startDate && data.endDate) {
-        return data.endDate >= data.startDate
-    }
-    return true
-}, {
-    message: "La fecha de fin no puede ser anterior a la fecha de inicio.",
-    path: ["endDate"],
-});
-
+import { AddCategoryFormSchema, type AddCategoryInput } from "@/contexts/ProjectsContext"
 
 type AddCategoryDialogProps = {
-  onAddCustomCategory: (data: z.infer<typeof customFormSchema>) => void;
+  onAddCustomCategory: (data: AddCategoryInput) => void;
   onAddPredefinedCategories: (categories: PredefinedCategory[]) => void;
   existingCategoryNames: string[];
   trigger?: React.ReactNode;
@@ -71,8 +55,8 @@ export function AddCategoryDialog({
   const [open, setOpen] = useState(false)
   const [selectedCategories, setSelectedCategories] = useState<Record<string, boolean>>({})
   
-  const form = useForm<z.infer<typeof customFormSchema>>({
-    resolver: zodResolver(customFormSchema),
+  const form = useForm<AddCategoryInput>({
+    resolver: zodResolver(AddCategoryFormSchema),
     defaultValues: {
       name: "",
       budget: 0,
@@ -94,7 +78,7 @@ export function AddCategoryDialog({
   }, [open, defaultStartDate, form]);
 
 
-  function handleCustomSubmit(values: z.infer<typeof customFormSchema>) {
+  function handleCustomSubmit(values: AddCategoryInput) {
     onAddCustomCategory(values)
     setOpen(false)
   }

@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from "react"
 import { useProjects } from "@/contexts/ProjectsContext"
-import type { Project, Transaction } from "@/contexts/ProjectsContext"
+import type { Project, Transaction, AddExpenseInput, AddIncomeInput, UpdateExpenseInput, UpdateIncomeInput } from "@/contexts/ProjectsContext"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -16,35 +16,6 @@ import { EditIncomeDialog } from "./edit-income-dialog"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { z } from "zod"
-
-
-const expenseFormSchema = z.object({
-  id: z.string().optional(),
-  date: z.date(),
-  description: z.string().min(1),
-  category: z.string().min(1),
-  user: z.string().min(1),
-  paymentMethod: z.string().min(1),
-  amountARS: z.coerce.number(),
-  exchangeRate: z.coerce.number(),
-  amountUSD: z.coerce.number(),
-  attachmentDataUrl: z.string().optional(),
-});
-
-const incomeFormSchema = z.object({
-  id: z.string().optional(),
-  date: z.date(),
-  description: z.string().min(1),
-  amountARS: z.coerce.number(),
-  exchangeRate: z.coerce.number(),
-  amountUSD: z.coerce.number(),
-  attachmentDataUrl: z.string().optional(),
-});
-
-type ExpenseFormData = z.infer<typeof expenseFormSchema>;
-type IncomeFormData = z.infer<typeof incomeFormSchema>;
-
 
 type ProjectTransactionsTabProps = {
   project: Project;
@@ -106,30 +77,12 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     }, [filteredTransactions, project.participants]);
 
 
-    const handleAddExpense = (data: ExpenseFormData) => {
-        let { amountARS, amountUSD, exchangeRate, ...rest } = data;
-
-        if (amountARS === 0 && amountUSD > 0 && exchangeRate && exchangeRate > 0) {
-            amountARS = amountUSD * exchangeRate;
-        }
-        if (!exchangeRate || exchangeRate === 0) {
-            exchangeRate = 1;
-        }
-
-        addTransaction(project.id, { ...rest, type: "expense", amountARS, exchangeRate })
+    const handleAddExpense = (data: AddExpenseInput) => {
+        addTransaction(project.id, data, "expense");
     }
 
-    const handleAddIncome = (data: IncomeFormData) => {
-        let { amountARS, amountUSD, exchangeRate, ...rest } = data;
-
-        if (amountARS === 0 && amountUSD > 0 && exchangeRate && exchangeRate > 0) {
-            amountARS = amountUSD * exchangeRate;
-        }
-        if (!exchangeRate || exchangeRate === 0) {
-            exchangeRate = 1;
-        }
-
-        addTransaction(project.id, { ...rest, type: "income", category: 'Ingreso', user: 'N/A', paymentMethod: 'N/A', amountARS, exchangeRate })
+    const handleAddIncome = (data: AddIncomeInput) => {
+        addTransaction(project.id, data, "income");
     }
 
     const handleEditClick = (transaction: Transaction) => {
@@ -142,18 +95,9 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
         }
     }
 
-    const handleUpdateTransaction = (data: ExpenseFormData | IncomeFormData) => {
+    const handleUpdateTransaction = (data: UpdateExpenseInput | UpdateIncomeInput) => {
         if (selectedTransaction) {
-            let { amountARS, amountUSD, exchangeRate, ...rest } = data;
-            
-            if (amountARS === 0 && amountUSD > 0 && exchangeRate && exchangeRate > 0) {
-                amountARS = amountUSD * exchangeRate;
-            }
-             if (!exchangeRate || exchangeRate === 0) {
-                exchangeRate = 1;
-            }
-
-            updateTransaction(project.id, selectedTransaction.id, { ...rest, amountARS, exchangeRate });
+            updateTransaction(project.id, selectedTransaction.id, data);
             setIsEditExpenseDialogOpen(false)
             setIsEditIncomeDialogOpen(false)
             setSelectedTransaction(null)

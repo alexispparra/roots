@@ -3,34 +3,19 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useState, useMemo } from "react"
-import { useProjects } from '@/contexts/ProjectsContext'
+import { useProjects, type AddExpenseInput, type UpdateExpenseInput } from '@/contexts/ProjectsContext'
 import type { Project, Transaction, Category } from "@/contexts/ProjectsContext"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Loader2, AlertTriangle, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 import Link from 'next/link'
-import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { CreateExpenseDialog } from "@/components/create-expense-dialog"
 import { EditExpenseDialog } from "@/components/edit-expense-dialog"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
 import { CategorySpendingChart } from '@/components/category-spending-chart'
-import { z } from 'zod'
 import { Progress } from './ui/progress'
-
-const expenseFormSchema = z.object({
-  id: z.string().optional(),
-  date: z.date(),
-  description: z.string().min(1),
-  category: z.string().min(1),
-  user: z.string().min(1),
-  paymentMethod: z.string().min(1),
-  amountARS: z.coerce.number(),
-  exchangeRate: z.coerce.number(),
-  amountUSD: z.coerce.number(),
-});
-type ExpenseFormData = z.infer<typeof expenseFormSchema>;
 
 export default function ProjectCategoryClient() {
   const searchParams = useSearchParams()
@@ -71,19 +56,9 @@ export default function ProjectCategoryClient() {
   }, [project]);
 
 
-  const handleAddExpense = (data: ExpenseFormData) => {
+  const handleAddExpense = (data: AddExpenseInput) => {
     if (!project || !category) return;
-    let { amountARS, amountUSD, exchangeRate, ...rest } = data;
-
-    if (amountARS === 0 && amountUSD > 0 && exchangeRate > 0) {
-        amountARS = amountUSD * exchangeRate;
-    } else if (amountARS > 0 && exchangeRate > 0) {
-       // This case is implicitly handled by the form logic
-    } else {
-       exchangeRate = 1;
-    }
-
-    addTransaction(project.id, { ...rest, type: "expense", category: category.name, amountARS, exchangeRate })
+    addTransaction(project.id, data, 'expense');
   }
 
   const handleEditClick = (transaction: Transaction) => {
@@ -91,17 +66,9 @@ export default function ProjectCategoryClient() {
     setIsEditExpenseDialogOpen(true)
   }
 
-  const handleUpdateTransaction = (data: ExpenseFormData) => {
+  const handleUpdateTransaction = (data: UpdateExpenseInput) => {
     if (selectedTransaction && project) {
-        let { amountARS, amountUSD, exchangeRate, ...rest } = data;
-
-        if (amountARS === 0 && amountUSD > 0 && exchangeRate > 0) {
-            amountARS = amountUSD * exchangeRate;
-        } else {
-           exchangeRate = exchangeRate || 1;
-        }
-        
-        updateTransaction(project.id, selectedTransaction.id, { ...rest, amountARS, exchangeRate });
+        updateTransaction(project.id, selectedTransaction.id, data);
         setIsEditExpenseDialogOpen(false)
         setSelectedTransaction(null)
     }

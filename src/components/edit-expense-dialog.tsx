@@ -4,7 +4,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { CalendarIcon, Upload, Camera, X } from "lucide-react"
@@ -42,27 +41,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { Transaction } from "@/contexts/ProjectsContext"
+import { UpdateExpenseFormSchema, type UpdateExpenseInput } from "@/contexts/ProjectsContext"
 import { CameraCaptureDialog } from "./camera-capture-dialog"
 import Image from "next/image"
 import { Separator } from "./ui/separator"
-
-const formSchema = z.object({
-  id: z.string(),
-  date: z.date({
-    required_error: "La fecha es requerida.",
-  }),
-  description: z.string().min(1, "La descripción es requerida."),
-  category: z.string().min(1, "La categoría es requerida."),
-  user: z.string().min(1, "El usuario es requerido."),
-  paymentMethod: z.string().min(1, "El medio de pago es requerido."),
-  amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
-  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").default(1),
-  amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
-  attachmentDataUrl: z.string().optional(),
-}).refine(data => data.amountARS > 0 || data.amountUSD > 0, {
-  message: "Debes ingresar un monto en AR$ o U$S.",
-  path: ["amountARS"],
-});
 
 type EditExpenseDialogProps = {
   expense: Transaction | null;
@@ -70,15 +52,15 @@ type EditExpenseDialogProps = {
   onOpenChange: (isOpen: boolean) => void;
   categories: { name: string }[]
   participants: { name: string }[]
-  onUpdateExpense: (data: z.infer<typeof formSchema>) => void;
+  onUpdateExpense: (data: UpdateExpenseInput) => void;
 }
 
 export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, participants, onUpdateExpense }: EditExpenseDialogProps) {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<UpdateExpenseInput>({
+    resolver: zodResolver(UpdateExpenseFormSchema),
   })
 
   const { watch, setValue } = form;
@@ -133,7 +115,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
     return () => subscription.unsubscribe();
   }, [watch, setValue]);
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: UpdateExpenseInput) {
     let { amountARS, amountUSD, exchangeRate } = values;
     if (amountUSD > 0 && amountARS === 0 && exchangeRate > 0) {
       values.amountARS = amountUSD * exchangeRate;

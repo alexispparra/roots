@@ -4,7 +4,6 @@
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -27,15 +26,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Project, UpdateProjectData } from "@/contexts/ProjectsContext"
-
-const formSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido."),
-  description: z.string().optional(),
-  address: z.string().min(1, "La dirección es requerida."),
-  googleSheetId: z.string().optional(),
-  status: z.enum(['planning', 'in-progress', 'completed', 'on-hold']),
-})
+import type { Project } from "@/contexts/ProjectsContext"
+import { UpdateProjectFormSchema, type UpdateProjectData } from "@/contexts/ProjectsContext"
 
 type EditProjectDialogProps = {
   project: Project | null;
@@ -47,8 +39,8 @@ type EditProjectDialogProps = {
 export function EditProjectDialog({ project, isOpen, onOpenChange, onUpdateProject }: EditProjectDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<UpdateProjectData>({
+    resolver: zodResolver(UpdateProjectFormSchema),
   })
 
   useEffect(() => {
@@ -63,7 +55,7 @@ export function EditProjectDialog({ project, isOpen, onOpenChange, onUpdateProje
     }
   }, [project, form, isOpen])
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: UpdateProjectData) {
     setIsSubmitting(true);
     onUpdateProject(values);
     setIsSubmitting(false);

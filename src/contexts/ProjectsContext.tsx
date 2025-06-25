@@ -7,8 +7,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp, arrayUnion, getDoc, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { USE_MOCK_DATA, mockProjects } from '@/lib/mock-data';
+import { z } from 'zod';
 
-// --- Type Definitions ---
+// --- Base Type Definitions (from Firestore) ---
 export type UserRole = 'admin' | 'editor' | 'viewer';
 
 export type Participant = {
@@ -65,35 +66,92 @@ export type Project = {
   createdAt: Timestamp;
 };
 
-export type AddProjectData = {
-  name: string;
-  description?: string;
-  address: string;
-  googleSheetId?: string;
-  status: ProjectStatus;
-};
 
-export type UpdateProjectData = Partial<Omit<Project, 'id' | 'ownerEmail' | 'participants' | 'createdAt'>>;
+// --- Zod Schemas & Input/Form Types (Single Source of Truth) ---
+
+export const AddProjectFormSchema = z.object({
+  name: z.string().min(1, "El nombre es requerido."),
+  description: z.string().optional(),
+  address: z.string().min(1, "La dirección es requerida."),
+  googleSheetId: z.string().optional(),
+  status: z.enum(['planning', 'in-progress', 'completed', 'on-hold']),
+});
+export type AddProjectData = z.infer<typeof AddProjectFormSchema>;
 
 
-// --- Input Type Definitions for functions ---
-// These types use JS Date objects for easier handling in components.
-// The context will handle the conversion to Firestore Timestamps.
+export const UpdateProjectFormSchema = AddProjectFormSchema;
+export type UpdateProjectData = z.infer<typeof UpdateProjectFormSchema>;
 
-type AddTransactionInput = Omit<Transaction, 'id' | 'date'> & { date: Date };
-type UpdateTransactionInput = Partial<Omit<Transaction, 'id' | 'type' | 'date'>> & { date?: Date };
-type AddCategoryInput = Omit<Category, 'startDate' | 'endDate' | 'budget' | 'dependencies'> & {
-    budget?: number;
-    dependencies?: string[];
-    startDate?: Date | null;
-    endDate?: Date | null;
-};
-type UpdateCategoryInput = Partial<Omit<Category, 'startDate' | 'endDate'>> & {
-    startDate?: Date | null;
-    endDate?: Date | null;
-};
-type AddEventInput = Omit<Event, 'id' | 'date'> & { date: Date };
-type UpdateEventInput = Partial<Omit<Event, 'id' | 'date'>> & { date?: Date };
+
+export const AddExpenseFormSchema = z.object({
+  date: z.date({ required_error: "La fecha es requerida." }),
+  description: z.string().min(1, "La descripción es requerida."),
+  category: z.string().min(1, "La categoría es requerida."),
+  user: z.string().min(1, "El usuario es requerido."),
+  paymentMethod: z.string().min(1, "El medio de pago es requerido."),
+  amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
+  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").default(1),
+  amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
+  attachmentDataUrl: z.string().optional(),
+}).refine(data => data.amountARS > 0 || data.amountUSD > 0, {
+  message: "Debes ingresar un monto en AR$ o U$S.",
+  path: ["amountARS"],
+});
+export type AddExpenseInput = z.infer<typeof AddExpenseFormSchema>;
+
+
+export const UpdateExpenseFormSchema = AddExpenseFormSchema.extend({ id: z.string() });
+export type UpdateExpenseInput = z.infer<typeof UpdateExpenseFormSchema>;
+
+
+export const AddIncomeFormSchema = z.object({
+  date: z.date({ required_error: "La fecha es requerida." }),
+  description: z.string().min(1, "La descripción es requerida."),
+  amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
+  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").default(1),
+  amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
+}).refine(data => data.amountARS > 0 || data.amountUSD > 0, {
+  message: "Debes ingresar un monto en AR$ o U$S.",
+  path: ["amountARS"],
+});
+export type AddIncomeInput = z.infer<typeof AddIncomeFormSchema>;
+
+
+export const UpdateIncomeFormSchema = AddIncomeFormSchema.extend({ id: z.string() });
+export type UpdateIncomeInput = z.infer<typeof UpdateIncomeFormSchema>;
+
+
+export const AddCategoryFormSchema = z.object({
+  name: z.string().min(1, "El nombre es requerido."),
+  budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
+  startDate: z.date().optional().nullable(),
+  endDate: z.date().optional().nullable(),
+}).refine(data => {
+    if (data.startDate && data.endDate) return data.endDate >= data.startDate
+    return true
+}, { message: "La fecha de fin no puede ser anterior a la de inicio.", path: ["endDate"] });
+export type AddCategoryInput = z.infer<typeof AddCategoryFormSchema>;
+
+
+export const UpdateCategoryFormSchema = AddCategoryFormSchema.extend({
+    icon: z.string().optional().nullable(),
+    progress: z.coerce.number().min(0).max(100).optional().nullable(),
+    dependencies: z.array(z.string()).optional(),
+});
+export type UpdateCategoryInput = z.infer<typeof UpdateCategoryFormSchema>;
+
+
+export const AddEventFormSchema = z.object({
+  title: z.string().min(1, "El título es requerido."),
+  date: z.date({ required_error: "La fecha es requerida." }),
+});
+export type AddEventInput = z.infer<typeof AddEventFormSchema>;
+
+
+export const UpdateEventFormSchema = AddEventFormSchema.extend({
+    completed: z.boolean().optional(),
+});
+export type UpdateEventInput = z.infer<typeof UpdateEventFormSchema>;
 
 
 // --- Context Definition ---
@@ -106,10 +164,10 @@ type ProjectsContextType = {
   getUserRoleForProject: (projectId: string) => UserRole | null;
   updateProject: (projectId: string, projectData: UpdateProjectData) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
-  addTransaction: (projectId: string, transactionData: AddTransactionInput) => Promise<void>;
-  updateTransaction: (projectId: string, transactionId: string, transactionData: UpdateTransactionInput) => Promise<void>;
+  addTransaction: (projectId: string, transactionData: AddExpenseInput | AddIncomeInput, type: 'income' | 'expense') => Promise<void>;
+  updateTransaction: (projectId: string, transactionId: string, transactionData: UpdateExpenseInput | UpdateIncomeInput) => Promise<void>;
   deleteTransaction: (projectId: string, transactionId: string) => Promise<void>;
-  addCategory: (projectId: string, categoryData: AddCategoryInput) => Promise<void>;
+  addCategory: (projectId: string, categoryData: AddCategoryInput, predefinedIcon?: string | null) => Promise<void>;
   updateCategory: (projectId: string, oldName: string, categoryData: UpdateCategoryInput) => Promise<void>;
   deleteCategory: (projectId: string, categoryName: string) => Promise<void>;
   addEvent: (projectId: string, eventData: AddEventInput) => Promise<void>;
@@ -128,14 +186,12 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // If using mock data, load it and bypass Firebase.
     if (USE_MOCK_DATA) {
       setProjects(mockProjects);
       setLoading(false);
       return;
     }
     
-    // Original logic for Firebase
     if (!user || !db) {
       setProjects([]);
       setLoading(false);
@@ -155,7 +211,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           userProjects.push({
             id: doc.id,
             ...data,
-            events: data.events || [], // Ensure events array exists
+            events: data.events || [],
           } as Project);
       });
       userProjects.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
@@ -188,27 +244,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   }, [projects, user, getProjectById]);
 
   const addProject = async (projectData: AddProjectData): Promise<string | null> => {
-    if (USE_MOCK_DATA) {
-      const newProject: Project = {
-        ...projectData,
-        id: `proj-${Date.now()}`,
-        ownerEmail: 'testing@roots.app',
-        participants: [{ email: 'testing@roots.app', name: 'Usuario de Prueba', role: 'admin' }],
-        categories: [],
-        transactions: [],
-        events: [],
-        createdAt: Timestamp.now(),
-      };
-      setProjects(prev => [newProject, ...prev]);
-      toast({ title: "Proyecto Añadido (Modo Prueba)" });
-      return newProject.id;
-    }
-
     if (!user || !db) {
       toast({ variant: "destructive", title: "Error", description: "Debes iniciar sesión para crear un proyecto." });
       return null;
     }
-    // Real Firebase logic...
     try {
       const newProjectRef = await addDoc(collection(db, "projects"), {
         ...projectData,
@@ -230,15 +269,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateProject = async (projectId: string, projectData: UpdateProjectData) => {
-     if (USE_MOCK_DATA) {
-      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, ...projectData } as Project : p));
-      toast({ title: "Proyecto Actualizado (Modo Prueba)" });
-      return;
-    }
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
     try {
-      await updateDoc(projectRef, projectData);
+      await updateDoc(projectRef, projectData as any);
       toast({ title: "Proyecto Actualizado", description: "Los detalles del proyecto se han guardado." });
     } catch (error) {
         console.error("Error updating project: ", error);
@@ -247,11 +281,6 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteProject = async (projectId: string) => {
-    if (USE_MOCK_DATA) {
-      setProjects(prev => prev.filter(p => p.id !== projectId));
-      toast({ title: "Proyecto Eliminado (Modo Prueba)" });
-      return;
-    }
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
     try {
@@ -263,16 +292,26 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  const addTransaction = async (projectId: string, transactionData: AddTransactionInput) => {
+  const addTransaction = async (projectId: string, transactionData: AddExpenseInput | AddIncomeInput, type: 'income' | 'expense') => {
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
     try {
-        const transactionForDb = {
-            ...transactionData,
+        const transactionForDb: Omit<Transaction, 'id'> = {
+            ...(type === 'expense' ? transactionData as AddExpenseInput : {}),
+            type: type,
             date: Timestamp.fromDate(transactionData.date),
-            id: doc(collection(db, 'dummy')).id 
+            description: transactionData.description,
+            amountARS: transactionData.amountARS,
+            exchangeRate: transactionData.exchangeRate,
+            attachmentDataUrl: transactionData.attachmentDataUrl,
+            category: type === 'income' ? 'Ingreso' : (transactionData as AddExpenseInput).category,
+            user: type === 'income' ? 'N/A' : (transactionData as AddExpenseInput).user,
+            paymentMethod: type === 'income' ? 'N/A' : (transactionData as AddExpenseInput).paymentMethod,
         };
-        await updateDoc(projectRef, { transactions: arrayUnion(transactionForDb) });
+        
+        await updateDoc(projectRef, { 
+            transactions: arrayUnion({ ...transactionForDb, id: doc(collection(db, 'dummy')).id })
+        });
         toast({ title: "Transacción Añadida" });
     } catch (error) {
         console.error("Error adding transaction: ", error);
@@ -280,7 +319,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateTransaction = async (projectId: string, transactionId: string, transactionData: UpdateTransactionInput) => {
+  const updateTransaction = async (projectId: string, transactionId: string, transactionData: UpdateExpenseInput | UpdateIncomeInput) => {
       if (!db) return;
       const projectRef = doc(db, 'projects', projectId);
       try {
@@ -291,6 +330,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           if (transactionData.date) {
               dataForDb.date = Timestamp.fromDate(transactionData.date);
           }
+          delete dataForDb.id;
 
           const project = projectDoc.data() as Project;
           const newTransactions = project.transactions.map(t => t.id === transactionId ? { ...t, ...dataForDb } : t);
@@ -318,22 +358,22 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       }
   };
 
-  const addCategory = async (projectId: string, categoryData: AddCategoryInput) => {
+  const addCategory = async (projectId: string, categoryData: AddCategoryInput, predefinedIcon?: string | null) => {
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
     
-    const categoryForDb: Category = {
+    const categoryForDb: Omit<Category, 'progress' | 'dependencies'> = {
         name: categoryData.name,
-        icon: categoryData.icon || 'Building',
+        icon: predefinedIcon || 'Building',
         budget: categoryData.budget ?? 0,
-        progress: categoryData.progress ?? 0,
-        dependencies: categoryData.dependencies ?? [],
         startDate: categoryData.startDate ? Timestamp.fromDate(categoryData.startDate) : null,
         endDate: categoryData.endDate ? Timestamp.fromDate(categoryData.endDate) : null,
     };
 
     try {
-        await updateDoc(projectRef, { categories: arrayUnion(categoryForDb) });
+        await updateDoc(projectRef, { 
+            categories: arrayUnion({ ...categoryForDb, progress: 0, dependencies: [] })
+        });
         toast({ title: "Categoría Añadida" });
     } catch (error) {
         console.error("Error adding category: ", error);
@@ -349,12 +389,8 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           if (!projectDoc.exists()) throw new Error("Project not found");
           
           const dataForDb = { ...categoryData } as any;
-          if (categoryData.startDate) {
-              dataForDb.startDate = Timestamp.fromDate(categoryData.startDate);
-          }
-          if (categoryData.endDate) {
-              dataForDb.endDate = Timestamp.fromDate(categoryData.endDate);
-          }
+          if (categoryData.startDate) dataForDb.startDate = Timestamp.fromDate(categoryData.startDate);
+          if (categoryData.endDate) dataForDb.endDate = Timestamp.fromDate(categoryData.endDate);
           if (categoryData.startDate === null) dataForDb.startDate = null;
           if (categoryData.endDate === null) dataForDb.endDate = null;
 
@@ -395,14 +431,15 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
 
-    const eventForDb: Event = {
-        ...eventData,
+    const eventForDb: Omit<Event, 'id' | 'completed'> = {
+        title: eventData.title,
         date: Timestamp.fromDate(eventData.date),
-        id: doc(collection(db, 'dummy')).id
     };
 
     try {
-        await updateDoc(projectRef, { events: arrayUnion(eventForDb) });
+        await updateDoc(projectRef, { 
+            events: arrayUnion({ ...eventForDb, id: doc(collection(db, 'dummy')).id, completed: false }) 
+        });
         toast({ title: "Evento Añadido" });
     } catch (error) {
         console.error("Error adding event: ", error);

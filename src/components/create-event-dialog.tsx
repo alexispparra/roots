@@ -4,7 +4,6 @@
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { CalendarIcon, CalendarPlus } from "lucide-react"
@@ -35,22 +34,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-
-const formSchema = z.object({
-  title: z.string().min(1, "El título es requerido."),
-  date: z.date({ required_error: "La fecha es requerida." }),
-});
+import { AddEventFormSchema, type AddEventInput } from "@/contexts/ProjectsContext"
 
 type CreateEventDialogProps = {
-  onAddEvent: (data: z.infer<typeof formSchema>) => void;
+  onAddEvent: (data: AddEventInput) => void;
   defaultDate?: Date;
   trigger?: React.ReactNode;
 }
 
 export function CreateEventDialog({ onAddEvent, defaultDate, trigger }: CreateEventDialogProps) {
   const [open, setOpen] = useState(false)
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<AddEventInput>({
+    resolver: zodResolver(AddEventFormSchema),
     defaultValues: {
       title: "",
       date: defaultDate ?? new Date(),
@@ -65,7 +60,7 @@ export function CreateEventDialog({ onAddEvent, defaultDate, trigger }: CreateEv
     }
   }, [open, defaultDate, form]);
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: AddEventInput) {
     onAddEvent(values);
     setOpen(false)
     form.reset({ title: "", date: defaultDate ?? new Date() })

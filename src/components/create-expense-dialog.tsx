@@ -4,7 +4,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { CalendarIcon, PlusCircle, Upload, Camera, X } from "lucide-react"
@@ -45,28 +44,12 @@ import {
 import { CameraCaptureDialog } from "./camera-capture-dialog"
 import Image from 'next/image'
 import { Separator } from "./ui/separator"
-
-const formSchema = z.object({
-  date: z.date({
-    required_error: "La fecha es requerida.",
-  }),
-  description: z.string().min(1, "La descripción es requerida."),
-  category: z.string().min(1, "La categoría es requerida."),
-  user: z.string().min(1, "El usuario es requerido."),
-  paymentMethod: z.string().min(1, "El medio de pago es requerido."),
-  amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
-  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").default(1),
-  amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
-  attachmentDataUrl: z.string().optional(),
-}).refine(data => data.amountARS > 0 || data.amountUSD > 0, {
-  message: "Debes ingresar un monto en AR$ o U$S.",
-  path: ["amountARS"],
-});
+import { AddExpenseFormSchema, type AddExpenseInput } from "@/contexts/ProjectsContext"
 
 type CreateExpenseDialogProps = {
   categories: { name: string }[]
   participants: { name: string }[]
-  onAddExpense: (data: z.infer<typeof formSchema>) => void;
+  onAddExpense: (data: AddExpenseInput) => void;
 }
 
 export function CreateExpenseDialog({ categories, participants, onAddExpense }: CreateExpenseDialogProps) {
@@ -74,8 +57,8 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<AddExpenseInput>({
+    resolver: zodResolver(AddExpenseFormSchema),
     defaultValues: {
       date: new Date(),
       description: "",
@@ -125,7 +108,7 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
   }, [watch, setValue]);
 
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: AddExpenseInput) {
     let { amountARS, amountUSD, exchangeRate } = values;
     if (amountUSD > 0 && amountARS === 0 && exchangeRate > 0) {
       values.amountARS = amountUSD * exchangeRate;

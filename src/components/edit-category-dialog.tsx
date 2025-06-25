@@ -4,7 +4,6 @@
 import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
@@ -33,39 +32,21 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import type { Category } from "@/contexts/ProjectsContext"
+import { UpdateCategoryFormSchema, type UpdateCategoryInput } from "@/contexts/ProjectsContext"
 import { ScrollArea } from "./ui/scroll-area"
 import { Checkbox } from "./ui/checkbox"
-
-const formSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido."),
-  budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
-  icon: z.string().optional().nullable(),
-  progress: z.coerce.number().min(0).max(100).optional().nullable(),
-  startDate: z.date().optional().nullable(),
-  endDate: z.date().optional().nullable(),
-  dependencies: z.array(z.string()).optional(),
-}).refine(data => {
-    if (data.startDate && data.endDate) {
-        return data.endDate >= data.startDate
-    }
-    return true
-}, {
-    message: "La fecha de fin no puede ser anterior a la fecha de inicio.",
-    path: ["endDate"],
-});
-
 
 type EditCategoryDialogProps = {
   category: Category | null;
   allCategories: Category[];
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onUpdateCategory: (data: z.infer<typeof formSchema>) => void;
+  onUpdateCategory: (data: UpdateCategoryInput) => void;
 }
 
 export function EditCategoryDialog({ category, allCategories, isOpen, onOpenChange, onUpdateCategory }: EditCategoryDialogProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<UpdateCategoryInput>({
+    resolver: zodResolver(UpdateCategoryFormSchema),
     defaultValues: {
       name: "",
       budget: 0,
@@ -88,7 +69,7 @@ export function EditCategoryDialog({ category, allCategories, isOpen, onOpenChan
     }
   }, [category, form, isOpen])
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: UpdateCategoryInput) {
     onUpdateCategory(values)
   }
 

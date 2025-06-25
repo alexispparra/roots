@@ -2,7 +2,7 @@
 "use client"
 
 import { useState } from "react"
-import { useProjects } from "@/contexts/ProjectsContext"
+import { useProjects, type AddCategoryInput, type UpdateCategoryInput } from "@/contexts/ProjectsContext"
 import type { Project, Category } from "@/contexts/ProjectsContext"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,27 +15,6 @@ import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialo
 import { CategoryIcon } from "./category-icon"
 import { Progress } from "@/components/ui/progress"
 import { PredefinedCategory } from "@/lib/predefined-categories"
-import { z } from "zod"
-
-const customFormSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido."),
-  budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
-  startDate: z.date().optional().nullable(),
-  endDate: z.date().optional().nullable(),
-});
-
-// This schema must match the one inside EditCategoryDialog.
-// It ensures that the data passed from the dialog to this component is type-safe.
-const updateCategoryFormSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido."),
-  budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
-  icon: z.string().optional().nullable(),
-  progress: z.coerce.number().min(0).max(100).optional().nullable(),
-  startDate: z.date().optional().nullable(),
-  endDate: z.date().optional().nullable(),
-  dependencies: z.array(z.string()).optional(),
-});
-
 
 type ProjectCategoriesTabProps = {
   project: Project;
@@ -49,21 +28,13 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
 
-  const handleAddCustomCategory = (data: z.infer<typeof customFormSchema>) => {
-    addCategory(project.id, { ...data, icon: 'Building', progress: 0, dependencies: [] }) // 'Building' as default icon
+  const handleAddCustomCategory = (data: AddCategoryInput) => {
+    addCategory(project.id, data)
   }
   
   const handleAddPredefinedCategories = (categories: PredefinedCategory[]) => {
     categories.forEach(category => {
-      addCategory(project.id, {
-        name: category.name,
-        icon: category.icon,
-        budget: 0,
-        progress: 0,
-        startDate: null,
-        endDate: null,
-        dependencies: [],
-      });
+      addCategory(project.id, { name: category.name, budget: 0 }, category.icon);
     });
   };
 
@@ -72,7 +43,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
     setIsEditDialogOpen(true)
   }
 
-  const handleUpdateCategory = (data: z.infer<typeof updateCategoryFormSchema>) => {
+  const handleUpdateCategory = (data: UpdateCategoryInput) => {
     if (selectedCategory) {
       updateCategory(project.id, selectedCategory.name, data)
       setIsEditDialogOpen(false)
