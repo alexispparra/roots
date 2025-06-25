@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -13,47 +13,58 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const [isProcessingRedirect, setIsProcessingRedirect] = useState(true); // Start as true
 
   useEffect(() => {
-    // This effect runs on mount to handle the result of a Google sign-in redirect.
+    // This effect runs once on mount to handle the result of a Google sign-in redirect.
     if (auth) {
         getRedirectResult(auth)
         .then((result) => {
             // If 'result' is not null, a user has successfully signed in.
-            // The onAuthStateChanged listener in AuthContext will handle the state update
-            // and the main useEffect below will handle the redirection. We just show a success toast.
+            // The onAuthStateChanged listener in AuthContext will handle the state update,
+            // so we don't need to do anything with the user object here.
             if (result) {
+              // A successful redirect login was processed.
+              // The main useEffect below will handle the navigation once the user state is updated.
               toast({ title: "Inicio de sesión exitoso." });
             }
         })
         .catch((error) => {
+            // This can happen if the user backs out, or if there's a configuration error.
             console.error("Error processing Google redirect:", error);
-            // The user will see the login page again, where they can retry.
-            // A toast can inform them of the specific error.
-             toast({
-                variant: "destructive",
-                title: "Error de Inicio de Sesión",
-                description: `Hubo un problema al procesar el inicio de sesión de Google: ${error.message}`,
-             });
+            // Don't show a toast for common cases like 'auth/cancelled-popup-request'
+            if (error.code !== 'auth/cancelled-popup-request') {
+                toast({
+                    variant: "destructive",
+                    title: "Error de Inicio de Sesión",
+                    description: `Hubo un problema al procesar el inicio de sesión: ${error.message}`,
+                });
+            }
+        })
+        .finally(() => {
+            // No matter the outcome, we're done processing the redirect.
+            setIsProcessingRedirect(false);
         });
+    } else {
+        // If auth is not configured, we're not processing anything.
+        setIsProcessingRedirect(false);
     }
-  // The empty dependency array ensures this effect runs only once when the component mounts.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // The empty dependency array ensures this effect runs only once when the component mounts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
   useEffect(() => {
-    // If the auth check is done and we have a user,
-    // they shouldn't be on the login/register pages.
-    // Redirect them to the app's main page.
-    if (!authLoading && user) {
+    // This effect handles redirection based on the user's state.
+    // It will not run until the redirect processing is complete AND the auth state is no longer loading.
+    if (!isProcessingRedirect && !authLoading && user) {
       router.replace('/projects');
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, isProcessingRedirect]);
 
-  // While checking auth state, or if there's a user and we're about to redirect,
-  // show a loader.
-  if (authLoading || user) {
+  // Show a loader if we're still checking the initial auth state OR processing a potential redirect.
+  // Also show a loader if we have a user and are about to redirect them.
+  if (authLoading || isProcessingRedirect || user) {
     return (
       <div className="flex items-center justify-center min-h-svh bg-background">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -61,6 +72,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     );
   }
 
-  // If the check is done and there's no user, show the content (login/register page).
+  // If all checks are done and there's no user, show the content (login/register page).
   return <>{children}</>;
 }

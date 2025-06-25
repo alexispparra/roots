@@ -86,17 +86,18 @@ export default function LoginPage() {
     setIsGoogleLoading(true)
     const provider = new GoogleAuthProvider()
     try {
-      // This will navigate the user away to Google's sign-in page.
-      // The result is handled by the AuthLayout on the return trip.
+      // This will navigate the user away. The result is handled by AuthLayout.
       await signInWithRedirect(auth, provider);
     } catch (err: any) {
+      // This catch block might not even be reached in a redirect flow,
+      // but it's good practice to have it.
       console.error("Firebase Google Redirect Error:", err);
       let errorMessage = `Error al iniciar con Google: ${err.message}.`;
        if (err.code === 'auth/popup-closed-by-user') {
           errorMessage = `La ventana de inicio de sesión se cerró. Esto puede ocurrir si el dominio '${window.location.hostname}' no está autorizado en Firebase, o si tu navegador bloqueó la ventana emergente. Por favor, revisa tus dominios autorizados en la configuración de Firebase Authentication.`
       }
       setError(errorMessage);
-      setIsGoogleLoading(false);
+      setIsGoogleLoading(false); // Reset loading state if there's an immediate error
     }
   }
 
