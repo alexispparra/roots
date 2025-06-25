@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp, arrayUnion, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { USE_MOCK_DATA, mockProjects } from '@/lib/mock-data';
 
 // --- Type Definitions ---
 export type UserRole = 'admin' | 'editor' | 'viewer';
@@ -88,6 +89,14 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // If using mock data, load it and bypass Firebase.
+    if (USE_MOCK_DATA) {
+      setProjects(mockProjects);
+      setLoading(false);
+      return;
+    }
+    
+    // Original logic for Firebase
     if (!user || !db) {
       setProjects([]);
       setLoading(false);
@@ -95,7 +104,6 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     }
 
     setLoading(true);
-    // This query requires a composite index in Firestore on (participantsEmails, createdAt)
     const q = query(
       collection(db, "projects"), 
       where("participantsEmails", "array-contains", user.email)
@@ -104,39 +112,13 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const userProjects: Project[] = [];
       querySnapshot.forEach((doc) => {
-        try {
           const data = doc.data();
-          // Robust validation to prevent crashes from malformed data
-          if (!data.name || !data.ownerEmail || !data.participants) {
-            console.warn("Skipping malformed project document:", doc.id);
-            return;
-          }
-
           userProjects.push({
             id: doc.id,
-            name: data.name,
-            description: data.description || '',
-            address: data.address || '',
-            googleSheetId: data.googleSheetId || '',
-            ownerEmail: data.ownerEmail,
-            participants: (data.participants || []).map((p: any) => ({
-                email: p.email || '',
-                name: String(p.name || 'Usuario'), // Ensure name is a string
-                role: p.role || 'viewer',
-            })).filter((p: Participant) => p.email), // Filter out invalid participants
-            categories: data.categories || [],
-            transactions: (data.transactions || []).map((t: any) => ({ ...t, date: t.date || Timestamp.now() })),
-            status: data.status || 'planning',
-            createdAt: data.createdAt || Timestamp.now(),
-          });
-        } catch (e) {
-          console.error("Error parsing project document:", doc.id, e);
-        }
+            ...data
+          } as Project);
       });
-      
-      // Sort projects by creation date, newest first
       userProjects.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
-
       setProjects(userProjects);
       setLoading(false);
     }, (error) => {
@@ -144,7 +126,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       toast({
         variant: "destructive",
         title: "Error de Conexión",
-        description: "No se pudieron cargar los proyectos. Revisa tu conexión a internet o la configuración de Firestore.",
+        description: "No se pudieron cargar los proyectos.",
       });
       setLoading(false);
     });
@@ -166,17 +148,32 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   }, [projects, user, getProjectById]);
 
   const addProject = async (projectData: AddProjectData): Promise<string | null> => {
+    if (USE_MOCK_DATA) {
+      const newProject: Project = {
+        ...projectData,
+        id: `proj-${Date.now()}`,
+        ownerEmail: 'testing@roots.app',
+        participants: [{ email: 'testing@roots.app', name: 'Usuario de Prueba', role: 'admin' }],
+        categories: [],
+        transactions: [],
+        createdAt: Timestamp.now(),
+      };
+      setProjects(prev => [newProject, ...prev]);
+      toast({ title: "Proyecto Añadido (Modo Prueba)" });
+      return newProject.id;
+    }
+
     if (!user || !db) {
       toast({ variant: "destructive", title: "Error", description: "Debes iniciar sesión para crear un proyecto." });
       return null;
     }
-
+    // Real Firebase logic...
     try {
       const newProjectRef = await addDoc(collection(db, "projects"), {
         ...projectData,
         ownerEmail: user.email,
         participants: [{ email: user.email, name: user.displayName || 'Propietario', role: 'admin' }],
-        participantsEmails: [user.email], // For querying
+        participantsEmails: [user.email],
         categories: [],
         transactions: [],
         createdAt: Timestamp.now(),
@@ -191,6 +188,11 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateProject = async (projectId: string, projectData: UpdateProjectData) => {
+     if (USE_MOCK_DATA) {
+      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, ...projectData } as Project : p));
+      toast({ title: "Proyecto Actualizado (Modo Prueba)" });
+      return;
+    }
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
     try {
@@ -203,16 +205,22 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const addTransaction = async (projectId: string, transactionData: Omit<Transaction, 'id'>) => {
+    if (USE_MOCK_DATA) {
+        const newTransaction = { ...transactionData, id: `trans-${Date.now()}` };
+        setProjects(prev => prev.map(p => {
+            if (p.id === projectId) {
+                return { ...p, transactions: [newTransaction as Transaction, ...p.transactions] };
+            }
+            return p;
+        }));
+        toast({ title: "Transacción Añadida (Modo Prueba)" });
+        return;
+    }
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
     try {
-        const newTransaction = {
-            ...transactionData,
-            id: doc(collection(db, 'dummy')).id, // Generate a unique ID
-        };
-        await updateDoc(projectRef, {
-            transactions: arrayUnion(newTransaction)
-        });
+        const newTransaction = { ...transactionData, id: doc(collection(db, 'dummy')).id };
+        await updateDoc(projectRef, { transactions: arrayUnion(newTransaction) });
         toast({ title: "Transacción Añadida" });
     } catch (error) {
         console.error("Error adding transaction: ", error);
@@ -221,17 +229,24 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateTransaction = async (projectId: string, transactionId: string, transactionData: Partial<Omit<Transaction, 'id' | 'type'>>) => {
+      if (USE_MOCK_DATA) {
+          setProjects(prev => prev.map(p => {
+              if (p.id === projectId) {
+                  const newTransactions = p.transactions.map(t => t.id === transactionId ? { ...t, ...transactionData } : t);
+                  return { ...p, transactions: newTransactions };
+              }
+              return p;
+          }));
+          toast({ title: "Transacción Actualizada (Modo Prueba)" });
+          return;
+      }
       if (!db) return;
       const projectRef = doc(db, 'projects', projectId);
       try {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
-          
           const project = projectDoc.data() as Project;
-          const newTransactions = project.transactions.map(t => 
-              t.id === transactionId ? { ...t, ...transactionData } : t
-          );
-          
+          const newTransactions = project.transactions.map(t => t.id === transactionId ? { ...t, ...transactionData } : t);
           await updateDoc(projectRef, { transactions: newTransactions });
           toast({ title: "Transacción Actualizada" });
       } catch (error) {
@@ -241,15 +256,23 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteTransaction = async (projectId: string, transactionId: string) => {
+      if (USE_MOCK_DATA) {
+          setProjects(prev => prev.map(p => {
+              if (p.id === projectId) {
+                  return { ...p, transactions: p.transactions.filter(t => t.id !== transactionId) };
+              }
+              return p;
+          }));
+          toast({ title: "Transacción Eliminada (Modo Prueba)" });
+          return;
+      }
       if (!db) return;
       const projectRef = doc(db, 'projects', projectId);
       try {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
-          
           const project = projectDoc.data() as Project;
           const newTransactions = project.transactions.filter(t => t.id !== transactionId);
-
           await updateDoc(projectRef, { transactions: newTransactions });
           toast({ title: "Transacción Eliminada" });
       } catch (error) {
@@ -259,12 +282,20 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addCategory = async (projectId: string, categoryData: Category) => {
+      if (USE_MOCK_DATA) {
+          setProjects(prev => prev.map(p => {
+              if (p.id === projectId) {
+                  return { ...p, categories: [...p.categories, categoryData] };
+              }
+              return p;
+          }));
+          toast({ title: "Categoría Añadida (Modo Prueba)" });
+          return;
+      }
       if (!db) return;
       const projectRef = doc(db, 'projects', projectId);
       try {
-          await updateDoc(projectRef, {
-              categories: arrayUnion(categoryData)
-          });
+          await updateDoc(projectRef, { categories: arrayUnion(categoryData) });
           toast({ title: "Categoría Añadida" });
       } catch (error) {
           console.error("Error adding category: ", error);
@@ -273,17 +304,24 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const updateCategory = async (projectId: string, categoryName: string, categoryData: Partial<Category>) => {
+      if (USE_MOCK_DATA) {
+          setProjects(prev => prev.map(p => {
+              if (p.id === projectId) {
+                  const newCategories = p.categories.map(c => c.name === categoryName ? { ...c, ...categoryData } : c);
+                  return { ...p, categories: newCategories };
+              }
+              return p;
+          }));
+          toast({ title: "Categoría Actualizada (Modo Prueba)" });
+          return;
+      }
       if (!db) return;
       const projectRef = doc(db, 'projects', projectId);
       try {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
-          
           const project = projectDoc.data() as Project;
-          const newCategories = project.categories.map(c => 
-              c.name === categoryName ? { ...c, ...categoryData } : c
-          );
-
+          const newCategories = project.categories.map(c => c.name === categoryName ? { ...c, ...categoryData } : c);
           await updateDoc(projectRef, { categories: newCategories });
           toast({ title: "Categoría Actualizada" });
       } catch (error) {
@@ -293,15 +331,23 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteCategory = async (projectId: string, categoryName: string) => {
+      if (USE_MOCK_DATA) {
+          setProjects(prev => prev.map(p => {
+              if (p.id === projectId) {
+                  return { ...p, categories: p.categories.filter(c => c.name !== categoryName) };
+              }
+              return p;
+          }));
+          toast({ title: "Categoría Eliminada (Modo Prueba)" });
+          return;
+      }
       if (!db) return;
       const projectRef = doc(db, 'projects', projectId);
        try {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
-          
           const project = projectDoc.data() as Project;
           const newCategories = project.categories.filter(c => c.name !== categoryName);
-
           await updateDoc(projectRef, { categories: newCategories });
           toast({ title: "Categoría Eliminada" });
       } catch (error) {

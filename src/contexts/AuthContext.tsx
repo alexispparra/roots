@@ -4,8 +4,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { USE_MOCK_DATA, mockUser } from '@/lib/mock-data';
 
 type AuthContextType = {
   user: User | null;
@@ -21,9 +20,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAppAdmin, setIsAppAdmin] = useState(false);
 
   useEffect(() => {
-    // If Firebase is not configured, auth will be null.
-    // In this case, we can't set up an auth state listener.
-    // We just set loading to false and the app will run in a "demo" mode without crashing.
+    if (USE_MOCK_DATA) {
+      setUser(mockUser);
+      setIsAppAdmin(true); // Simulate admin user for testing
+      setLoading(false);
+      return;
+    }
+
     if (!auth) {
       setLoading(false);
       return;
