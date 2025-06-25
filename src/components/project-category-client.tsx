@@ -16,6 +16,20 @@ import { CreateExpenseDialog } from "@/components/create-expense-dialog"
 import { EditExpenseDialog } from "@/components/edit-expense-dialog"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
 import { CategorySpendingChart } from '@/components/category-spending-chart'
+import { z } from 'zod'
+
+const expenseFormSchema = z.object({
+  id: z.string().optional(),
+  date: z.date(),
+  description: z.string().min(1),
+  category: z.string().min(1),
+  user: z.string().min(1),
+  paymentMethod: z.string().min(1),
+  amountARS: z.coerce.number(),
+  exchangeRate: z.coerce.number(),
+  amountUSD: z.coerce.number(),
+});
+type ExpenseFormData = z.infer<typeof expenseFormSchema>;
 
 export default function ProjectCategoryClient() {
   const searchParams = useSearchParams()
@@ -56,9 +70,19 @@ export default function ProjectCategoryClient() {
   }, [project]);
 
 
-  const handleAddExpense = (data: any) => {
-    if (!project) return;
-    addTransaction(project.id, { ...data, type: "expense", category: categoryName })
+  const handleAddExpense = (data: ExpenseFormData) => {
+    if (!project || !category) return;
+    let { amountARS, amountUSD, exchangeRate, ...rest } = data;
+
+    if (amountARS === 0 && amountUSD > 0) {
+        amountARS = amountUSD;
+        exchangeRate = 1;
+    }
+    if (exchangeRate === 0) {
+        exchangeRate = 1;
+    }
+
+    addTransaction(project.id, { ...rest, type: "expense", category: category.name, amountARS, exchangeRate })
   }
 
   const handleEditClick = (transaction: Transaction) => {
@@ -66,9 +90,19 @@ export default function ProjectCategoryClient() {
     setIsEditExpenseDialogOpen(true)
   }
 
-  const handleUpdateTransaction = (data: any) => {
+  const handleUpdateTransaction = (data: ExpenseFormData) => {
     if (selectedTransaction && project) {
-        updateTransaction(project.id, selectedTransaction.id, data)
+        let { amountARS, amountUSD, exchangeRate, ...rest } = data;
+
+        if (amountARS === 0 && amountUSD > 0) {
+            amountARS = amountUSD;
+            exchangeRate = 1;
+        }
+        if (exchangeRate === 0) {
+            exchangeRate = 1;
+        }
+        
+        updateTransaction(project.id, selectedTransaction.id, { ...rest, amountARS, exchangeRate });
         setIsEditExpenseDialogOpen(false)
         setSelectedTransaction(null)
     }
@@ -169,7 +203,7 @@ export default function ProjectCategoryClient() {
                                     <TableCell className="font-medium">{t.description}</TableCell>
                                     <TableCell>{t.user}</TableCell>
                                     <TableCell className="text-right font-medium text-destructive">
-                                      -${(t.amountARS / t.exchangeRate).toFixed(2)}
+                                      -${(t.amountARS / (t.exchangeRate || 1)).toFixed(2)}
                                     </TableCell>
                                     {canEdit && <TableCell>
                                         <DropdownMenu>

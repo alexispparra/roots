@@ -16,6 +16,33 @@ import { EditIncomeDialog } from "./edit-income-dialog"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { z } from "zod"
+
+
+const expenseFormSchema = z.object({
+  id: z.string().optional(),
+  date: z.date(),
+  description: z.string().min(1),
+  category: z.string().min(1),
+  user: z.string().min(1),
+  paymentMethod: z.string().min(1),
+  amountARS: z.coerce.number(),
+  exchangeRate: z.coerce.number(),
+  amountUSD: z.coerce.number(),
+});
+
+const incomeFormSchema = z.object({
+  id: z.string().optional(),
+  date: z.date(),
+  description: z.string().min(1),
+  amountARS: z.coerce.number(),
+  exchangeRate: z.coerce.number(),
+  amountUSD: z.coerce.number(),
+});
+
+type ExpenseFormData = z.infer<typeof expenseFormSchema>;
+type IncomeFormData = z.infer<typeof incomeFormSchema>;
+
 
 type ProjectTransactionsTabProps = {
   project: Project;
@@ -68,7 +95,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
 
         filteredTransactions.forEach(t => {
             if (t.type === 'expense' && t.user && summary[t.user]) {
-                const amountUSD = t.amountARS / t.exchangeRate;
+                const amountUSD = t.amountARS / (t.exchangeRate || 1);
                 summary[t.user].total += amountUSD;
             }
         });
@@ -77,12 +104,32 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     }, [filteredTransactions, project.participants]);
 
 
-    const handleAddExpense = (data: any) => {
-        addTransaction(project.id, { ...data, type: "expense" })
+    const handleAddExpense = (data: ExpenseFormData) => {
+        let { amountARS, amountUSD, exchangeRate, ...rest } = data;
+
+        if (amountARS === 0 && amountUSD > 0) {
+            amountARS = amountUSD;
+            exchangeRate = 1;
+        }
+        if (exchangeRate === 0) {
+            exchangeRate = 1;
+        }
+
+        addTransaction(project.id, { ...rest, type: "expense", amountARS, exchangeRate })
     }
 
-    const handleAddIncome = (data: any) => {
-        addTransaction(project.id, { ...data, type: "income", category: 'Ingreso', user: 'N/A', paymentMethod: 'N/A' })
+    const handleAddIncome = (data: IncomeFormData) => {
+        let { amountARS, amountUSD, exchangeRate, ...rest } = data;
+
+        if (amountARS === 0 && amountUSD > 0) {
+            amountARS = amountUSD;
+            exchangeRate = 1;
+        }
+        if (exchangeRate === 0) {
+            exchangeRate = 1;
+        }
+
+        addTransaction(project.id, { ...rest, type: "income", category: 'Ingreso', user: 'N/A', paymentMethod: 'N/A', amountARS, exchangeRate })
     }
 
     const handleEditClick = (transaction: Transaction) => {
@@ -95,9 +142,19 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
         }
     }
 
-    const handleUpdateTransaction = (data: any) => {
+    const handleUpdateTransaction = (data: ExpenseFormData | IncomeFormData) => {
         if (selectedTransaction) {
-            updateTransaction(project.id, selectedTransaction.id, data)
+            let { amountARS, amountUSD, exchangeRate, ...rest } = data;
+
+            if (amountARS === 0 && amountUSD > 0) {
+                amountARS = amountUSD;
+                exchangeRate = 1;
+            }
+            if (exchangeRate === 0) {
+                exchangeRate = 1;
+            }
+
+            updateTransaction(project.id, selectedTransaction.id, { ...rest, amountARS, exchangeRate });
             setIsEditExpenseDialogOpen(false)
             setIsEditIncomeDialogOpen(false)
             setSelectedTransaction(null)
@@ -190,7 +247,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                             {t.type === 'income' ? '+' : '-'}${t.amountARS.toLocaleString('es-AR')}
                                             </TableCell>
                                             <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                            {t.type === 'income' ? '+' : '-'}${(t.amountARS / t.exchangeRate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            {t.type === 'income' ? '+' : '-'}${(t.amountARS / (t.exchangeRate || 1)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </TableCell>
                                             {canEdit && <TableCell>
                                                 <DropdownMenu>

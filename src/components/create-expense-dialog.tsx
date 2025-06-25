@@ -62,7 +62,7 @@ const formSchema = z.object({
 type CreateExpenseDialogProps = {
   categories: { name: string }[]
   participants: { name: string }[]
-  onAddExpense: (data: Omit<z.infer<typeof formSchema>, 'amountUSD'>) => void;
+  onAddExpense: (data: z.infer<typeof formSchema>) => void;
 }
 
 export function CreateExpenseDialog({ categories, participants, onAddExpense }: CreateExpenseDialogProps) {
@@ -101,7 +101,6 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
           setValue('amountARS', amountUSD * exchangeRate, { shouldValidate: true });
         }
       } else if (name === 'exchangeRate') {
-        // Prioritize calculating USD from ARS if ARS has a value
         if (amountARS > 0 && exchangeRate > 0) {
           setValue('amountUSD', amountARS / exchangeRate, { shouldValidate: true });
         } else if (amountUSD > 0 && exchangeRate > 0) {
@@ -118,15 +117,7 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
 
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const { amountARS, amountUSD, exchangeRate, ...rest } = values;
-    let finalExchangeRate = exchangeRate;
-
-    // If exchange rate is not set, calculate it from ARS and USD
-    if ((!finalExchangeRate || finalExchangeRate <= 0) && amountARS > 0 && amountUSD > 0) {
-        finalExchangeRate = amountARS / amountUSD;
-    }
-
-    onAddExpense({ ...rest, amountARS, exchangeRate: finalExchangeRate });
+    onAddExpense(values);
     setOpen(false)
     form.reset({
       date: new Date(),

@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useRef } from "react"
@@ -65,7 +66,7 @@ type EditExpenseDialogProps = {
   onOpenChange: (isOpen: boolean) => void;
   categories: { name: string }[]
   participants: { name: string }[]
-  onUpdateExpense: (data: Omit<z.infer<typeof formSchema>, 'amountUSD'>) => void;
+  onUpdateExpense: (data: z.infer<typeof formSchema>) => void;
 }
 
 export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, participants, onUpdateExpense }: EditExpenseDialogProps) {
@@ -78,13 +79,15 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
 
   useEffect(() => {
     if (expense) {
-      const amountUSD = (expense.amountARS && expense.exchangeRate) 
-        ? expense.amountARS / expense.exchangeRate 
+      const exchangeRate = expense.exchangeRate || 1;
+      const amountUSD = (expense.amountARS && exchangeRate) 
+        ? expense.amountARS / exchangeRate 
         : 0;
 
       form.reset({
         ...expense,
         date: expense.date.toDate(),
+        exchangeRate,
         amountUSD,
       })
     }
@@ -122,14 +125,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
   }, [watch, setValue]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const { amountARS, amountUSD, exchangeRate, ...rest } = values;
-    let finalExchangeRate = exchangeRate;
-
-    if ((!finalExchangeRate || finalExchangeRate <= 0) && amountARS > 0 && amountUSD > 0) {
-        finalExchangeRate = amountARS / amountUSD;
-    }
-    
-    onUpdateExpense({ ...rest, amountARS, exchangeRate: finalExchangeRate });
+    onUpdateExpense(values);
   }
 
   return (

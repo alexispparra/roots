@@ -51,7 +51,7 @@ const formSchema = z.object({
 
 
 type CreateIncomeDialogProps = {
-  onAddIncome: (data: Omit<z.infer<typeof formSchema>, 'amountUSD'>) => void;
+  onAddIncome: (data: z.infer<typeof formSchema>) => void;
 }
 
 export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
@@ -103,14 +103,7 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
 
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const { amountARS, amountUSD, exchangeRate, ...rest } = values;
-    let finalExchangeRate = exchangeRate;
-
-    if ((!finalExchangeRate || finalExchangeRate <= 0) && amountARS > 0 && amountUSD > 0) {
-        finalExchangeRate = amountARS / amountUSD;
-    }
-
-    onAddIncome({ ...rest, amountARS, exchangeRate: finalExchangeRate });
+    onAddIncome(values);
     setOpen(false)
     form.reset({
       date: new Date(),

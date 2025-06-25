@@ -54,7 +54,7 @@ type EditIncomeDialogProps = {
   income: Transaction | null;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onUpdateIncome: (data: Omit<z.infer<typeof formSchema>, 'amountUSD'>) => void;
+  onUpdateIncome: (data: z.infer<typeof formSchema>) => void;
 }
 
 export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome }: EditIncomeDialogProps) {
@@ -67,12 +67,14 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
 
   useEffect(() => {
     if (income) {
-       const amountUSD = (income.amountARS && income.exchangeRate) 
-        ? income.amountARS / income.exchangeRate 
+       const exchangeRate = income.exchangeRate || 1;
+       const amountUSD = (income.amountARS && exchangeRate) 
+        ? income.amountARS / exchangeRate 
         : 0;
       form.reset({
         ...income,
         date: income.date.toDate(),
+        exchangeRate,
         amountUSD,
       })
     }
@@ -110,14 +112,7 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
   }, [watch, setValue]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const { amountARS, amountUSD, exchangeRate, ...rest } = values;
-    let finalExchangeRate = exchangeRate;
-
-    if ((!finalExchangeRate || finalExchangeRate <= 0) && amountARS > 0 && amountUSD > 0) {
-        finalExchangeRate = amountARS / amountUSD;
-    }
-
-    onUpdateIncome({ ...rest, amountARS, exchangeRate: finalExchangeRate });
+    onUpdateIncome(values);
   }
 
   return (
