@@ -40,7 +40,7 @@ export default function ProjectCategoryClient() {
     if (!project || !categoryName) return [];
     return project.transactions
       .filter(t => t.type === 'expense' && t.category === categoryName)
-      .sort((a, b) => b.date.toMillis() - a.date.toMillis());
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [project, categoryName])
 
   const categorySpent = useMemo(() => 
@@ -150,8 +150,8 @@ export default function ProjectCategoryClient() {
                 <div>
                   <h4 className="text-sm font-medium mb-2">Fechas Clave</h4>
                   <div className="text-sm text-muted-foreground">
-                    <p><strong>Inicio:</strong> {category.startDate ? category.startDate.toDate().toLocaleDateString('es-ES') : 'No definida'}</p>
-                    <p><strong>Fin:</strong> {category.endDate ? category.endDate.toDate().toLocaleDateString('es-ES') : 'No definida'}</p>
+                    <p><strong>Inicio:</strong> {category.startDate ? category.startDate.toLocaleDateString('es-ES') : 'No definida'}</p>
+                    <p><strong>Fin:</strong> {category.endDate ? category.endDate.toLocaleDateString('es-ES') : 'No definida'}</p>
                   </div>
                 </div>
                 <div>
@@ -199,7 +199,7 @@ export default function ProjectCategoryClient() {
                         {categoryTransactions.length > 0 ? (
                             categoryTransactions.map((t) => (
                                 <TableRow key={t.id}>
-                                    <TableCell>{t.date.toDate().toLocaleDateString('es-ES')}</TableCell>
+                                    <TableCell>{t.date.toLocaleDateString('es-ES')}</TableCell>
                                     <TableCell className="font-medium">{t.description}</TableCell>
                                     <TableCell>{t.user}</TableCell>
                                     <TableCell className="text-right font-medium text-destructive">

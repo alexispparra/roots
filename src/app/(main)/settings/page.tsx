@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
+import { USE_MOCK_DATA } from "@/lib/mock-data";
 
 // Schemas
 const profileFormSchema = z.object({
@@ -123,8 +124,9 @@ export default function SettingsPage() {
     }
   }
 
-  // Handle the case where Firebase is not configured (demo mode).
-  if (!isFirebaseConfigured) {
+  // Handle the case where Firebase is not configured.
+  // This check is now primarily for local development.
+  if (!isFirebaseConfigured && !USE_MOCK_DATA) {
     return (
       <div className="grid gap-6">
         <Card>
@@ -140,7 +142,7 @@ export default function SettingsPage() {
             <CardContent>
                 <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Modo de Demostración Activo</AlertTitle>
+                    <AlertTitle>Error de Configuración</AlertTitle>
                     <AlertDescription>
                      La autenticación de Firebase no está configurada. Para habilitarla, crea un archivo `.env` en la raíz de tu proyecto y añade las variables de entorno de tu proyecto de Firebase. Después, reinicia el servidor de desarrollo.
                     </AlertDescription>
@@ -210,7 +212,7 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
               <CardFooter className="border-t px-6 py-4">
-                <Button type="submit" disabled={isProfileLoading}>
+                <Button type="submit" disabled={isProfileLoading || USE_MOCK_DATA}>
                   {isProfileLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Guardar Cambios
                 </Button>
@@ -275,7 +277,7 @@ export default function SettingsPage() {
                 />
               </CardContent>
               <CardFooter className="border-t px-6 py-4">
-                 <Button type="submit" disabled={isPasswordLoading}>
+                 <Button type="submit" disabled={isPasswordLoading || USE_MOCK_DATA}>
                   {isPasswordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Cambiar Contraseña
                 </Button>

@@ -73,7 +73,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
 
       form.reset({
         ...expense,
-        date: expense.date.toDate(),
+        date: expense.date,
         exchangeRate,
         amountUSD,
         attachmentDataUrl: expense.attachmentDataUrl || "",

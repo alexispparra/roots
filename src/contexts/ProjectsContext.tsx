@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { USE_MOCK_DATA, mockProjects } from '@/lib/mock-data';
 import { z } from 'zod';
 
-// --- Base Type Definitions (from Firestore) ---
+// --- Base Type Definitions (Using standard JS Date) ---
 export type UserRole = 'admin' | 'editor' | 'viewer';
 
 export type Participant = {
@@ -23,15 +23,15 @@ export type Category = {
   budget: number;
   icon?: string | null;
   progress?: number; // From 0 to 100
-  startDate?: Timestamp | null;
-  endDate?: Timestamp | null;
+  startDate?: Date | null;
+  endDate?: Date | null;
   dependencies?: string[];
 };
 
 export type Event = {
   id: string;
   title: string;
-  date: Timestamp;
+  date: Date;
   completed: boolean;
 };
 
@@ -40,7 +40,7 @@ export type ProjectStatus = 'planning' | 'in-progress' | 'completed' | 'on-hold'
 export type Transaction = {
   id: string;
   type: 'income' | 'expense';
-  date: Timestamp;
+  date: Date;
   description: string;
   amountARS: number;
   exchangeRate: number;
@@ -63,7 +63,7 @@ export type Project = {
   transactions: Transaction[];
   events: Event[];
   status: ProjectStatus;
-  createdAt: Timestamp;
+  createdAt: Date;
 };
 
 
@@ -191,6 +191,28 @@ type ProjectsContextType = {
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
 
 // --- Provider Component ---
+const convertFirestoreDataToProject = (doc: any): Project => {
+    const data = doc.data();
+    return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt.toDate(),
+        categories: (data.categories || []).map((c: any) => ({
+            ...c,
+            startDate: c.startDate ? c.startDate.toDate() : null,
+            endDate: c.endDate ? c.endDate.toDate() : null,
+        })),
+        transactions: (data.transactions || []).map((t: any) => ({
+            ...t,
+            date: t.date.toDate(),
+        })),
+        events: (data.events || []).map((e: any) => ({
+            ...e,
+            date: e.date.toDate(),
+        })),
+    } as Project;
+}
+
 
 export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
@@ -215,14 +237,9 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const userProjects: Project[] = [];
         querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            userProjects.push({
-              id: doc.id,
-              ...data,
-              events: data.events || [],
-            } as Project);
+            userProjects.push(convertFirestoreDataToProject(doc));
         });
-        userProjects.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+        userProjects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         setProjects(userProjects);
         setLoading(false);
       }, (error) => {
@@ -237,8 +254,6 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
 
       return () => unsubscribe();
     } else {
-      // If there's no user or no db connection, set an empty state and stop loading.
-      // This prevents crashes.
       setProjects([]);
       setLoading(false);
     }
@@ -334,15 +349,15 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
           
-          const dataForDb: any = { ...transactionData };
-          if (transactionData.date) {
-              dataForDb.date = Timestamp.fromDate(transactionData.date);
-          }
-          delete dataForDb.id;
+          const rawProjectData = convertFirestoreDataToProject(projectDoc);
+          
+          const newTransactions = rawProjectData.transactions.map(t => 
+              t.id === transactionId ? { ...t, ...transactionData, id: t.id } : t
+          );
+          
+          const transactionsForDb = newTransactions.map(t => ({...t, date: Timestamp.fromDate(t.date)}));
 
-          const project = projectDoc.data() as Project;
-          const newTransactions = project.transactions.map(t => t.id === transactionId ? { ...t, ...dataForDb } : t);
-          await updateDoc(projectRef, { transactions: newTransactions });
+          await updateDoc(projectRef, { transactions: transactionsForDb });
           toast({ title: "Transacción Actualizada" });
       } catch (error) {
           console.error("Error updating transaction: ", error);
@@ -356,9 +371,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       try {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
-          const project = projectDoc.data() as Project;
-          const newTransactions = project.transactions.filter(t => t.id !== transactionId);
-          await updateDoc(projectRef, { transactions: newTransactions });
+          const rawProjectData = convertFirestoreDataToProject(projectDoc);
+          const newTransactions = rawProjectData.transactions.filter(t => t.id !== transactionId);
+          const transactionsForDb = newTransactions.map(t => ({...t, date: Timestamp.fromDate(t.date)}));
+          await updateDoc(projectRef, { transactions: transactionsForDb });
           toast({ title: "Transacción Eliminada" });
       } catch (error) {
           console.error("Error deleting transaction: ", error);
@@ -370,17 +386,19 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     if (!db) return;
     const projectRef = doc(db, 'projects', projectId);
     
-    const categoryForDb: Omit<Category, 'progress' | 'dependencies'> = {
+    const categoryForDb = {
         name: categoryData.name,
         icon: predefinedIcon || 'Building',
         budget: categoryData.budget ?? 0,
         startDate: categoryData.startDate ? Timestamp.fromDate(categoryData.startDate) : null,
         endDate: categoryData.endDate ? Timestamp.fromDate(categoryData.endDate) : null,
+        progress: 0, 
+        dependencies: []
     };
 
     try {
         await updateDoc(projectRef, { 
-            categories: arrayUnion({ ...categoryForDb, progress: 0, dependencies: [] })
+            categories: arrayUnion(categoryForDb)
         });
         toast({ title: "Categoría Añadida" });
     } catch (error) {
@@ -395,23 +413,27 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       try {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
-          
-          const dataForDb: any = { ...categoryData };
-          if (categoryData.startDate) dataForDb.startDate = Timestamp.fromDate(categoryData.startDate);
-          if (categoryData.endDate) dataForDb.endDate = Timestamp.fromDate(categoryData.endDate);
-          if (categoryData.startDate === null) dataForDb.startDate = null;
-          if (categoryData.endDate === null) dataForDb.endDate = null;
+          const rawProjectData = convertFirestoreDataToProject(projectDoc);
 
-          const project = projectDoc.data() as Project;
-          const newCategories = project.categories.map(c => c.name === oldName ? { ...c, ...dataForDb } : c);
-          
-          let newTransactions = project.transactions;
-          if (dataForDb.name && dataForDb.name !== oldName) {
-            newTransactions = project.transactions.map(t => 
-                t.category === oldName ? { ...t, category: dataForDb.name } : t
+          const newCategories = rawProjectData.categories.map(c => 
+              c.name === oldName ? { ...c, ...categoryData } : c
+          );
+
+          let newTransactions = rawProjectData.transactions;
+          if (categoryData.name && categoryData.name !== oldName) {
+            newTransactions = rawProjectData.transactions.map(t => 
+                t.category === oldName ? { ...t, category: categoryData.name } : t
             );
           }
-          await updateDoc(projectRef, { categories: newCategories, transactions: newTransactions });
+
+          const categoriesForDb = newCategories.map(c => ({
+              ...c,
+              startDate: c.startDate ? Timestamp.fromDate(c.startDate) : null,
+              endDate: c.endDate ? Timestamp.fromDate(c.endDate) : null,
+          }));
+          const transactionsForDb = newTransactions.map(t => ({...t, date: Timestamp.fromDate(t.date)}));
+          
+          await updateDoc(projectRef, { categories: categoriesForDb, transactions: transactionsForDb });
           toast({ title: "Categoría Actualizada" });
       } catch (error) {
           console.error("Error updating category: ", error);
@@ -425,9 +447,15 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
        try {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
-          const project = projectDoc.data() as Project;
-          const newCategories = project.categories.filter(c => c.name !== categoryName);
-          await updateDoc(projectRef, { categories: newCategories });
+          const rawProjectData = convertFirestoreDataToProject(projectDoc);
+          const newCategories = rawProjectData.categories.filter(c => c.name !== categoryName);
+          const categoriesForDb = newCategories.map(c => ({
+              ...c,
+              startDate: c.startDate ? Timestamp.fromDate(c.startDate) : null,
+              endDate: c.endDate ? Timestamp.fromDate(c.endDate) : null,
+          }));
+
+          await updateDoc(projectRef, { categories: categoriesForDb });
           toast({ title: "Categoría Eliminada" });
       } catch (error) {
           console.error("Error deleting category: ", error);
@@ -443,11 +471,12 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         title: eventData.title,
         date: Timestamp.fromDate(eventData.date),
         completed: false,
+        id: doc(collection(db, 'dummy')).id
     };
 
     try {
         await updateDoc(projectRef, { 
-            events: arrayUnion({ ...eventForDb, id: doc(collection(db, 'dummy')).id }) 
+            events: arrayUnion(eventForDb)
         });
         toast({ title: "Evento Añadido" });
     } catch (error) {
@@ -463,14 +492,11 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         const projectDoc = await getDoc(projectRef);
         if (!projectDoc.exists()) throw new Error("Project not found");
 
-        const dataForDb: any = { ...eventData };
-        if (eventData.date) {
-            dataForDb.date = Timestamp.fromDate(eventData.date);
-        }
-
-        const project = projectDoc.data() as Project;
-        const newEvents = project.events.map(e => e.id === eventId ? { ...e, ...dataForDb } : e);
-        await updateDoc(projectRef, { events: newEvents });
+        const rawProjectData = convertFirestoreDataToProject(projectDoc);
+        const newEvents = rawProjectData.events.map(e => e.id === eventId ? { ...e, ...eventData, id: e.id } : e);
+        const eventsForDb = newEvents.map(e => ({ ...e, date: Timestamp.fromDate(e.date) }));
+        
+        await updateDoc(projectRef, { events: eventsForDb });
     } catch (error) {
         console.error("Error updating event: ", error);
         toast({ variant: "destructive", title: "Error", description: "No se pudo actualizar el evento." });
@@ -483,9 +509,11 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     try {
         const projectDoc = await getDoc(projectRef);
         if (!projectDoc.exists()) throw new Error("Project not found");
-        const project = projectDoc.data() as Project;
-        const newEvents = project.events.filter(e => e.id !== eventId);
-        await updateDoc(projectRef, { events: newEvents });
+        const rawProjectData = convertFirestoreDataToProject(projectDoc);
+        const newEvents = rawProjectData.events.filter(e => e.id !== eventId);
+        const eventsForDb = newEvents.map(e => ({ ...e, date: Timestamp.fromDate(e.date) }));
+
+        await updateDoc(projectRef, { events: eventsForDb });
         toast({ title: "Evento Eliminado" });
     } catch (error) {
         console.error("Error deleting event: ", error);

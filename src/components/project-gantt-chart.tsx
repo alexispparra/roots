@@ -15,8 +15,8 @@ type GanttChartProps = {
 export function ProjectGanttChart({ categories }: GanttChartProps) {
   const categoriesWithDates = React.useMemo(() => 
     categories
-      .filter(c => c.startDate && c.endDate && c.endDate.toDate() >= c.startDate.toDate())
-      .sort((a, b) => a.startDate!.toDate().getTime() - b.startDate!.toDate().getTime()), 
+      .filter(c => c.startDate && c.endDate && c.endDate >= c.startDate)
+      .sort((a, b) => a.startDate!.getTime() - b.startDate!.getTime()), 
     [categories]
   );
 
@@ -25,8 +25,8 @@ export function ProjectGanttChart({ categories }: GanttChartProps) {
       return { projectStartDate: new Date(), projectEndDate: addDays(new Date(), 30), totalDurationInDays: 31 };
     }
 
-    const startDates = categoriesWithDates.map(c => c.startDate!.toDate());
-    const endDates = categoriesWithDates.map(c => c.endDate!.toDate());
+    const startDates = categoriesWithDates.map(c => c.startDate!);
+    const endDates = categoriesWithDates.map(c => c.endDate!);
 
     const minDate = new Date(Math.min(...startDates.map(d => d.getTime())));
     const maxDate = new Date(Math.max(...endDates.map(d => d.getTime())));
@@ -109,8 +109,8 @@ export function ProjectGanttChart({ categories }: GanttChartProps) {
               {/* Category Bars */}
               <div className="relative space-y-px py-1">
                  {categoriesWithDates.map((category) => {
-                  const offset = differenceInDays(category.startDate!.toDate(), projectStartDate);
-                  const duration = differenceInDays(category.endDate!.toDate(), category.startDate!.toDate()) + 1;
+                  const offset = differenceInDays(category.startDate!, projectStartDate);
+                  const duration = differenceInDays(category.endDate!, category.startDate!) + 1;
 
                   return (
                     <div key={category.name} className="h-9 flex items-center relative">
@@ -137,8 +137,8 @@ export function ProjectGanttChart({ categories }: GanttChartProps) {
                           <TooltipContent>
                             <p className="font-bold">{category.name}</p>
                             <p>Progreso: {category.progress ?? 0}%</p>
-                            <p>Inicio: {format(category.startDate!.toDate(), 'd MMM yyyy', { locale: es })}</p>
-                            <p>Fin: {format(category.endDate!.toDate(), 'd MMM yyyy', { locale: es })}</p>
+                            <p>Inicio: {format(category.startDate!, 'd MMM yyyy', { locale: es })}</p>
+                            <p>Fin: {format(category.endDate!, 'd MMM yyyy', { locale: es })}</p>
                             <p>Duración: {duration} días</p>
                           </TooltipContent>
                         </Tooltip>

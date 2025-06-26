@@ -53,13 +53,13 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
       .sort((a, b) => b.value - a.value)
 
     const recTransactions = [...project.transactions]
-        .sort((a, b) => b.date.toMillis() - a.date.toMillis())
+        .sort((a, b) => b.date.getTime() - a.date.getTime())
         .slice(0, 5)
 
-    const relevantCategories = project.categories.filter(c => c.startDate && c.endDate && c.endDate.toDate() >= c.startDate.toDate());
+    const relevantCategories = project.categories.filter(c => c.startDate && c.endDate && c.endDate >= c.startDate);
 
     const totalDurationDays = relevantCategories.reduce((acc, cat) => {
-        const duration = cat.endDate!.toDate().getTime() - cat.startDate!.toDate().getTime();
+        const duration = cat.endDate!.getTime() - cat.startDate!.getTime();
         // Add 1 day to include the start day in the duration
         const durationInDays = (duration / (1000 * 3600 * 24)) + 1;
         return acc + durationInDays;
@@ -67,7 +67,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
 
     const weightedProgressSum = relevantCategories.reduce((acc, cat) => {
         const progress = cat.progress ?? 0;
-        const duration = cat.endDate!.toDate().getTime() - cat.startDate!.toDate().getTime();
+        const duration = cat.endDate!.getTime() - cat.startDate!.getTime();
         const durationInDays = (duration / (1000 * 3600 * 24)) + 1;
         return acc + (progress * durationInDays);
     }, 0);
@@ -205,7 +205,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                                 <TableRow key={t.id}>
                                     <TableCell>
                                         <div className="font-medium">{t.description}</div>
-                                        <div className="text-xs text-muted-foreground">{t.date.toDate().toLocaleDateString('es-ES')}</div>
+                                        <div className="text-xs text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
                                     </TableCell>
                                     <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
                                       {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountARS / (t.exchangeRate || 1))}

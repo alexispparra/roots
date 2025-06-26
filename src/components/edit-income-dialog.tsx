@@ -59,7 +59,7 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
         : 0;
       form.reset({
         ...income,
-        date: income.date.toDate(),
+        date: income.date,
         exchangeRate,
         amountUSD,
       })

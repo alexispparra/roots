@@ -4,7 +4,6 @@
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Timestamp } from "firebase/firestore";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, GanttChartSquare, CalendarPlus, MoreHorizontal, Trash2, Bell } from "lucide-react";
@@ -25,11 +24,11 @@ function generateGoogleCalendarLinkForCategory(category: Category, project: Proj
     const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
     const text = encodeURIComponent(`[${project.name}] ${category.name}`);
     
-    const startDate = category.startDate?.toDate();
+    const startDate = category.startDate;
     if (!startDate) return '#';
 
     const startDateFormat = format(startDate, "yyyyMMdd");
-    const endDate = category.endDate?.toDate();
+    const endDate = category.endDate;
     const endDateFormat = endDate 
         ? format(new Date(endDate.getTime() + 24 * 60 * 60 * 1000), "yyyyMMdd") 
         : format(new Date(startDate.getTime() + 24 * 60 * 60 * 1000), "yyyyMMdd");
@@ -45,7 +44,7 @@ function generateGoogleCalendarLinkForEvent(event: Event, project: Project): str
     const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
     const text = encodeURIComponent(`[${project.name}] ${event.title}`);
     
-    const startDate = event.date.toDate();
+    const startDate = event.date;
     const startDateFormat = format(startDate, "yyyyMMdd");
     const endDateFormat = format(new Date(startDate.getTime() + 24 * 60 * 60 * 1000), "yyyyMMdd")
     
@@ -86,8 +85,8 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
       .filter(c => c.startDate)
       .forEach((category, index) => {
         const calendarCategory: CalendarCategory = { ...category, color: `hsl(var(${colors[index % colors.length]}))` };
-        let current = category.startDate!.toDate();
-        const end = category.endDate?.toDate() ?? current;
+        let current = category.startDate!;
+        const end = category.endDate ?? current;
         
         let loopGuard = 0;
         while (current <= end && loopGuard < 365) {
@@ -104,7 +103,7 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
 
     // Process events
     (project.events || []).forEach(event => {
-        const dayKey = format(event.date.toDate(), 'yyyy-MM-dd');
+        const dayKey = format(event.date, 'yyyy-MM-dd');
         if (!byDay[dayKey]) byDay[dayKey] = [];
         byDay[dayKey].push({ type: 'event', data: event });
     });
@@ -125,7 +124,7 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
   };
   
   const handleToggleEventCompletion = (event: CalendarEvent) => {
-    updateEvent(project.id, event.id, { title: event.title, date: event.date.toDate(), completed: !event.completed });
+    updateEvent(project.id, event.id, { title: event.title, date: event.date, completed: !event.completed });
   };
 
   const handleDeleteEventClick = (event: CalendarEvent) => {
@@ -235,8 +234,8 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
                                             <li key={category.name} className="flex flex-col p-2 rounded-md" style={{ borderLeft: `4px solid ${category.color}` }}>
                                                 <span className="font-semibold text-sm">{category.name}</span>
                                                 <span className="text-xs text-muted-foreground">
-                                                    {category.startDate ? format(category.startDate.toDate(), "d MMM", { locale: es }) : ''}
-                                                    {category.endDate ? ` - ${format(category.endDate.toDate(), "d MMM", { locale: es })}` : ''}
+                                                    {category.startDate ? format(category.startDate, "d MMM", { locale: es }) : ''}
+                                                    {category.endDate ? ` - ${format(category.endDate, "d MMM", { locale: es })}` : ''}
                                                 </span>
                                                 <Button size="sm" variant="ghost" asChild className="mt-1 -ml-1 justify-start h-auto p-1 text-xs w-fit">
                                                     <a href={generateGoogleCalendarLinkForCategory(category, project)} target="_blank" rel="noopener noreferrer">

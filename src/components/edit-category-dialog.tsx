@@ -62,8 +62,8 @@ export function EditCategoryDialog({ category, allCategories, isOpen, onOpenChan
       form.reset({
         ...category,
         dependencies: category.dependencies ?? [],
-        startDate: category.startDate ? category.startDate.toDate() : null,
-        endDate: category.endDate ? category.endDate.toDate() : null,
+        startDate: category.startDate,
+        endDate: category.endDate,
       })
     }
   }, [category, form, isOpen])

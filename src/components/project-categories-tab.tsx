@@ -76,7 +76,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
             onAddCustomCategory={handleAddCustomCategory} 
             onAddPredefinedCategories={handleAddPredefinedCategories}
             existingCategoryNames={project.categories.map(c => c.name)}
-            defaultStartDate={project.createdAt?.toDate()}
+            defaultStartDate={project.createdAt}
           />}
         </CardHeader>
         <CardContent>
@@ -108,8 +108,8 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
                     </TableCell>
                      <TableCell>
                       <div className="text-xs">
-                        <div>Inicio: {category.startDate ? category.startDate.toDate().toLocaleDateString('es-ES') : 'N/A'}</div>
-                        <div>Fin: {category.endDate ? category.endDate.toDate().toLocaleDateString('es-ES') : 'N/A'}</div>
+                        <div>Inicio: {category.startDate ? category.startDate.toLocaleDateString('es-ES') : 'N/A'}</div>
+                        <div>Fin: {category.endDate ? category.endDate.toLocaleDateString('es-ES') : 'N/A'}</div>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">${category.budget.toLocaleString('es-AR')}</TableCell>

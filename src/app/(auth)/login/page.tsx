@@ -18,6 +18,7 @@ import Link from "next/link"
 import { LandingLogo } from "@/components/landing-logo"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { USE_MOCK_DATA } from "@/lib/mock-data"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -25,18 +26,19 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
 
-  // Demo mode check. This is the single source of truth.
-  if (!isFirebaseConfigured) {
+  // This check is now primarily for local development.
+  // In production, USE_MOCK_DATA will be true, bypassing this.
+  if (!isFirebaseConfigured && !USE_MOCK_DATA) {
     return (
        <div className="flex items-center justify-center min-h-svh bg-background">
           <Card className="mx-auto w-full max-w-md bg-card text-card-foreground border-border">
             <CardHeader>
-                <CardTitle className="text-2xl font-headline text-center">Modo Demostración</CardTitle>
+                <CardTitle className="text-2xl font-headline text-center">Error de Configuración</CardTitle>
             </CardHeader>
             <CardContent>
                 <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Error de Configuración</AlertTitle>
+                    <AlertTitle>Firebase no configurado</AlertTitle>
                     <AlertDescription>
                      La autenticación de Firebase no está configurada. Para habilitarla, crea un archivo `.env` en la raíz de tu proyecto y añade las variables de entorno de tu proyecto de Firebase. Después, reinicia el servidor de desarrollo.
                     </AlertDescription>
@@ -53,7 +55,6 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Redundant check for safety, the main one is above.
     if (!auth) {
       setError("Error de Configuración: La autenticación de Firebase no está disponible.");
       return;

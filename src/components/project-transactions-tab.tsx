@@ -41,15 +41,15 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     const [monthFilter, setMonthFilter] = useState<string>(String(new Date().getMonth()));
 
     const sortedTransactions = useMemo(() => 
-        [...project.transactions].sort((a, b) => b.date.toMillis() - a.date.toMillis()), 
+        [...project.transactions].sort((a, b) => b.date.getTime() - a.date.getTime()), 
     [project.transactions]);
 
     const availableYears = useMemo(() => 
-        [...new Set(sortedTransactions.map(t => t.date.toDate().getFullYear()))].sort((a,b) => b - a), 
+        [...new Set(sortedTransactions.map(t => t.date.getFullYear()))].sort((a,b) => b - a), 
     [sortedTransactions]);
 
     const filteredTransactions = useMemo(() => sortedTransactions.filter(t => {
-        const date = t.date.toDate();
+        const date = t.date;
         const yearMatch = yearFilter === 'all' || date.getFullYear() === parseInt(yearFilter, 10);
         const monthMatch = monthFilter === 'all' || date.getMonth() === parseInt(monthFilter, 10);
         return yearMatch && monthMatch;
@@ -180,7 +180,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                 {filteredTransactions.length > 0 ? (
                                     filteredTransactions.map((t) => (
                                         <TableRow key={t.id}>
-                                            <TableCell>{t.date.toDate().toLocaleDateString('es-ES')}</TableCell>
+                                            <TableCell>{t.date.toLocaleDateString('es-ES')}</TableCell>
                                             <TableCell className="font-medium">{t.description}</TableCell>
                                             <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
                                             <TableCell>{t.user}</TableCell>
