@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { LandingLogo } from "@/components/landing-logo"
+import { Logo } from "@/components/logo"
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
       <Card className="mx-auto w-full max-w-sm bg-card text-card-foreground border-border">
         <CardHeader className="space-y-4">
           <div className="flex justify-center p-6">
-            <LandingLogo className="h-20 w-auto" />
+            <Logo className="h-10 w-auto" />
           </div>
           <CardTitle className="text-2xl font-headline text-center">Restablecer Contraseña</CardTitle>
           <CardDescription className="text-center">
