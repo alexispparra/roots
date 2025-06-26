@@ -37,9 +37,12 @@ export default function RegisterPage() {
         return;
     }
 
-    // The global error handler in `app-content.tsx` and `firebase.ts` now manages
-    // configuration errors, so a local check is no longer needed and could be confusing.
-    const firebase = getFirebaseInstances()!
+    const firebase = getFirebaseInstances()
+    if (!firebase) {
+      setError("Error de Configuración: El servicio de autenticación no está disponible. Por favor, contacta al administrador.")
+      setIsLoading(false)
+      return
+    }
 
     try {
       const { createUserWithEmailAndPassword, updateProfile } = await import("firebase/auth")
