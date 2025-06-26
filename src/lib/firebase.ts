@@ -27,22 +27,23 @@ export function getFirebaseInstances() {
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   };
-  
+
   // This boolean is the single source of truth for Firebase configuration status.
+  // It checks not only for existence but also that the placeholder values have been replaced.
   const isFirebaseConfigured =
-    firebaseConfig.apiKey &&
-    firebaseConfig.authDomain &&
-    firebaseConfig.projectId &&
-    firebaseConfig.storageBucket &&
-    firebaseConfig.messagingSenderId &&
-    firebaseConfig.appId;
+    firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("REEMPLAZA_CON_TU") &&
+    firebaseConfig.authDomain && !firebaseConfig.authDomain.includes("REEMPLAZA_CON_TU") &&
+    firebaseConfig.projectId && !firebaseConfig.projectId.includes("REEMPLAZA_CON_TU") &&
+    firebaseConfig.storageBucket && !firebaseConfig.storageBucket.includes("REEMPLAZA_CON_TU") &&
+    firebaseConfig.messagingSenderId && !firebaseConfig.messagingSenderId.includes("REEMPLAZA_CON_TU") &&
+    firebaseConfig.appId && !firebaseConfig.appId.includes("REEMPLAZA_CON_TU");
 
 
   // If Firebase is not configured (missing environment variables),
   // return null. The calling code is responsible for handling this case.
   if (!isFirebaseConfigured) {
     // This warning is helpful for both local and production debugging.
-    console.error("CRITICAL: Firebase configuration is missing. The application cannot connect to Firebase services. This is likely because environment variables (NEXT_PUBLIC_FIREBASE_*) are not set correctly in the production environment (apphosting.yaml) or locally (.env).");
+    console.error("CRITICAL: Firebase configuration is missing or contains placeholder values. The application cannot connect to Firebase services. This is likely because environment variables (NEXT_PUBLIC_FIREBASE_*) are not set correctly in the production environment (apphosting.yaml) or locally (.env).");
     return null;
   }
 
