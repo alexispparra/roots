@@ -63,8 +63,9 @@ export default function LandingPage() {
             </section>
             <section className="hidden lg:flex flex-1 justify-center items-center">
               <Image
-                  src="/oo_blanco-sin-fondo.png"
+                  src="https://placehold.co/1200x800.png"
                   alt="Logo de Roots.oo"
+                  data-ai-hint="logo brand"
                   width={1200}
                   height={800}
                   className="w-full max-w-lg"
