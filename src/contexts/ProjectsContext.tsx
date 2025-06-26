@@ -205,42 +205,43 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     
-    if (!user || !db) {
+    if (user && db) {
+      setLoading(true);
+      const q = query(
+        collection(db, "projects"), 
+        where("participantsEmails", "array-contains", user.email)
+      );
+
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const userProjects: Project[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            userProjects.push({
+              id: doc.id,
+              ...data,
+              events: data.events || [],
+            } as Project);
+        });
+        userProjects.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+        setProjects(userProjects);
+        setLoading(false);
+      }, (error) => {
+        console.error("Error fetching projects:", error);
+        toast({
+          variant: "destructive",
+          title: "Error de Conexión",
+          description: "No se pudieron cargar los proyectos.",
+        });
+        setLoading(false);
+      });
+
+      return () => unsubscribe();
+    } else {
+      // If there's no user or no db connection, set an empty state and stop loading.
+      // This prevents crashes.
       setProjects([]);
       setLoading(false);
-      return;
     }
-
-    setLoading(true);
-    const q = query(
-      collection(db, "projects"), 
-      where("participantsEmails", "array-contains", user.email)
-    );
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const userProjects: Project[] = [];
-      querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          userProjects.push({
-            id: doc.id,
-            ...data,
-            events: data.events || [],
-          } as Project);
-      });
-      userProjects.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
-      setProjects(userProjects);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching projects:", error);
-      toast({
-        variant: "destructive",
-        title: "Error de Conexión",
-        description: "No se pudieron cargar los proyectos.",
-      });
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
   }, [user, toast]);
 
   const getProjectById = useCallback((id: string | null) => {

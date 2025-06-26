@@ -27,22 +27,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    if (!auth) {
+    if (auth) {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        setUser(user);
+        if (user && process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL && user.email === process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL) {
+            setIsAppAdmin(true);
+        } else {
+            setIsAppAdmin(false);
+        }
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    } else {
+      // If Firebase is not configured, set state to not-loading and no user.
+      // This prevents the app from crashing.
+      setUser(null);
+      setIsAppAdmin(false);
       setLoading(false);
-      return;
     }
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-       if (user && process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL && user.email === process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL) {
-          setIsAppAdmin(true);
-      } else {
-          setIsAppAdmin(false);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
   }, []);
 
   return (

@@ -28,7 +28,9 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   // Demo mode check
-  if (!auth) {
+  const isDemoMode = !process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+
+  if (isDemoMode) {
     return (
        <div className="flex items-center justify-center min-h-svh bg-background">
           <Card className="mx-auto w-full max-w-md bg-card text-card-foreground border-border">
@@ -40,7 +42,7 @@ export default function RegisterPage() {
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Error de Configuración</AlertTitle>
                     <AlertDescription>
-                    La autenticación de Firebase no está configurada. Para habilitarla, crea un archivo `.env` en la raíz de tu proyecto y añade las variables de entorno de tu proyecto de Firebase (NEXT_PUBLIC_FIREBASE_...).
+                    Las variables de entorno de Firebase no se han cargado. Asegúrate de que tu archivo <strong>.env</strong> esté completo y de que hayas <strong>reiniciado el servidor de desarrollo</strong>.
                     </AlertDescription>
                 </Alert>
                 <Button asChild className="w-full mt-4">
