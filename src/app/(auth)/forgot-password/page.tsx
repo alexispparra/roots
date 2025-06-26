@@ -3,7 +3,7 @@
 
 import { useState } from "react"
 import { sendPasswordResetEmail } from "firebase/auth"
-import { auth } from "@/lib/firebase"
+import { auth, isFirebaseConfigured } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -25,8 +25,8 @@ export default function ForgotPasswordPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  // Demo mode check
-  if (!auth) {
+  // Demo mode check. This is the single source of truth.
+  if (!isFirebaseConfigured) {
     return (
        <div className="flex items-center justify-center min-h-svh bg-background">
           <Card className="mx-auto w-full max-w-md bg-card text-card-foreground border-border">
@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Error de Configuración</AlertTitle>
                     <AlertDescription>
-                    La autenticación de Firebase no está configurada. Para habilitarla, crea un archivo `.env` en la raíz de tu proyecto y añade las variables de entorno de tu proyecto de Firebase (NEXT_PUBLIC_FIREBASE_...).
+                    La autenticación de Firebase no está configurada. Para habilitarla, crea un archivo `.env` en la raíz de tu proyecto y añade las variables de entorno de tu proyecto de Firebase. Después, reinicia el servidor de desarrollo.
                     </AlertDescription>
                 </Alert>
                  <Button asChild className="w-full mt-4">
@@ -52,6 +52,7 @@ export default function ForgotPasswordPage() {
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault()
+    // Redundant check for safety, the main one is above.
     if (!auth) {
       setError("Error de Configuración: La autenticación de Firebase no está disponible.");
       return;

@@ -3,7 +3,7 @@
 
 import { useState } from "react"
 import { signInWithEmailAndPassword } from "firebase/auth"
-import { auth } from "@/lib/firebase"
+import { auth, isFirebaseConfigured } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -25,10 +25,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
 
-  // Demo mode check
-  const isDemoMode = !process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-
-  if (isDemoMode) {
+  // Demo mode check. This is the single source of truth.
+  if (!isFirebaseConfigured) {
     return (
        <div className="flex items-center justify-center min-h-svh bg-background">
           <Card className="mx-auto w-full max-w-md bg-card text-card-foreground border-border">
@@ -40,7 +38,7 @@ export default function LoginPage() {
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Error de Configuración</AlertTitle>
                     <AlertDescription>
-                    Las variables de entorno de Firebase no se han cargado. Asegúrate de que tu archivo <strong>.env</strong> esté completo y de que hayas <strong>reiniciado el servidor de desarrollo</strong>.
+                     La autenticación de Firebase no está configurada. Para habilitarla, crea un archivo `.env` en la raíz de tu proyecto y añade las variables de entorno de tu proyecto de Firebase. Después, reinicia el servidor de desarrollo.
                     </AlertDescription>
                 </Alert>
                  <Button asChild className="w-full mt-4">
@@ -55,6 +53,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    // Redundant check for safety, the main one is above.
     if (!auth) {
       setError("Error de Configuración: La autenticación de Firebase no está disponible.");
       return;

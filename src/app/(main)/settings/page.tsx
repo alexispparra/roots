@@ -8,7 +8,7 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import { useAuth } from "@/contexts/AuthContext";
-import { auth } from "@/lib/firebase";
+import { auth, isFirebaseConfigured } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
@@ -124,7 +124,7 @@ export default function SettingsPage() {
   }
 
   // Handle the case where Firebase is not configured (demo mode).
-  if (!auth) {
+  if (!isFirebaseConfigured) {
     return (
       <div className="grid gap-6">
         <Card>
@@ -142,7 +142,7 @@ export default function SettingsPage() {
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Modo de Demostración Activo</AlertTitle>
                     <AlertDescription>
-                    Para gestionar la configuración de tu cuenta, necesitas configurar tus credenciales de Firebase en el archivo `.env`. Por favor, revisa las instrucciones, asegúrate de que las variables de entorno están correctamente cargadas y reinicia el servidor de desarrollo.
+                     La autenticación de Firebase no está configurada. Para habilitarla, crea un archivo `.env` en la raíz de tu proyecto y añade las variables de entorno de tu proyecto de Firebase. Después, reinicia el servidor de desarrollo.
                     </AlertDescription>
                 </Alert>
             </CardContent>
