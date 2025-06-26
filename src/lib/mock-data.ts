@@ -3,13 +3,15 @@ import type { Project, Participant, Category, Transaction, Event } from '@/conte
 import type { User } from 'firebase/auth';
 
 // --- CONFIGURATION ---
-// This flag is now definitively set to false. The application is architected
-// to run as a final, production-ready version. It will gracefully handle cases
-// where Firebase is not configured, instead of crashing.
-export const USE_MOCK_DATA = false;
+// This flag determines if the app uses local mock data or connects to Firebase.
+// Setting this to 'true' ensures the app runs without any Firebase configuration,
+// preventing server crashes if credentials are not set up.
+// For production, this should be 'false' and Firebase credentials must be
+// configured in the hosting environment.
+export const USE_MOCK_DATA = true;
 
 // --- MOCK USER ---
-// This user is now only for reference or potential local testing, but is not used by default.
+// This user is used when USE_MOCK_DATA is true.
 export const mockUser: User = {
     uid: 'mock-user-123',
     email: 'testing@roots.app',
@@ -40,7 +42,6 @@ export const mockUser: User = {
 
 
 // --- MOCK DATA DEFINITIONS ---
-// This data is now only for reference or potential local testing, but is not used by default.
 
 const participants: Participant[] = [
     { email: 'testing@roots.app', name: 'Usuario de Prueba', role: 'admin' },

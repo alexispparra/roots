@@ -28,40 +28,9 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    const firebase = getFirebaseInstances();
-    if (!firebase) {
-      setError("Error de Configuración: El servicio de autenticación no está disponible. Por favor, contacta al soporte.");
-      return;
-    }
-    
-    if (password.length < 6) {
-        setError("La contraseña debe tener al menos 6 caracteres.");
-        return;
-    }
-    setError(null)
-    setIsLoading(true)
-
-    try {
-      const { createUserWithEmailAndPassword, updateProfile } = await import("firebase/auth");
-      const userCredential = await createUserWithEmailAndPassword(firebase.auth, email, password)
-      
-      if (userCredential.user) {
-          await updateProfile(userCredential.user, {
-              displayName: `${firstName} ${lastName}`.trim()
-          });
-      }
-      // La redirección es manejada por AuthLayout
-    } catch (err: any) {
-        if (err.code === 'auth/email-already-in-use') {
-            setError("Este correo electrónico ya está en uso. Por favor, inicia sesión o usa otro correo.");
-        } else {
-            setError(`Error: ${err.message} (código: ${err.code})`);
-        }
-        console.error(err);
-    } finally {
-        setIsLoading(false)
-    }
+    setIsLoading(true);
+    setError("Función de registro no disponible en modo de prueba. Serás redirigido.");
+    // In mock mode, the user is already "logged in", so AuthLayout will redirect.
   }
 
   return (

@@ -27,29 +27,14 @@ export default function ForgotPasswordPage() {
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    const firebase = getFirebaseInstances();
-    if (!firebase) {
-      setError("Error de Configuración: El servicio de autenticación no está disponible. Por favor, contacta al soporte.");
-      return;
-    }
-
     setError(null)
     setSuccess(null)
     setIsLoading(true)
 
-    try {
-      const { sendPasswordResetEmail } = await import("firebase/auth");
-      await sendPasswordResetEmail(firebase.auth, email);
-      setSuccess("Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Por favor, revisa tu bandeja de entrada (y la carpeta de spam).");
-    } catch (err: any) {
-      // Don't reveal if the user exists or not, but log the error for debugging
-      console.error("Password Reset Error:", err);
-      // Still show a success message to prevent user enumeration
-      setSuccess("Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Por favor, revisa tu bandeja de entrada (y la carpeta de spam).");
-    } finally {
-        setIsLoading(false)
-    }
+    // In mock mode, this feature is not available.
+    setError("Función no disponible en modo de prueba.");
+    setSuccess(null);
+    setIsLoading(false);
   }
 
   return (

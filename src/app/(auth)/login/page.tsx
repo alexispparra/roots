@@ -17,39 +17,26 @@ import Link from "next/link"
 import { LandingLogo } from "@/components/landing-logo"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
+  const { user } = useAuth(); // We get the user from the mock context
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // In a real scenario, we'd use Firebase here.
+    // In mock mode, the user is already "logged in" via the context,
+    // and the AuthLayout handles the redirection.
+    // This form is effectively a placeholder in mock mode.
+    setIsFormLoading(true);
+    setError("Función de inicio de sesión no disponible en modo de prueba. Serás redirigido.");
 
-    const firebase = getFirebaseInstances();
-    if (!firebase) {
-      setError("Error de Configuración: El servicio de autenticación no está disponible. Por favor, contacta al soporte.");
-      return;
-    }
-
-    setError(null)
-    setIsFormLoading(true)
-
-    try {
-      const { signInWithEmailAndPassword } = await import("firebase/auth");
-      await signInWithEmailAndPassword(firebase.auth, email, password);
-      // The redirection is handled by AuthLayout
-    } catch (err: any) {
-      if (err.code === 'auth/invalid-credential') {
-        setError("Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.");
-      } else {
-        setError(`Error: ${err.message} (código: ${err.code})`);
-      }
-      console.error("Firebase Auth Error:", err);
-    } finally {
-        setIsFormLoading(false)
-    }
+    // The redirect is handled by AuthLayout which sees the mock user
   }
 
   return (
