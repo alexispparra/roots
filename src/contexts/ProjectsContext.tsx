@@ -2,9 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, Timestamp, arrayUnion, getDoc, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { USE_MOCK_DATA, mockProjects } from '@/lib/mock-data';
 import { z } from 'zod';
@@ -190,69 +188,268 @@ type ProjectsContextType = {
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
 
-// --- Provider Component ---
-const convertFirestoreDataToProject = (doc: any): Project => {
-    const data = doc.data();
-    return {
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt.toDate(),
-        categories: (data.categories || []).map((c: any) => ({
-            ...c,
-            startDate: c.startDate ? c.startDate.toDate() : null,
-            endDate: c.endDate ? c.endDate.toDate() : null,
-        })),
-        transactions: (data.transactions || []).map((t: any) => ({
-            ...t,
-            date: t.date.toDate(),
-        })),
-        events: (data.events || []).map((e: any) => ({
-            ...e,
-            date: e.date.toDate(),
-        })),
-    } as Project;
-}
+// --- Provider Components ---
+
+const ProjectsProviderMock = ({ children }: { children: ReactNode }) => {
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const [projects, setProjects] = useState<Project[]>(mockProjects);
+    const [loading, setLoading] = useState(false);
+
+    const getProjectById = useCallback((id: string | null) => {
+        if (!id) return undefined;
+        return projects.find(p => p.id === id);
+    }, [projects]);
+
+    const getUserRoleForProject = useCallback((projectId: string): UserRole | null => {
+        if (!user) return null;
+        const project = getProjectById(projectId);
+        if (!project) return null;
+        const participant = project.participants.find(p => p.email === user.email);
+        return participant ? participant.role : null;
+    }, [projects, user, getProjectById]);
+
+    const addProject = async (projectData: AddProjectData): Promise<string | null> => {
+        if (!user) {
+            toast({ variant: "destructive", title: "Error", description: "Debes iniciar sesión." });
+            return null;
+        }
+        const newProject: Project = {
+            id: `proj-${Date.now()}`,
+            ...projectData,
+            ownerEmail: user.email!,
+            participants: [{ email: user.email!, name: user.displayName || 'Propietario', role: 'admin' }],
+            categories: [],
+            transactions: [],
+            events: [],
+            createdAt: new Date(),
+        };
+        setProjects(prev => [newProject, ...prev]);
+        toast({ title: "¡Proyecto Creado!", description: `El proyecto "${projectData.name}" ha sido creado.` });
+        return newProject.id;
+    };
+
+    const updateProject = async (projectId: string, projectData: UpdateProjectData) => {
+        setProjects(prev => prev.map(p => p.id === projectId ? { ...p, ...projectData } : p));
+        toast({ title: "Proyecto Actualizado" });
+    };
+
+    const deleteProject = async (projectId: string) => {
+        setProjects(prev => prev.filter(p => p.id !== projectId));
+        toast({ title: "Proyecto Eliminado" });
+    };
+
+    const addTransaction = async (projectId: string, transactionData: AddExpenseInput | AddIncomeInput, type: 'income' | 'expense') => {
+        const newTransaction: Transaction = {
+            ...transactionData,
+            id: `trn-${Date.now()}`,
+            type,
+            category: type === 'income' ? 'Ingreso' : (transactionData as AddExpenseInput).category,
+        };
+        setProjects(prev => prev.map(p => {
+            if (p.id === projectId) {
+                return { ...p, transactions: [...p.transactions, newTransaction] };
+            }
+            return p;
+        }));
+        toast({ title: "Transacción Añadida" });
+    };
+
+    const updateTransaction = async (projectId: string, transactionId: string, transactionData: UpdateExpenseInput | UpdateIncomeInput) => {
+        setProjects(prev => prev.map(p => {
+            if (p.id === projectId) {
+                const newTransactions = p.transactions.map(t =>
+                    t.id === transactionId ? { ...t, ...transactionData, id: t.id } : t
+                );
+                return { ...p, transactions: newTransactions };
+            }
+            return p;
+        }));
+        toast({ title: "Transacción Actualizada" });
+    };
+
+    const deleteTransaction = async (projectId: string, transactionId: string) => {
+        setProjects(prev => prev.map(p => {
+            if (p.id === projectId) {
+                return { ...p, transactions: p.transactions.filter(t => t.id !== transactionId) };
+            }
+            return p;
+        }));
+        toast({ title: "Transacción Eliminada" });
+    };
+    
+    const addCategory = async (projectId: string, categoryData: AddCategoryInput, predefinedIcon?: string | null) => {
+        const newCategory: Category = {
+            ...categoryData,
+            icon: predefinedIcon || 'Building',
+            progress: 0,
+            dependencies: [],
+        };
+        setProjects(prev => prev.map(p => {
+            if (p.id === projectId) {
+                return { ...p, categories: [...p.categories, newCategory] };
+            }
+            return p;
+        }));
+        toast({ title: "Categoría Añadida" });
+    };
+
+    const updateCategory = async (projectId: string, oldName: string, categoryData: UpdateCategoryInput) => {
+        setProjects(prev => prev.map(p => {
+            if (p.id === projectId) {
+                const newCategories = p.categories.map(c => c.name === oldName ? { ...c, ...categoryData } : c);
+                let newTransactions = p.transactions;
+                if(categoryData.name && categoryData.name !== oldName) {
+                    newTransactions = p.transactions.map(t => t.category === oldName ? {...t, category: categoryData.name} : t);
+                }
+                return { ...p, categories: newCategories, transactions: newTransactions };
+            }
+            return p;
+        }));
+        toast({ title: "Categoría Actualizada" });
+    };
+
+    const deleteCategory = async (projectId: string, categoryName: string) => {
+        setProjects(prev => prev.map(p => {
+            if(p.id === projectId) {
+                return {...p, categories: p.categories.filter(c => c.name !== categoryName)}
+            }
+            return p;
+        }));
+        toast({ title: "Categoría Eliminada" });
+    };
+    
+    const addEvent = async (projectId: string, eventData: AddEventInput) => {
+        const newEvent: Event = {
+            ...eventData,
+            id: `evt-${Date.now()}`,
+            completed: false,
+        };
+         setProjects(prev => prev.map(p => {
+            if (p.id === projectId) {
+                return { ...p, events: [...p.events, newEvent] };
+            }
+            return p;
+        }));
+        toast({ title: "Evento Añadido" });
+    };
+
+    const updateEvent = async (projectId: string, eventId: string, eventData: UpdateEventInput) => {
+        setProjects(prev => prev.map(p => {
+            if (p.id === projectId) {
+                const newEvents = p.events.map(e => e.id === eventId ? {...e, ...eventData, id: e.id} : e);
+                return { ...p, events: newEvents };
+            }
+            return p;
+        }));
+    };
+
+    const deleteEvent = async (projectId: string, eventId: string) => {
+        setProjects(prev => prev.map(p => {
+            if (p.id === projectId) {
+                return { ...p, events: p.events.filter(e => e.id !== eventId) };
+            }
+            return p;
+        }));
+        toast({ title: "Evento Eliminado" });
+    };
 
 
-export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
+    const contextValue: ProjectsContextType = {
+        projects,
+        loading,
+        addProject,
+        getProjectById,
+        getUserRoleForProject,
+        updateProject,
+        deleteProject,
+        addTransaction,
+        updateTransaction,
+        deleteTransaction,
+        addCategory,
+        updateCategory,
+        deleteCategory,
+        addEvent,
+        updateEvent,
+        deleteEvent,
+    };
+
+    return (
+        <ProjectsContext.Provider value={contextValue}>
+            {children}
+        </ProjectsContext.Provider>
+    );
+};
+
+
+const ProjectsProviderFirebase = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // --- Helper to convert Firestore Timestamps to JS Dates ---
+  const convertFirestoreDataToProject = (docData: any): Project => {
+      const data = docData.data();
+      return {
+          id: docData.id,
+          ...data,
+          createdAt: data.createdAt.toDate(),
+          categories: (data.categories || []).map((c: any) => ({
+              ...c,
+              startDate: c.startDate ? c.startDate.toDate() : null,
+              endDate: c.endDate ? c.endDate.toDate() : null,
+          })),
+          transactions: (data.transactions || []).map((t: any) => ({
+              ...t,
+              date: t.date.toDate(),
+          })),
+          events: (data.events || []).map((e: any) => ({
+              ...e,
+              date: e.date.toDate(),
+          })),
+      } as Project;
+  }
+
   useEffect(() => {
-    if (USE_MOCK_DATA) {
-      setProjects(mockProjects);
-      setLoading(false);
-      return;
-    }
-    
-    if (user && db) {
+    if (user) {
       setLoading(true);
-      const q = query(
-        collection(db, "projects"), 
-        where("participantsEmails", "array-contains", user.email)
-      );
+      // Dynamic import of firebase modules
+      Promise.all([
+        import('firebase/firestore'),
+        import('@/lib/firebase'),
+      ]).then(([{ collection, query, where, onSnapshot }, { db }]) => {
+          if (!db) {
+              setLoading(false);
+              return;
+          }
+          const q = query(
+            collection(db, "projects"), 
+            where("participantsEmails", "array-contains", user.email)
+          );
 
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const userProjects: Project[] = [];
-        querySnapshot.forEach((doc) => {
-            userProjects.push(convertFirestoreDataToProject(doc));
-        });
-        userProjects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-        setProjects(userProjects);
-        setLoading(false);
-      }, (error) => {
-        console.error("Error fetching projects:", error);
-        toast({
-          variant: "destructive",
-          title: "Error de Conexión",
-          description: "No se pudieron cargar los proyectos.",
-        });
-        setLoading(false);
+          const unsubscribe = onSnapshot(q, (querySnapshot: any) => {
+            const userProjects: Project[] = [];
+            querySnapshot.forEach((doc: any) => {
+                userProjects.push(convertFirestoreDataToProject(doc));
+            });
+            userProjects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+            setProjects(userProjects);
+            setLoading(false);
+          }, (error: any) => {
+            console.error("Error fetching projects:", error);
+            toast({
+              variant: "destructive",
+              title: "Error de Conexión",
+              description: "No se pudieron cargar los proyectos.",
+            });
+            setLoading(false);
+          });
+          return () => unsubscribe();
+      }).catch(error => {
+          console.error("Failed to load Firebase modules for projects", error);
+          setLoading(false);
       });
-
-      return () => unsubscribe();
     } else {
       setProjects([]);
       setLoading(false);
@@ -273,10 +470,14 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   }, [projects, user, getProjectById]);
 
   const addProject = async (projectData: AddProjectData): Promise<string | null> => {
-    if (!user || !db) {
+    if (!user) {
       toast({ variant: "destructive", title: "Error", description: "Debes iniciar sesión para crear un proyecto." });
       return null;
     }
+    const { collection, addDoc, Timestamp } = await import('firebase/firestore');
+    const { db } = await import('@/lib/firebase');
+    if (!db) return null;
+    
     try {
       const newProjectRef = await addDoc(collection(db, "projects"), {
         ...projectData,
@@ -298,7 +499,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateProject = async (projectId: string, projectData: UpdateProjectData) => {
+    const { doc, updateDoc } = await import('firebase/firestore');
+    const { db } = await import('@/lib/firebase');
     if (!db) return;
+
     const projectRef = doc(db, 'projects', projectId);
     try {
       await updateDoc(projectRef, projectData as any);
@@ -310,7 +514,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteProject = async (projectId: string) => {
+    const { doc, deleteDoc } = await import('firebase/firestore');
+    const { db } = await import('@/lib/firebase');
     if (!db) return;
+
     const projectRef = doc(db, 'projects', projectId);
     try {
       await deleteDoc(projectRef);
@@ -322,7 +529,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const addTransaction = async (projectId: string, transactionData: AddExpenseInput | AddIncomeInput, type: 'income' | 'expense') => {
+    const { doc, updateDoc, arrayUnion, Timestamp, collection } = await import('firebase/firestore');
+    const { db } = await import('@/lib/firebase');
     if (!db) return;
+    
     const projectRef = doc(db, 'projects', projectId);
     try {
         const transactionForDb = {
@@ -343,7 +553,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateTransaction = async (projectId: string, transactionId: string, transactionData: UpdateExpenseInput | UpdateIncomeInput) => {
+      const { doc, updateDoc, getDoc, Timestamp } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
       if (!db) return;
+
       const projectRef = doc(db, 'projects', projectId);
       try {
           const projectDoc = await getDoc(projectRef);
@@ -366,7 +579,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteTransaction = async (projectId: string, transactionId: string) => {
+      const { doc, updateDoc, getDoc, Timestamp } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
       if (!db) return;
+
       const projectRef = doc(db, 'projects', projectId);
       try {
           const projectDoc = await getDoc(projectRef);
@@ -383,7 +599,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addCategory = async (projectId: string, categoryData: AddCategoryInput, predefinedIcon?: string | null) => {
+    const { doc, updateDoc, arrayUnion, Timestamp } = await import('firebase/firestore');
+    const { db } = await import('@/lib/firebase');
     if (!db) return;
+
     const projectRef = doc(db, 'projects', projectId);
     
     const categoryForDb = {
@@ -408,7 +627,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const updateCategory = async (projectId: string, oldName: string, categoryData: UpdateCategoryInput) => {
+      const { doc, updateDoc, getDoc, Timestamp } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
       if (!db) return;
+
       const projectRef = doc(db, 'projects', projectId);
       try {
           const projectDoc = await getDoc(projectRef);
@@ -442,7 +664,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteCategory = async (projectId: string, categoryName: string) => {
+      const { doc, updateDoc, getDoc, Timestamp } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
       if (!db) return;
+
       const projectRef = doc(db, 'projects', projectId);
        try {
           const projectDoc = await getDoc(projectRef);
@@ -464,9 +689,11 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addEvent = async (projectId: string, eventData: AddEventInput) => {
+    const { doc, updateDoc, arrayUnion, Timestamp, collection } = await import('firebase/firestore');
+    const { db } = await import('@/lib/firebase');
     if (!db) return;
-    const projectRef = doc(db, 'projects', projectId);
 
+    const projectRef = doc(db, 'projects', projectId);
     const eventForDb = {
         title: eventData.title,
         date: Timestamp.fromDate(eventData.date),
@@ -486,7 +713,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateEvent = async (projectId: string, eventId: string, eventData: UpdateEventInput) => {
+    const { doc, updateDoc, getDoc, Timestamp } = await import('firebase/firestore');
+    const { db } = await import('@/lib/firebase');
     if (!db) return;
+
     const projectRef = doc(db, 'projects', projectId);
     try {
         const projectDoc = await getDoc(projectRef);
@@ -504,7 +734,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteEvent = async (projectId: string, eventId: string) => {
+    const { doc, updateDoc, getDoc, Timestamp } = await import('firebase/firestore');
+    const { db } = await import('@/lib/firebase');
     if (!db) return;
+
     const projectRef = doc(db, 'projects', projectId);
     try {
         const projectDoc = await getDoc(projectRef);
@@ -520,7 +753,6 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar el evento." });
     }
   };
-
 
   const contextValue: ProjectsContextType = {
     projects,
@@ -547,6 +779,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     </ProjectsContext.Provider>
   );
 };
+
+
+export const ProjectsProvider = USE_MOCK_DATA ? ProjectsProviderMock : ProjectsProviderFirebase;
+
 
 // --- Custom Hook ---
 

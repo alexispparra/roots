@@ -3,7 +3,7 @@
 
 import { useState } from "react"
 import { sendPasswordResetEmail } from "firebase/auth"
-import { auth, isFirebaseConfigured } from "@/lib/firebase"
+import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -26,36 +26,15 @@ export default function ForgotPasswordPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  // This check is now primarily for local development.
-  // In production, USE_MOCK_DATA will be true, bypassing this.
-  if (!isFirebaseConfigured && !USE_MOCK_DATA) {
-    return (
-       <div className="flex items-center justify-center min-h-svh bg-background">
-          <Card className="mx-auto w-full max-w-md bg-card text-card-foreground border-border">
-            <CardHeader>
-                <CardTitle className="text-2xl font-headline text-center">Error de Configuración</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Firebase no configurado</AlertTitle>
-                    <AlertDescription>
-                    La autenticación de Firebase no está configurada. Para habilitarla, crea un archivo `.env` en la raíz de tu proyecto y añade las variables de entorno de tu proyecto de Firebase. Después, reinicia el servidor de desarrollo.
-                    </AlertDescription>
-                </Alert>
-                 <Button asChild className="w-full mt-4">
-                  <Link href="/">Volver al Inicio</Link>
-                </Button>
-            </CardContent>
-        </Card>
-      </div>
-    )
-  }
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (USE_MOCK_DATA) {
+        setSuccess("Esta función no está disponible en el modo de demostración.");
+        return;
+    }
     if (!auth) {
-      setError("Error de Configuración: La autenticación de Firebase no está disponible.");
+      setError("La configuración de Firebase no está disponible. Por favor, contacta al soporte.");
       return;
     }
 

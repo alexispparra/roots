@@ -8,7 +8,7 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import { useAuth } from "@/contexts/AuthContext";
-import { auth, isFirebaseConfigured } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
@@ -70,6 +70,10 @@ export default function SettingsPage() {
 
   async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
     if (!user) return;
+    if (USE_MOCK_DATA) {
+        toast({ title: "Perfil Actualizado (Demo)", description: "En un entorno real, tu nombre se guardaría." });
+        return;
+    }
     setIsProfileLoading(true);
     try {
       await updateProfile(user, { displayName: values.displayName });
@@ -92,7 +96,10 @@ export default function SettingsPage() {
 
   async function onPasswordSubmit(values: z.infer<typeof passwordFormSchema>) {
     if (!user || !user.email) return;
-
+    if (USE_MOCK_DATA) {
+        setPasswordError("Esta función no está disponible en el modo de demostración.");
+        return;
+    }
     setIsPasswordLoading(true);
     setPasswordError(null);
 
@@ -124,36 +131,6 @@ export default function SettingsPage() {
     }
   }
 
-  // Handle the case where Firebase is not configured.
-  // This check is now primarily for local development.
-  if (!isFirebaseConfigured && !USE_MOCK_DATA) {
-    return (
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline">Configuración de la Cuenta</CardTitle>
-            <CardDescription>Gestiona los ajustes de tu perfil y la seguridad de tu cuenta.</CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle>Función no disponible</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Error de Configuración</AlertTitle>
-                    <AlertDescription>
-                     La autenticación de Firebase no está configurada. Para habilitarla, crea un archivo `.env` en la raíz de tu proyecto y añade las variables de entorno de tu proyecto de Firebase. Después, reinicia el servidor de desarrollo.
-                    </AlertDescription>
-                </Alert>
-            </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Handle loading state while waiting for user data.
   if (loading) {
     return (
         <div className="flex items-center justify-center min-h-[400px]">
@@ -162,7 +139,6 @@ export default function SettingsPage() {
     )
   }
 
-  // This should not be reached if AuthGuard is working, but it's a safeguard.
   if (!user) {
     return null;
   }
@@ -212,7 +188,7 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
               <CardFooter className="border-t px-6 py-4">
-                <Button type="submit" disabled={isProfileLoading || USE_MOCK_DATA}>
+                <Button type="submit" disabled={isProfileLoading}>
                   {isProfileLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Guardar Cambios
                 </Button>
@@ -277,7 +253,7 @@ export default function SettingsPage() {
                 />
               </CardContent>
               <CardFooter className="border-t px-6 py-4">
-                 <Button type="submit" disabled={isPasswordLoading || USE_MOCK_DATA}>
+                 <Button type="submit" disabled={isPasswordLoading}>
                   {isPasswordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Cambiar Contraseña
                 </Button>
