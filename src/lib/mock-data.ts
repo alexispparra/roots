@@ -4,11 +4,8 @@ import type { User } from 'firebase/auth';
 
 // --- CONFIGURATION ---
 // This flag determines if the app uses local mock data or connects to Firebase.
-// Setting this to 'true' ensures the app runs without any Firebase configuration,
-// preventing server crashes if credentials are not set up.
-// For production, this should be 'false' and Firebase credentials must be
-// configured in the hosting environment.
-export const USE_MOCK_DATA = true;
+// Setting this to 'false' enables the full Firebase integration for production.
+export const USE_MOCK_DATA = false;
 
 // --- MOCK USER ---
 // This user is used when USE_MOCK_DATA is true.
