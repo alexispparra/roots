@@ -69,9 +69,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
   useEffect(() => {
     if (expense) {
       const exchangeRate = expense.exchangeRate || 1;
-      const amountUSD = (expense.amountARS && exchangeRate) 
-        ? expense.amountARS / exchangeRate 
-        : 0;
+      const amountUSD = expense.amountARS / (exchangeRate || 1);
 
       form.reset({
         ...expense,

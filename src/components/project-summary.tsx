@@ -28,11 +28,11 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
   const { totalIncome, totalExpenses, balance, expensesByCategory, recentTransactions, overallProgress } = useMemo(() => {
     const income = project.transactions
       .filter(t => t.type === 'income')
-      .reduce((acc, t) => acc + (t.amountARS / t.exchangeRate), 0)
+      .reduce((acc, t) => acc + (t.amountARS / (t.exchangeRate || 1)), 0)
 
     const expenses = project.transactions
       .filter(t => t.type === 'expense')
-      .reduce((acc, t) => acc + (t.amountARS / t.exchangeRate), 0)
+      .reduce((acc, t) => acc + (t.amountARS / (t.exchangeRate || 1)), 0)
 
     const bal = income - expenses
 
@@ -41,7 +41,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
       .filter(t => t.type === 'expense' && t.category)
       .forEach(t => {
         const category = t.category!
-        const amountUSD = t.amountARS / t.exchangeRate
+        const amountUSD = t.amountARS / (t.exchangeRate || 1)
         if (!catExpenses[category]) {
           catExpenses[category] = 0
         }
@@ -208,7 +208,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                                         <div className="text-xs text-muted-foreground">{t.date.toDate().toLocaleDateString('es-ES')}</div>
                                     </TableCell>
                                     <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                      {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountARS / t.exchangeRate)}
+                                      {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountARS / (t.exchangeRate || 1))}
                                     </TableCell>
                                 </TableRow>
                             ))
