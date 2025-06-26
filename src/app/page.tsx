@@ -63,12 +63,11 @@ export default function LandingPage() {
             </section>
             <section className="hidden lg:flex flex-1 justify-center items-center">
               <Image
-                  src="https://placehold.co/1200x800.png"
-                  alt="Dashboard de Roots"
+                  src="/oo_blanco-sin-fondo.png"
+                  alt="Logo de Roots.oo"
                   width={1200}
                   height={800}
-                  className="rounded-xl shadow-2xl w-full max-w-lg"
-                  data-ai-hint="dashboard analytics"
+                  className="w-full max-w-lg"
               />
             </section>
         </div>
