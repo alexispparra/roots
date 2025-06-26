@@ -57,6 +57,7 @@ export type Project = {
   googleSheetId?: string;
   ownerEmail: string;
   participants: Participant[];
+  participantsEmails: string[];
   categories: Category[];
   transactions: Transaction[];
   events: Event[];
@@ -184,6 +185,9 @@ type ProjectsContextType = {
   addEvent: (projectId: string, eventData: AddEventInput) => Promise<void>;
   updateEvent: (projectId: string, eventId: string, eventData: UpdateEventInput) => Promise<void>;
   deleteEvent: (projectId: string, eventId: string) => Promise<void>;
+  addParticipantToProject: (projectId: string, email: string, role: UserRole) => Promise<void>;
+  updateParticipantRoleInProject: (projectId: string, participantEmail: string, newRole: UserRole) => Promise<void>;
+  removeParticipantFromProject: (projectId: string, participantEmail: string) => Promise<void>;
 };
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -596,6 +600,96 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar el evento." });
     }
   };
+  
+  const addParticipantToProject = async (projectId: string, email: string, role: UserRole) => {
+    const firebase = getFirebaseInstances();
+    if (!firebase) {
+      toast({ variant: "destructive", title: "Error", description: "La base de datos no está disponible." });
+      return;
+    }
+    try {
+      const { doc, updateDoc, arrayUnion, getDoc } = await import('firebase/firestore');
+      const projectRef = doc(firebase.db, 'projects', projectId);
+      const projectDoc = await getDoc(projectRef);
+      if (!projectDoc.exists()) throw new Error("Project not found");
+      const projectData = projectDoc.data() as Project;
+
+      if (projectData.participants.some(p => p.email === email)) {
+        toast({ variant: "destructive", title: "Usuario ya existente", description: "Este usuario ya es miembro del proyecto." });
+        return;
+      }
+      
+      const newParticipant: Participant = { email, name: email, role };
+      
+      await updateDoc(projectRef, {
+        participants: arrayUnion(newParticipant),
+        participantsEmails: arrayUnion(email)
+      });
+      toast({ title: "Usuario añadido", description: `${email} ha sido añadido al proyecto.` });
+    } catch (error) {
+      console.error("Error adding participant: ", error);
+      toast({ variant: "destructive", title: "Error", description: "No se pudo añadir al usuario." });
+    }
+  };
+  
+  const updateParticipantRoleInProject = async (projectId: string, participantEmail: string, newRole: UserRole) => {
+    const firebase = getFirebaseInstances();
+    if (!firebase) {
+      toast({ variant: "destructive", title: "Error", description: "La base de datos no está disponible." });
+      return;
+    }
+    try {
+      const { doc, updateDoc, getDoc } = await import('firebase/firestore');
+      const projectRef = doc(firebase.db, 'projects', projectId);
+      const projectDoc = await getDoc(projectRef);
+      if (!projectDoc.exists()) throw new Error("Project not found");
+      const projectData = projectDoc.data() as Project;
+      
+      const newParticipants = projectData.participants.map(p => 
+        p.email === participantEmail ? { ...p, role: newRole } : p
+      );
+      
+      await updateDoc(projectRef, { participants: newParticipants });
+      toast({ title: "Rol actualizado", description: `El rol de ${participantEmail} ha sido actualizado.` });
+    } catch (error) {
+      console.error("Error updating participant role: ", error);
+      toast({ variant: "destructive", title: "Error", description: "No se pudo actualizar el rol." });
+    }
+  };
+  
+  const removeParticipantFromProject = async (projectId: string, participantEmail: string) => {
+    const firebase = getFirebaseInstances();
+    if (!firebase) {
+      toast({ variant: "destructive", title: "Error", description: "La base de datos no está disponible." });
+      return;
+    }
+    try {
+      const { doc, updateDoc, getDoc } = await import('firebase/firestore');
+      const projectRef = doc(firebase.db, 'projects', projectId);
+      const projectDoc = await getDoc(projectRef);
+      if (!projectDoc.exists()) throw new Error("Project not found");
+      const projectData = projectDoc.data() as Project;
+      
+      const admins = projectData.participants.filter(p => p.role === 'admin');
+      if (admins.length === 1 && admins[0].email === participantEmail) {
+        toast({ variant: "destructive", title: "Acción no permitida", description: "No se puede eliminar al último administrador del proyecto." });
+        return;
+      }
+      
+      const newParticipants = projectData.participants.filter(p => p.email !== participantEmail);
+      const newParticipantEmails = projectData.participantsEmails.filter(email => email !== participantEmail);
+      
+      await updateDoc(projectRef, {
+        participants: newParticipants,
+        participantsEmails: newParticipantEmails
+      });
+      toast({ title: "Usuario eliminado", description: `${participantEmail} ha sido eliminado del proyecto.` });
+    } catch (error) {
+      console.error("Error removing participant: ", error);
+      toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar al usuario." });
+    }
+  };
+
 
   const contextValue: ProjectsContextType = {
     projects,
@@ -614,6 +708,9 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     addEvent,
     updateEvent,
     deleteEvent,
+    addParticipantToProject,
+    updateParticipantRoleInProject,
+    removeParticipantFromProject,
   };
 
   return (

@@ -14,11 +14,11 @@ import { Button } from '@/components/ui/button';
 import { ProjectCategoriesTab } from '@/components/project-categories-tab';
 import { ProjectTransactionsTab } from '@/components/project-transactions-tab';
 import { ProjectSummary } from '@/components/project-summary';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { EditProjectDialog } from '@/components/edit-project-dialog';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { ProjectCalendarTab } from './project-calendar-tab';
+import { ProjectTeamTab } from './project-team-tab';
 
 export default function ProjectDetailClient() {
   const searchParams = useSearchParams();
@@ -135,21 +135,7 @@ export default function ProjectDetailClient() {
         </TabsContent>
 
         {isAdmin && <TabsContent value="team">
-           <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Equipo del Proyecto</CardTitle>
-                <CardDescription>Gestiona los participantes y sus permisos en este proyecto.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Alert>
-                    <Users className="h-4 w-4" />
-                    <AlertTitle>Función en Desarrollo</AlertTitle>
-                    <AlertDescription>
-                        La capacidad para añadir, editar y eliminar miembros del equipo y gestionar sus permisos estará disponible en una futura actualización.
-                    </AlertDescription>
-                </Alert>
-            </CardContent>
-          </Card>
+           <ProjectTeamTab project={project} />
         </TabsContent>}
 
       </Tabs>

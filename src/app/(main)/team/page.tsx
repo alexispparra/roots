@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,15 +9,14 @@ export default function TeamPage() {
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Gestión de Equipo y Permisos</CardTitle>
+          <CardTitle className="font-headline">Gestión de Equipo</CardTitle>
           <CardDescription>
-            Asigna roles a los participantes en cada proyecto. Solo los administradores pueden cambiar los permisos.
+            La gestión de equipos y permisos ahora se realiza dentro de cada proyecto específico.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
             <Users className="h-16 w-16 mb-4" />
-          <p>La gestión de equipos estará disponible aquí pronto.</p>
-           <p className="text-xs mt-2">Esta función se habilitará en una futura actualización.</p>
+          <p>Navega a un proyecto para gestionar sus participantes y roles desde la pestaña "Equipo".</p>
         </CardContent>
       </Card>
     </div>
