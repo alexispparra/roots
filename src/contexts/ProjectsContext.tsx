@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { getFirebaseInstances } from '@/lib/firebase';
-import { USE_MOCK_DATA, mockProjects } from '@/lib/mock-data';
 
 // --- Base Type Definitions (Using standard JS Date) ---
 export type UserRole = 'admin' | 'editor' | 'viewer';
@@ -189,79 +188,9 @@ type ProjectsContextType = {
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
 
-// --- Mock Provider ---
-const MockProjectsProvider = ({ children }: { children: ReactNode }) => {
-    const { user } = useAuth();
-    const { toast } = useToast();
-    const [projects, setProjects] = useState<Project[]>(mockProjects);
-    const loading = false;
 
-    const getProjectById = useCallback((id: string | null) => {
-        if (!id) return undefined;
-        return projects.find(p => p.id === id);
-    }, [projects]);
-    
-    const getUserRoleForProject = useCallback((projectId: string): UserRole | null => {
-        if (!user) return null;
-        const project = getProjectById(projectId);
-        if (!project) return null;
-        const participant = project.participants.find(p => p.email === user.email);
-        return participant ? participant.role : null;
-    }, [projects, user, getProjectById]);
-
-    const addProject = async (data: AddProjectData) => {
-        const newProject: Project = {
-            id: `proj-${Date.now()}`,
-            ...data,
-            ownerEmail: user?.email || 'mock-owner@test.com',
-            participants: [{ email: user?.email || '', name: user?.displayName || 'Owner', role: 'admin' }],
-            categories: [],
-            transactions: [],
-            events: [],
-            createdAt: new Date(),
-        };
-        setProjects(prev => [newProject, ...prev]);
-        toast({ title: `Proyecto "${data.name}" creado (mock).` });
-        return newProject.id;
-    }
-    
-    // Implement other mock functions...
-    const updateProject = async (projectId: string, data: UpdateProjectData) => {
-        setProjects(projs => projs.map(p => p.id === projectId ? { ...p, ...data } : p));
-        toast({ title: `Proyecto actualizado (mock).` });
-    }
-    const deleteProject = async (projectId: string) => {
-        setProjects(projs => projs.filter(p => p.id !== projectId));
-        toast({ title: `Proyecto eliminado (mock).` });
-    }
-    // ... and so on for transactions, categories, events.
-    // For brevity in this example, they are simplified.
-    const addTransaction = async () => { toast({ title: "Función no implementada en modo mock."}) }
-    const updateTransaction = async () => { toast({ title: "Función no implementada en modo mock."}) }
-    const deleteTransaction = async () => { toast({ title: "Función no implementada en modo mock."}) }
-    const addCategory = async () => { toast({ title: "Función no implementada en modo mock."}) }
-    const updateCategory = async () => { toast({ title: "Función no implementada en modo mock."}) }
-    const deleteCategory = async () => { toast({ title: "Función no implementada en modo mock."}) }
-    const addEvent = async () => { toast({ title: "Función no implementada en modo mock."}) }
-    const updateEvent = async () => { toast({ title: "Función no implementada en modo mock."}) }
-    const deleteEvent = async () => { toast({ title: "Función no implementada en modo mock."}) }
-
-
-    return (
-        <ProjectsContext.Provider value={{ 
-            projects, loading, getProjectById, getUserRoleForProject, addProject,
-            updateProject, deleteProject, addTransaction, updateTransaction,
-            deleteTransaction, addCategory, updateCategory, deleteCategory,
-            addEvent, updateEvent, deleteEvent
-        }}>
-            {children}
-        </ProjectsContext.Provider>
-    );
-}
-
-
-// --- Firebase Provider ---
-const FirebaseProjectsProvider = ({ children }: { children: ReactNode }) => {
+// --- Production-Ready Firebase Projects Provider ---
+export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -694,20 +623,7 @@ const FirebaseProjectsProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-
-// --- Main Provider ---
-// This is the component you'll use in your layout.
-// It decides whether to use the Mock or Firebase provider.
-export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
-  if (USE_MOCK_DATA) {
-    return <MockProjectsProvider>{children}</MockProjectsProvider>;
-  }
-  return <FirebaseProjectsProvider>{children}</FirebaseProjectsProvider>;
-};
-
-
 // --- Custom Hook ---
-
 export const useProjects = () => {
   const context = useContext(ProjectsContext);
   if (context === undefined) {
