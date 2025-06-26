@@ -28,9 +28,40 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true);
-    setError("Función de registro no disponible en modo de prueba. Serás redirigido.");
-    // In mock mode, the user is already "logged in", so AuthLayout will redirect.
+    setError(null)
+    setIsLoading(true)
+
+    if (password.length < 6) {
+        setError("La contraseña debe tener al menos 6 caracteres.");
+        setIsLoading(false);
+        return;
+    }
+
+    const firebase = getFirebaseInstances()
+    if (!firebase) {
+      setError("Error de Configuración: El servicio de autenticación no está disponible.")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const { createUserWithEmailAndPassword, updateProfile } = await import("firebase/auth")
+      const userCredential = await createUserWithEmailAndPassword(firebase.auth, email, password)
+      
+      const fullName = `${firstName} ${lastName}`.trim();
+      await updateProfile(userCredential.user, { displayName: fullName })
+      
+      // La redirección es manejada por el AuthLayout al detectar el nuevo usuario logueado
+    } catch (error: any) {
+      console.error("Firebase Register Error:", error.code, error.message)
+      if (error.code === 'auth/email-already-in-use') {
+        setError("Este correo electrónico ya está registrado. Intenta iniciar sesión.")
+      } else {
+        setError("Ocurrió un error inesperado al registrar la cuenta.")
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -96,6 +127,7 @@ export default function RegisterPage() {
                     id="password" 
                     type="password" 
                     required
+                    placeholder="Mínimo 6 caracteres"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}

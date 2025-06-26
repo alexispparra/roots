@@ -31,10 +31,25 @@ export default function ForgotPasswordPage() {
     setSuccess(null)
     setIsLoading(true)
 
-    // In mock mode, this feature is not available.
-    setError("Función no disponible en modo de prueba.");
-    setSuccess(null);
-    setIsLoading(false);
+    const firebase = getFirebaseInstances()
+    if (!firebase) {
+      setError("Error de Configuración: El servicio de autenticación no está disponible.")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+        const { sendPasswordResetEmail } = await import("firebase/auth")
+        await sendPasswordResetEmail(firebase.auth, email)
+        setSuccess("Si existe una cuenta con este correo, recibirás un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y spam.")
+    } catch (error: any) {
+        console.error("Firebase Password Reset Error:", error.code, error.message)
+        // No mostramos un error de "usuario no encontrado" por seguridad.
+        // Siempre mostramos el mensaje de éxito.
+        setSuccess("Si existe una cuenta con este correo, recibirás un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y spam.")
+    } finally {
+        setIsLoading(false)
+    }
   }
 
   return (

@@ -17,26 +17,39 @@ import Link from "next/link"
 import { LandingLogo } from "@/components/landing-logo"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useAuth } from "@/contexts/AuthContext"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isFormLoading, setIsFormLoading] = useState(false)
-  const { user } = useAuth(); // We get the user from the mock context
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // In a real scenario, we'd use Firebase here.
-    // In mock mode, the user is already "logged in" via the context,
-    // and the AuthLayout handles the redirection.
-    // This form is effectively a placeholder in mock mode.
-    setIsFormLoading(true);
-    setError("Función de inicio de sesión no disponible en modo de prueba. Serás redirigido.");
+    setError(null)
+    setIsFormLoading(true)
 
-    // The redirect is handled by AuthLayout which sees the mock user
+    const firebase = getFirebaseInstances()
+    if (!firebase) {
+      setError("Error de Configuración: El servicio de autenticación no está disponible.")
+      setIsFormLoading(false)
+      return
+    }
+
+    try {
+      const { signInWithEmailAndPassword } = await import("firebase/auth")
+      await signInWithEmailAndPassword(firebase.auth, email, password)
+      // La redirección es manejada por el AuthLayout al detectar el nuevo estado de autenticación
+    } catch (error: any) {
+      console.error("Firebase Login Error:", error.code, error.message)
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+        setError("El correo electrónico o la contraseña son incorrectos.")
+      } else {
+        setError("Ocurrió un error inesperado. Por favor, inténtalo de nuevo.")
+      }
+    } finally {
+      setIsFormLoading(false)
+    }
   }
 
   return (
