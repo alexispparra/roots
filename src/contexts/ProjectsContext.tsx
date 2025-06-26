@@ -82,7 +82,7 @@ export type AddProjectData = z.infer<typeof AddProjectFormSchema>;
 export const UpdateProjectFormSchema = AddProjectFormSchema;
 export type UpdateProjectData = z.infer<typeof UpdateProjectFormSchema>;
 
-// --- Expense Schemas ---
+// --- Expense Schemas (Corrected Structure) ---
 const BaseExpenseFormSchema = z.object({
   date: z.date({ required_error: "La fecha es requerida." }),
   description: z.string().min(1, "La descripción es requerida."),
@@ -108,7 +108,7 @@ export const UpdateExpenseFormSchema = BaseExpenseFormSchema.extend({ id: z.stri
 export type UpdateExpenseInput = z.infer<typeof UpdateExpenseFormSchema>;
 
 
-// --- Income Schemas ---
+// --- Income Schemas (Corrected Structure) ---
 const BaseIncomeFormSchema = z.object({
   date: z.date({ required_error: "La fecha es requerida." }),
   description: z.string().min(1, "La descripción es requerida."),
@@ -130,7 +130,7 @@ export const UpdateIncomeFormSchema = BaseIncomeFormSchema.extend({ id: z.string
 export type UpdateIncomeInput = z.infer<typeof UpdateIncomeFormSchema>;
 
 
-// --- Category Schemas ---
+// --- Category Schemas (Corrected Structure) ---
 const BaseCategoryFormSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
   budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
