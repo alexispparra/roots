@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { LandingLogo } from "@/components/landing-logo";
-import Image from "next/image";
+import { LandingIllustration } from "@/components/landing-illustration";
 import Link from "next/link";
 import { Loader2 } from 'lucide-react';
 
@@ -62,14 +62,7 @@ export default function LandingPage() {
               </div>
             </section>
             <section className="hidden lg:flex flex-1 justify-center items-center">
-              <Image
-                  src="https://placehold.co/500x500.png"
-                  alt="Ilustración de la aplicación"
-                  data-ai-hint="app illustration"
-                  width={500}
-                  height={500}
-                  className="w-full max-w-lg object-contain"
-              />
+              <LandingIllustration className="w-full max-w-lg" />
             </section>
         </div>
       </main>
