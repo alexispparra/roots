@@ -4,7 +4,7 @@
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { PlusCircle } from "lucide-react"
+import { PlusCircle, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
@@ -27,11 +27,13 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { useProjects, AddProjectFormSchema, type AddProjectData } from "@/contexts/ProjectsContext"
+import { useProjects } from "@/contexts/ProjectsContext"
+import { AddProjectFormSchema, type AddProjectData } from "@/lib/types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function CreateProjectDialog() {
   const [open, setOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { addProject } = useProjects();
   const router = useRouter();
   
@@ -46,12 +48,14 @@ export function CreateProjectDialog() {
   })
 
   async function onSubmit(values: AddProjectData) {
+    setIsSubmitting(true);
     const newProjectId = await addProject(values);
     if (newProjectId) {
       setOpen(false)
       form.reset()
       router.push(`/project-detail?id=${newProjectId}`);
     }
+    setIsSubmitting(false);
   }
 
   return (
@@ -139,7 +143,10 @@ export function CreateProjectDialog() {
               />
             </div>
             <DialogFooter>
-              <Button type="submit">Crear Proyecto</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Crear Proyecto
+              </Button>
             </DialogFooter>
           </form>
         </Form>

@@ -35,7 +35,8 @@ import { CategoryIcon } from "./category-icon"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Calendar } from "./ui/calendar"
 import { cn } from "@/lib/utils"
-import { AddCategoryFormSchema, type AddCategoryInput } from "@/contexts/ProjectsContext"
+import { AddCategoryFormSchema, type AddCategoryInput } from "@/lib/types"
+import { useProjects } from "@/contexts/ProjectsContext"
 
 type AddCategoryDialogProps = {
   onAddCustomCategory: (data: AddCategoryInput) => void;

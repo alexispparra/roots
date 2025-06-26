@@ -34,7 +34,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { AddIncomeFormSchema, type AddIncomeInput } from "@/contexts/ProjectsContext"
+import { AddIncomeFormSchema, type AddIncomeInput } from "@/lib/types"
 
 type CreateIncomeDialogProps = {
   onAddIncome: (data: AddIncomeInput) => void;

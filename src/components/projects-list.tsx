@@ -1,7 +1,8 @@
+
 "use client"
 
 import { useProjects } from "@/contexts/ProjectsContext";
-import type { ProjectStatus } from "@/contexts/ProjectsContext";
+import type { ProjectStatus } from "@/lib/types";
 import type { VariantProps } from "class-variance-authority";
 import { Loader2, Briefcase } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";

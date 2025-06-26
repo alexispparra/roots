@@ -44,7 +44,7 @@ import {
 import { CameraCaptureDialog } from "./camera-capture-dialog"
 import Image from 'next/image'
 import { Separator } from "./ui/separator"
-import { AddExpenseFormSchema, type AddExpenseInput } from "@/contexts/ProjectsContext"
+import { AddExpenseFormSchema, type AddExpenseInput } from "@/lib/types"
 
 type CreateExpenseDialogProps = {
   categories: { name: string }[]

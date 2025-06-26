@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useProjects } from '@/contexts/ProjectsContext';
-import type { Project, UpdateProjectData } from "@/contexts/ProjectsContext";
+import type { Project, UpdateProjectData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

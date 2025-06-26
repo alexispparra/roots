@@ -26,7 +26,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { type Project, UpdateProjectFormSchema, type UpdateProjectData } from "@/contexts/ProjectsContext"
+import { useProjects } from "@/contexts/ProjectsContext"
+import { type Project, UpdateProjectFormSchema, type UpdateProjectData } from "@/lib/types"
 
 type EditProjectDialogProps = {
   project: Project | null;

@@ -31,7 +31,7 @@ import { Slider } from "@/components/ui/slider"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
-import { type Category, UpdateCategoryFormSchema, type UpdateCategoryInput } from "@/contexts/ProjectsContext"
+import { type Category, UpdateCategoryFormSchema, type UpdateCategoryInput } from "@/lib/types"
 import { ScrollArea } from "./ui/scroll-area"
 import { Checkbox } from "./ui/checkbox"
 

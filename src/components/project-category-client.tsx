@@ -3,8 +3,8 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useState, useMemo } from "react"
-import { useProjects, type AddExpenseInput, type UpdateExpenseInput } from '@/contexts/ProjectsContext'
-import type { Project, Transaction, Category } from "@/contexts/ProjectsContext"
+import { useProjects } from '@/contexts/ProjectsContext'
+import type { Project, Transaction, Category, AddExpenseInput, UpdateExpenseInput } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"

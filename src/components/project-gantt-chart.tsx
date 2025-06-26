@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from 'react';
-import type { Category } from '@/contexts/ProjectsContext';
+import type { Category } from '@/lib/types';
 import { differenceInDays, addDays, format, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';

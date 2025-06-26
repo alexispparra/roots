@@ -7,7 +7,7 @@ import { es } from "date-fns/locale";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, GanttChartSquare, CalendarPlus, MoreHorizontal, Trash2, Bell } from "lucide-react";
-import { type Project, type Category, type Event, type AddEventInput } from "@/contexts/ProjectsContext";
+import { type Project, type Category, type Event, type AddEventInput } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { useProjects } from "@/contexts/ProjectsContext";

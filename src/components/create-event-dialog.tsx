@@ -34,7 +34,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { AddEventFormSchema, type AddEventInput } from "@/contexts/ProjectsContext"
+import { AddEventFormSchema, type AddEventInput } from "@/lib/types"
 
 type CreateEventDialogProps = {
   onAddEvent: (data: AddEventInput) => void;
