@@ -69,7 +69,7 @@ export default function SettingsPage() {
   async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
     const firebase = getFirebaseInstances();
     if (!user || !firebase) {
-        toast({ variant: "destructive", title: "Error", description: "No se puede actualizar el perfil. Servicio no disponible." });
+        toast({ variant: "destructive", title: "Error de Configuración", description: "No se pudo conectar a Firebase. Revisa 'apphosting.yaml'." });
         return;
     }
 
@@ -97,7 +97,7 @@ export default function SettingsPage() {
   async function onPasswordSubmit(values: z.infer<typeof passwordFormSchema>) {
     const firebase = getFirebaseInstances();
     if (!user || !user.email || !firebase) {
-        setPasswordError("El servicio de autenticación no está disponible.");
+        setPasswordError("Error de Configuración: No se pudo conectar a Firebase. Revisa 'apphosting.yaml'.");
         return;
     }
 

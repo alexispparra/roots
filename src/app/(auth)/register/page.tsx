@@ -39,7 +39,7 @@ export default function RegisterPage() {
 
     const firebase = getFirebaseInstances()
     if (!firebase) {
-      setError("Error de Configuración: El servicio de autenticación no está disponible.")
+      setError("Error de Configuración: No se pudo conectar a Firebase. Verifica que las variables de entorno estén configuradas en 'apphosting.yaml' y que el despliegue se haya completado.")
       setIsLoading(false)
       return
     }
