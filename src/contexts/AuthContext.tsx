@@ -10,6 +10,7 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   isAppAdmin: boolean;
+  configError: string | null;
 };
 
 // --- Context Object ---
@@ -20,24 +21,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAppAdmin, setIsAppAdmin] = useState(false);
+  const [configError, setConfigError] = useState<string | null>(null);
 
   useEffect(() => {
     const firebase = getFirebaseInstances();
-    // If firebase is not configured, we are in a state where auth cannot function.
-    // We stop loading and the user remains null.
+    
     if (!firebase) {
+      setConfigError(
+        "La aplicación no puede conectar con Firebase porque las credenciales no están configuradas en el entorno. " +
+        "Esto es un problema de configuración del despliegue, no un error en el código de la aplicación. " +
+        "La aplicación no puede funcionar sin estas claves."
+      );
       setLoading(false);
       return;
     }
 
     let unsubscribe: () => void;
     
-    // Dynamically import auth functions to ensure they only run when firebase is available.
     import('firebase/auth').then(({ onAuthStateChanged }) => {
       unsubscribe = onAuthStateChanged(firebase.auth, (user) => {
         setUser(user);
         
-        // Check if the logged-in user is the designated application admin.
         const adminEmail = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL;
         if (user && adminEmail && user.email === adminEmail) {
           setIsAppAdmin(true);
@@ -49,6 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     }).catch(error => {
       console.error("Critical Error: Failed to load Firebase auth modules.", error);
+      setConfigError("Error irrecuperable al cargar los módulos de Firebase. Revisa la consola del navegador y del servidor para más detalles.");
       setLoading(false);
     });
 
@@ -61,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAppAdmin }}>
+    <AuthContext.Provider value={{ user, loading, isAppAdmin, configError }}>
       {children}
     </AuthContext.Provider>
   );

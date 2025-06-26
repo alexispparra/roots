@@ -31,7 +31,8 @@ export default function LoginPage() {
 
     const firebase = getFirebaseInstances()
     if (!firebase) {
-      setError("Error de Configuración: La app no puede leer las claves de Firebase. Por favor, revisa tu archivo 'apphosting.yaml'. Asegúrate de que todas las variables de entorno 'NEXT_PUBLIC_FIREBASE_*' estén completas y correctas en las secciones 'build' y 'runConfig', y vuelve a desplegar la aplicación.")
+      // This message is a fallback. The main, more detailed error is now handled globally.
+      setError("El servicio de autenticación no está disponible. Revisa la configuración.")
       setIsFormLoading(false)
       return
     }
