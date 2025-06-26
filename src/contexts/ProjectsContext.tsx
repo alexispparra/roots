@@ -104,7 +104,9 @@ const expenseRefinementMessage = {
 export const AddExpenseFormSchema = BaseExpenseFormSchema.refine(expenseRefinement, expenseRefinementMessage);
 export type AddExpenseInput = z.infer<typeof AddExpenseFormSchema>;
 
-export const UpdateExpenseFormSchema = BaseExpenseFormSchema.extend({ id: z.string() }).refine(expenseRefinement, expenseRefinementMessage);
+// Extend the base schema first, then refine the extended version.
+const UpdateExpenseBaseSchema = BaseExpenseFormSchema.extend({ id: z.string() });
+export const UpdateExpenseFormSchema = UpdateExpenseBaseSchema.refine(expenseRefinement, expenseRefinementMessage);
 export type UpdateExpenseInput = z.infer<typeof UpdateExpenseFormSchema>;
 
 
@@ -126,7 +128,9 @@ const incomeRefinementMessage = {
 export const AddIncomeFormSchema = BaseIncomeFormSchema.refine(incomeRefinement, incomeRefinementMessage);
 export type AddIncomeInput = z.infer<typeof AddIncomeFormSchema>;
 
-export const UpdateIncomeFormSchema = BaseIncomeFormSchema.extend({ id: z.string() }).refine(incomeRefinement, incomeRefinementMessage);
+// Extend the base schema first, then refine the extended version.
+const UpdateIncomeBaseSchema = BaseIncomeFormSchema.extend({ id: z.string() });
+export const UpdateIncomeFormSchema = UpdateIncomeBaseSchema.refine(incomeRefinement, incomeRefinementMessage);
 export type UpdateIncomeInput = z.infer<typeof UpdateIncomeFormSchema>;
 
 
@@ -147,11 +151,13 @@ const categoryDateRefinementMessage = { message: "La fecha de fin no puede ser a
 export const AddCategoryFormSchema = BaseCategoryFormSchema.refine(categoryDateRefinement, categoryDateRefinementMessage);
 export type AddCategoryInput = z.infer<typeof AddCategoryFormSchema>;
 
-export const UpdateCategoryFormSchema = BaseCategoryFormSchema.extend({
+// Extend the base schema first, then refine the extended version.
+const UpdateCategoryBaseSchema = BaseCategoryFormSchema.extend({
     icon: z.string().optional().nullable(),
     progress: z.coerce.number().min(0).max(100).optional().nullable(),
     dependencies: z.array(z.string()).optional(),
-}).refine(categoryDateRefinement, categoryDateRefinementMessage);
+});
+export const UpdateCategoryFormSchema = UpdateCategoryBaseSchema.refine(categoryDateRefinement, categoryDateRefinementMessage);
 export type UpdateCategoryInput = z.infer<typeof UpdateCategoryFormSchema>;
 
 
