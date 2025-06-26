@@ -39,7 +39,7 @@ export default function RegisterPage() {
 
     const firebase = getFirebaseInstances()
     if (!firebase) {
-      setError("Error de Configuración: No se pudo conectar a Firebase. Por favor, verifica que las variables de entorno NEXT_PUBLIC_FIREBASE_* estén correctamente configuradas en tu archivo apphosting.yaml y que el despliegue se haya completado.")
+      setError("Error de Configuración: La app no puede leer las claves de Firebase. Por favor, revisa tu archivo 'apphosting.yaml'. Asegúrate de que todas las variables de entorno 'NEXT_PUBLIC_FIREBASE_*' estén completas y correctas en las secciones 'build' y 'runConfig', y vuelve a desplegar la aplicación.")
       setIsLoading(false)
       return
     }
