@@ -21,17 +21,28 @@ let db: Firestore | null = null;
 const isConfigured = firebaseConfig.apiKey && firebaseConfig.projectId;
 
 if (isConfigured) {
-  if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApp();
-  }
-  auth = getAuth(app);
-  db = getFirestore(app);
-} else {
-  // This message is helpful for local development.
-  // In a deployed App Hosting environment, the config should always be present.
-  console.warn("Firebase configuration not found. The app will run in a read-only demonstration mode.");
+    try {
+        if (getApps().length === 0) {
+            app = initializeApp(firebaseConfig);
+        } else {
+            app = getApp();
+        }
+        auth = getAuth(app);
+        db = getFirestore(app);
+    } catch (error) {
+        console.error("Firebase initialization error:", error);
+        // If initialization fails, fall back to demo mode.
+        app = null;
+        auth = null;
+        db = null;
+    }
 }
+
+if (!app) {
+    // This message is helpful for local development.
+    // In a deployed App Hosting environment, the config should always be present.
+    console.warn("Firebase not configured or initialization failed. The app will run in a read-only demonstration mode.");
+}
+
 
 export { app, auth, db };
