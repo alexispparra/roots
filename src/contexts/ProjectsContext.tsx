@@ -54,7 +54,6 @@ export type Project = {
   name:string;
   description?: string;
   address: string;
-  googleSheetId?: string;
   ownerEmail: string;
   participants: Participant[];
   participantsEmails: string[];
@@ -72,7 +71,6 @@ export const AddProjectFormSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
   description: z.string().optional(),
   address: z.string().min(1, "La dirección es requerida."),
-  googleSheetId: z.string().optional(),
   status: z.enum(['planning', 'in-progress', 'completed', 'on-hold']),
 });
 export type AddProjectData = z.infer<typeof AddProjectFormSchema>;

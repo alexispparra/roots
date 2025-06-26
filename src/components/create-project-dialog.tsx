@@ -5,6 +5,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { PlusCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -32,21 +33,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export function CreateProjectDialog() {
   const [open, setOpen] = useState(false)
   const { addProject } = useProjects();
+  const router = useRouter();
+  
   const form = useForm<AddProjectData>({
     resolver: zodResolver(AddProjectFormSchema),
     defaultValues: {
       name: "",
       description: "",
       address: "",
-      googleSheetId: "",
       status: "planning",
     },
   })
 
-  function onSubmit(values: AddProjectData) {
-    addProject(values);
-    setOpen(false)
-    form.reset()
+  async function onSubmit(values: AddProjectData) {
+    const newProjectId = await addProject(values);
+    if (newProjectId) {
+      setOpen(false)
+      form.reset()
+      router.push(`/project-detail?id=${newProjectId}`);
+    }
   }
 
   return (
@@ -104,19 +109,6 @@ export function CreateProjectDialog() {
                     <FormLabel>Dirección</FormLabel>
                     <FormControl>
                       <Input placeholder="Ej: Av. Corrientes 123, CABA" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name="googleSheetId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ID de la Hoja de Google Sheets (Opcional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Pega aquí el ID de tu hoja de cálculo" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

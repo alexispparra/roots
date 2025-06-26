@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useProjects, type Project, UpdateProjectFormSchema, type UpdateProjectData } from "@/contexts/ProjectsContext"
+import { type Project, UpdateProjectFormSchema, type UpdateProjectData } from "@/contexts/ProjectsContext"
 
 type EditProjectDialogProps = {
   project: Project | null;
@@ -48,7 +48,6 @@ export function EditProjectDialog({ project, isOpen, onOpenChange, onUpdateProje
         name: project.name,
         description: project.description ?? "",
         address: project.address,
-        googleSheetId: project.googleSheetId ?? "",
         status: project.status,
       })
     }
@@ -109,19 +108,6 @@ export function EditProjectDialog({ project, isOpen, onOpenChange, onUpdateProje
                     <FormLabel>Dirección</FormLabel>
                     <FormControl>
                       <Input placeholder="Ej: Av. Corrientes 123, CABA" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name="googleSheetId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ID de la Hoja de Google Sheets (Opcional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Pega aquí el ID de tu hoja de cálculo" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

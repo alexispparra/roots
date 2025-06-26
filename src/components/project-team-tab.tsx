@@ -40,6 +40,10 @@ export function ProjectTeamTab({ project }: { project: Project }) {
   });
   
   const onSubmit = (data: AddParticipantFormData) => {
+    if (data.email === currentUser?.email) {
+      form.setError("email", { message: "No puedes invitarte a ti mismo al proyecto." });
+      return;
+    }
     addParticipantToProject(project.id, data.email, data.role);
     form.reset();
   };
@@ -160,7 +164,7 @@ export function ProjectTeamTab({ project }: { project: Project }) {
                                 )}
                             </TableCell>
                             <TableCell>
-                                {participant.email !== currentUser?.email && (
+                                {participant.role !== 'admin' && (
                                     <Button 
                                         variant="ghost" 
                                         size="icon" 
@@ -188,4 +192,3 @@ export function ProjectTeamTab({ project }: { project: Project }) {
     </>
   );
 }
-
