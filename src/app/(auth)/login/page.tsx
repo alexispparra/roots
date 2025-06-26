@@ -2,8 +2,7 @@
 "use client"
 
 import { useState } from "react"
-import { signInWithEmailAndPassword } from "firebase/auth"
-import { auth } from "@/lib/firebase"
+import { getFirebaseInstances } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -18,7 +17,6 @@ import Link from "next/link"
 import { LandingLogo } from "@/components/landing-logo"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { USE_MOCK_DATA } from "@/lib/mock-data"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -28,14 +26,10 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-     if (USE_MOCK_DATA) {
-        // In mock mode, login is handled by the AuthContext and AuthLayout.
-        // This form submission is effectively disabled.
-        return;
-    }
 
-    if (!auth) {
-      setError("La configuración de Firebase no está disponible. Por favor, contacta al soporte.");
+    const firebase = getFirebaseInstances();
+    if (!firebase) {
+      setError("Error de Configuración: El servicio de autenticación no está disponible. Por favor, contacta al soporte.");
       return;
     }
 
@@ -43,7 +37,8 @@ export default function LoginPage() {
     setIsFormLoading(true)
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const { signInWithEmailAndPassword } = await import("firebase/auth");
+      await signInWithEmailAndPassword(firebase.auth, email, password);
       // The redirection is handled by AuthLayout
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {

@@ -13,43 +13,56 @@ const firebaseConfig = {
 };
 
 // This boolean is the single source of truth for Firebase configuration status.
-// We explicitly check if the values are strings and have some length.
 export const isFirebaseConfigured =
-  typeof firebaseConfig.apiKey === 'string' &&
-  firebaseConfig.apiKey.length > 0 &&
-  typeof firebaseConfig.projectId === 'string' &&
-  firebaseConfig.projectId.length > 0;
+  firebaseConfig.apiKey &&
+  firebaseConfig.authDomain &&
+  firebaseConfig.projectId &&
+  firebaseConfig.storageBucket &&
+  firebaseConfig.messagingSenderId &&
+  firebaseConfig.appId;
 
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
-let db: Firestore | null = null;
+// This object will hold the initialized Firebase instances.
+// It's declared once and reused to avoid re-initialization (singleton pattern).
+let firebaseInstances: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;
 
-// The initialization logic is wrapped in a self-executing function
-// to ensure it only runs once and handles all errors gracefully.
-(function initializeFirebase() {
-  if (isFirebaseConfigured) {
-    try {
-      if (getApps().length === 0) {
-        app = initializeApp(firebaseConfig);
-      } else {
-        app = getApp();
-      }
-      auth = getAuth(app);
-      db = getFirestore(app);
-    } catch (error) {
-      console.error("CRITICAL: Firebase initialization failed.", error);
-      // Explicitly set everything to null on failure to prevent partial initialization.
-      app = null;
-      auth = null;
-      db = null;
-    }
-  } else {
-    // This is not an error, just a state of the app.
-    // It's useful for developers to see this warning locally.
-    if (process.env.NODE_ENV === 'development') {
-      console.warn("Firebase not configured. The app will run in a read-only demonstration mode. Please provide Firebase config in your .env file.");
-    }
+/**
+ * A robust function to get initialized Firebase services.
+ * It ensures Firebase is initialized only once and only if configuration is provided.
+ * This function is safe to call from both server and client components.
+ * @returns An object with Firebase services (app, auth, db) or null if not configured.
+ */
+export function getFirebaseInstances() {
+  // If already initialized, return the instances immediately.
+  if (firebaseInstances) {
+    return firebaseInstances;
   }
-})();
 
-export { app, auth, db };
+  // If Firebase is not configured (missing environment variables),
+  // log a warning in development and return null.
+  if (!isFirebaseConfigured) {
+    if (process.env.NODE_ENV === 'development') {
+        console.warn("Firebase is not configured. Please provide Firebase config in your environment variables to enable full functionality.");
+    }
+    return null;
+  }
+
+  try {
+    // Initialize Firebase app, reusing the existing app if one exists.
+    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Store the initialized instances for future calls.
+    firebaseInstances = { app, auth, db };
+    return firebaseInstances;
+
+  } catch (error) {
+    console.error("CRITICAL: Firebase initialization failed.", error);
+    // In case of an unexpected error during initialization, ensure we return null.
+    return null;
+  }
+}
+
+// For convenience, you can also export the individual services, but it's often
+// safer to use getFirebaseInstances() to ensure you handle the unconfigured case.
+export const { app, auth, db } = getFirebaseInstances() ?? { app: null, auth: null, db: null };

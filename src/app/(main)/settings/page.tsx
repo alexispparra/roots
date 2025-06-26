@@ -6,9 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
-import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import { useAuth } from "@/contexts/AuthContext";
-import { auth } from "@/lib/firebase";
+import { getFirebaseInstances } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
-import { USE_MOCK_DATA } from "@/lib/mock-data";
 
 // Schemas
 const profileFormSchema = z.object({
@@ -69,13 +67,15 @@ export default function SettingsPage() {
   }, [user, profileForm]);
 
   async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
-    if (!user) return;
-    if (USE_MOCK_DATA) {
-        toast({ title: "Perfil Actualizado (Demo)", description: "En un entorno real, tu nombre se guardaría." });
+    const firebase = getFirebaseInstances();
+    if (!user || !firebase) {
+        toast({ variant: "destructive", title: "Error", description: "No se puede actualizar el perfil. Servicio no disponible." });
         return;
     }
+
     setIsProfileLoading(true);
     try {
+      const { updateProfile } = await import("firebase/auth");
       await updateProfile(user, { displayName: values.displayName });
       toast({
         title: "Perfil Actualizado",
@@ -95,15 +95,17 @@ export default function SettingsPage() {
   }
 
   async function onPasswordSubmit(values: z.infer<typeof passwordFormSchema>) {
-    if (!user || !user.email) return;
-    if (USE_MOCK_DATA) {
-        setPasswordError("Esta función no está disponible en el modo de demostración.");
+    const firebase = getFirebaseInstances();
+    if (!user || !user.email || !firebase) {
+        setPasswordError("El servicio de autenticación no está disponible.");
         return;
     }
+
     setIsPasswordLoading(true);
     setPasswordError(null);
 
     try {
+      const { EmailAuthProvider, reauthenticateWithCredential, updatePassword } = await import("firebase/auth");
       const credential = EmailAuthProvider.credential(user.email, values.currentPassword);
       await reauthenticateWithCredential(user, credential);
       await updatePassword(user, values.newPassword);
@@ -113,10 +115,8 @@ export default function SettingsPage() {
         description: "Tu contraseña ha sido cambiada. Se cerrará tu sesión por seguridad.",
       });
 
-      if(auth) {
-        await auth.signOut();
-        router.push("/login");
-      }
+      await firebase.auth.signOut();
+      router.push("/login");
 
     } catch (error: any) {
       if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {

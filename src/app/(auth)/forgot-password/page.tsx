@@ -2,8 +2,7 @@
 "use client"
 
 import { useState } from "react"
-import { sendPasswordResetEmail } from "firebase/auth"
-import { auth } from "@/lib/firebase"
+import { getFirebaseInstances } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -18,7 +17,6 @@ import Link from "next/link"
 import { LandingLogo } from "@/components/landing-logo"
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { USE_MOCK_DATA } from "@/lib/mock-data"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -29,12 +27,10 @@ export default function ForgotPasswordPage() {
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (USE_MOCK_DATA) {
-        setSuccess("Esta función no está disponible en el modo de demostración.");
-        return;
-    }
-    if (!auth) {
-      setError("La configuración de Firebase no está disponible. Por favor, contacta al soporte.");
+    
+    const firebase = getFirebaseInstances();
+    if (!firebase) {
+      setError("Error de Configuración: El servicio de autenticación no está disponible. Por favor, contacta al soporte.");
       return;
     }
 
@@ -43,7 +39,8 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      await sendPasswordResetEmail(auth, email);
+      const { sendPasswordResetEmail } = await import("firebase/auth");
+      await sendPasswordResetEmail(firebase.auth, email);
       setSuccess("Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Por favor, revisa tu bandeja de entrada (y la carpeta de spam).");
     } catch (err: any) {
       // Don't reveal if the user exists or not, but log the error for debugging

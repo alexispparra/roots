@@ -18,7 +18,7 @@ import { Navigation } from "@/components/navigation";
 import { Logo } from "@/components/logo";
 import { ProjectsProvider } from "@/contexts/ProjectsContext";
 import { Button } from "@/components/ui/button";
-import { auth } from "@/lib/firebase";
+import { getFirebaseInstances } from "@/lib/firebase";
 import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -41,16 +41,17 @@ export default function MainLayout({
 
 
   const handleLogout = async () => {
-    if (!auth) {
+    const firebase = getFirebaseInstances();
+    if (!firebase) {
         toast({
             variant: "destructive",
             title: "Error de Configuración",
-            description: "La función de cerrar sesión no está disponible en modo demostración.",
+            description: "El servicio de autenticación no está disponible.",
         });
         return;
     }
     try {
-        await auth.signOut();
+        await firebase.auth.signOut();
         toast({ title: "Has cerrado sesión." });
         // La redirección a /login es manejada por el useEffect de arriba
         // cuando el estado del usuario se vuelve nulo.

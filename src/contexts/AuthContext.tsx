@@ -2,8 +2,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { USE_MOCK_DATA, mockUser } from '@/lib/mock-data';
 import type { User } from 'firebase/auth';
+import { getFirebaseInstances } from '@/lib/firebase';
 
 // --- Type Definition ---
 type AuthContextType = {
@@ -16,56 +16,48 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 
-// --- Mock Provider ---
-const AuthProviderMock = ({ children }: { children: ReactNode }) => {
-  const [user] = useState<User | null>(mockUser);
-  const [loading] = useState(false);
-  const [isAppAdmin] = useState(true); // Simulate admin for testing
-
-  return (
-    <AuthContext.Provider value={{ user, loading, isAppAdmin }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-
 // --- Firebase Provider ---
-const AuthProviderFirebase = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAppAdmin, setIsAppAdmin] = useState(false);
 
   useEffect(() => {
-    // Dynamic import of firebase modules only in the firebase provider
-    Promise.all([
-        import('firebase/auth'),
-        import('@/lib/firebase')
-    ]).then(([{ onAuthStateChanged }, { auth }]) => {
-        if (auth) {
-            const unsubscribe = onAuthStateChanged(auth, (user) => {
-              setUser(user);
-              if (user && process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL && user.email === process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL) {
-                  setIsAppAdmin(true);
-              } else {
-                  setIsAppAdmin(false);
-              }
-              setLoading(false);
-            });
-            return () => unsubscribe();
-        } else {
-            // This case handles when Firebase is not configured in .env
-            setUser(null);
-            setIsAppAdmin(false);
-            setLoading(false);
-        }
-    }).catch(error => {
-        // This case handles if the dynamic import itself fails
-        console.error("Failed to load Firebase auth modules", error);
+    // Attempt to get Firebase instances. If not configured, this will return null.
+    const firebase = getFirebaseInstances();
+
+    // If Firebase is not configured, we stop loading and set user to null.
+    // This is the safe path that prevents crashes.
+    if (!firebase) {
+        setLoading(false);
         setUser(null);
         setIsAppAdmin(false);
+        return;
+    }
+
+    // If Firebase is configured, dynamically import auth functions and set up the listener.
+    let unsubscribe: () => void;
+    import('firebase/auth').then(({ onAuthStateChanged }) => {
+        unsubscribe = onAuthStateChanged(firebase.auth, (user) => {
+            setUser(user);
+            if (user && process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL && user.email === process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL) {
+                setIsAppAdmin(true);
+            } else {
+                setIsAppAdmin(false);
+            }
+            setLoading(false);
+        });
+    }).catch(error => {
+        console.error("Failed to load Firebase auth modules", error);
         setLoading(false);
     });
+
+    // Cleanup subscription on unmount
+    return () => {
+        if (unsubscribe) {
+            unsubscribe();
+        }
+    };
   }, []);
 
   return (
@@ -74,12 +66,6 @@ const AuthProviderFirebase = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
-
-
-// --- Main Exported Provider ---
-// This determines which provider to use based on the configuration.
-export const AuthProvider = USE_MOCK_DATA ? AuthProviderMock : AuthProviderFirebase;
-
 
 // --- Custom Hook ---
 export const useAuth = () => {

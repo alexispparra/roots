@@ -2,8 +2,7 @@
 "use client"
 
 import { useState } from "react"
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
-import { auth } from "@/lib/firebase"
+import { getFirebaseInstances } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -18,7 +17,6 @@ import Link from "next/link"
 import { LandingLogo } from "@/components/landing-logo"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { USE_MOCK_DATA } from "@/lib/mock-data"
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("")
@@ -30,14 +28,13 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-     if (USE_MOCK_DATA) {
-        // In mock mode, this function does nothing as auth is handled by AuthContext
-        return;
-    }
-    if (!auth) {
-      setError("La configuración de Firebase no está disponible. Por favor, contacta al soporte.");
+    
+    const firebase = getFirebaseInstances();
+    if (!firebase) {
+      setError("Error de Configuración: El servicio de autenticación no está disponible. Por favor, contacta al soporte.");
       return;
     }
+    
     if (password.length < 6) {
         setError("La contraseña debe tener al menos 6 caracteres.");
         return;
@@ -46,7 +43,8 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      const { createUserWithEmailAndPassword, updateProfile } = await import("firebase/auth");
+      const userCredential = await createUserWithEmailAndPassword(firebase.auth, email, password)
       
       if (userCredential.user) {
           await updateProfile(userCredential.user, {

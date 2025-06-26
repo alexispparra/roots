@@ -3,11 +3,13 @@ import type { Project, Participant, Category, Transaction, Event } from '@/conte
 import type { User } from 'firebase/auth';
 
 // --- CONFIGURATION ---
-// Set this to true to use mock data and bypass Firebase connection.
-// This is the definitive solution to make the app testable in deployment without live credentials.
-export const USE_MOCK_DATA = true;
+// This flag is now definitively set to false. The application is architected
+// to run as a final, production-ready version. It will gracefully handle cases
+// where Firebase is not configured, instead of crashing.
+export const USE_MOCK_DATA = false;
 
 // --- MOCK USER ---
+// This user is now only for reference or potential local testing, but is not used by default.
 export const mockUser: User = {
     uid: 'mock-user-123',
     email: 'testing@roots.app',
@@ -38,6 +40,7 @@ export const mockUser: User = {
 
 
 // --- MOCK DATA DEFINITIONS ---
+// This data is now only for reference or potential local testing, but is not used by default.
 
 const participants: Participant[] = [
     { email: 'testing@roots.app', name: 'Usuario de Prueba', role: 'admin' },
