@@ -82,8 +82,8 @@ export type AddProjectData = z.infer<typeof AddProjectFormSchema>;
 export const UpdateProjectFormSchema = AddProjectFormSchema;
 export type UpdateProjectData = z.infer<typeof UpdateProjectFormSchema>;
 
-
-export const AddExpenseFormSchema = z.object({
+// --- Expense Schemas ---
+const BaseExpenseFormSchema = z.object({
   date: z.date({ required_error: "La fecha es requerida." }),
   description: z.string().min(1, "La descripción es requerida."),
   category: z.string().min(1, "La categoría es requerida."),
@@ -93,54 +93,69 @@ export const AddExpenseFormSchema = z.object({
   exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").default(1),
   amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
   attachmentDataUrl: z.string().optional(),
-}).refine(data => data.amountARS > 0 || data.amountUSD > 0, {
+});
+
+const expenseRefinement = (data: { amountARS: number, amountUSD: number }) => data.amountARS > 0 || data.amountUSD > 0;
+const expenseRefinementMessage = {
   message: "Debes ingresar un monto en AR$ o U$S.",
   path: ["amountARS"],
-});
+};
+
+export const AddExpenseFormSchema = BaseExpenseFormSchema.refine(expenseRefinement, expenseRefinementMessage);
 export type AddExpenseInput = z.infer<typeof AddExpenseFormSchema>;
 
-
-export const UpdateExpenseFormSchema = AddExpenseFormSchema.extend({ id: z.string() });
+export const UpdateExpenseFormSchema = BaseExpenseFormSchema.extend({ id: z.string() }).refine(expenseRefinement, expenseRefinementMessage);
 export type UpdateExpenseInput = z.infer<typeof UpdateExpenseFormSchema>;
 
 
-export const AddIncomeFormSchema = z.object({
+// --- Income Schemas ---
+const BaseIncomeFormSchema = z.object({
   date: z.date({ required_error: "La fecha es requerida." }),
   description: z.string().min(1, "La descripción es requerida."),
   amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
   exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").default(1),
   amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
-}).refine(data => data.amountARS > 0 || data.amountUSD > 0, {
+});
+
+const incomeRefinement = (data: { amountARS: number, amountUSD: number }) => data.amountARS > 0 || data.amountUSD > 0;
+const incomeRefinementMessage = {
   message: "Debes ingresar un monto en AR$ o U$S.",
   path: ["amountARS"],
-});
+};
+
+export const AddIncomeFormSchema = BaseIncomeFormSchema.refine(incomeRefinement, incomeRefinementMessage);
 export type AddIncomeInput = z.infer<typeof AddIncomeFormSchema>;
 
-
-export const UpdateIncomeFormSchema = AddIncomeFormSchema.extend({ id: z.string() });
+export const UpdateIncomeFormSchema = BaseIncomeFormSchema.extend({ id: z.string() }).refine(incomeRefinement, incomeRefinementMessage);
 export type UpdateIncomeInput = z.infer<typeof UpdateIncomeFormSchema>;
 
 
-export const AddCategoryFormSchema = z.object({
+// --- Category Schemas ---
+const BaseCategoryFormSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
   budget: z.coerce.number().min(0, "El presupuesto debe ser un número positivo."),
   startDate: z.date().optional().nullable(),
   endDate: z.date().optional().nullable(),
-}).refine(data => {
+});
+
+const categoryDateRefinement = (data: { startDate?: Date | null, endDate?: Date | null }) => {
     if (data.startDate && data.endDate) return data.endDate >= data.startDate
     return true
-}, { message: "La fecha de fin no puede ser anterior a la de inicio.", path: ["endDate"] });
+};
+const categoryDateRefinementMessage = { message: "La fecha de fin no puede ser anterior a la de inicio.", path: ["endDate"] };
+
+export const AddCategoryFormSchema = BaseCategoryFormSchema.refine(categoryDateRefinement, categoryDateRefinementMessage);
 export type AddCategoryInput = z.infer<typeof AddCategoryFormSchema>;
 
-
-export const UpdateCategoryFormSchema = AddCategoryFormSchema.extend({
+export const UpdateCategoryFormSchema = BaseCategoryFormSchema.extend({
     icon: z.string().optional().nullable(),
     progress: z.coerce.number().min(0).max(100).optional().nullable(),
     dependencies: z.array(z.string()).optional(),
-});
+}).refine(categoryDateRefinement, categoryDateRefinementMessage);
 export type UpdateCategoryInput = z.infer<typeof UpdateCategoryFormSchema>;
 
 
+// --- Event Schemas ---
 export const AddEventFormSchema = z.object({
   title: z.string().min(1, "El título es requerido."),
   date: z.date({ required_error: "La fecha es requerida." }),
