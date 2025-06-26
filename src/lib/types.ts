@@ -14,7 +14,7 @@ export type Category = {
   name: string;
   budget: number;
   icon?: string | null;
-  progress?: number; // From 0 to 100
+  progress?: number | null; // From 0 to 100
   startDate?: Date | null;
   endDate?: Date | null;
   dependencies?: string[];
