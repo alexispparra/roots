@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function MapPage() {
   return (
-    <Card>
+    <Card className="light-data-card">
       <CardHeader>
         <CardTitle className="font-headline">Map</CardTitle>
       </CardHeader>

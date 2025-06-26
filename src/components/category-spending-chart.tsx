@@ -45,7 +45,7 @@ export function CategorySpendingChart({ categorySpent, totalProjectExpenses, cat
   const totalProjectExpensesFormatted = totalProjectExpenses.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col light-data-card">
       <CardHeader className="items-center pb-0">
         <CardTitle>Proporción de Gasto</CardTitle>
         <CardDescription>"{categoryName}" vs. Gasto Total del Proyecto</CardDescription>

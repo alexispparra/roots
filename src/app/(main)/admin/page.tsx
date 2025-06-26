@@ -33,7 +33,7 @@ export default function AdminPage() {
 
   return (
     <div className="grid gap-6">
-      <Card>
+      <Card className="light-data-card">
         <CardHeader>
           <CardTitle className="font-headline">Panel de Administración Global</CardTitle>
           <CardDescription>

@@ -30,7 +30,7 @@ const transactions = [
 
 export default function TransactionsPage() {
   return (
-    <Card>
+    <Card className="light-data-card">
       <CardHeader className="flex flex-row items-center">
         <div className="grid gap-2">
           <CardTitle className="font-headline">Cuentas</CardTitle>

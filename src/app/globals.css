@@ -4,86 +4,92 @@
 
 @layer base {
   :root {
-    --background: 120 10% 95%; /* Light desaturated pastel green */
-    --foreground: 150 15% 20%; /* Dark green for text */
+    /* Dark theme (default) inspired by user's reference image */
+    --background: 158 24% 18%; /* Dark, desaturated green */
+    --foreground: 150 10% 90%; /* Light, off-white text */
     
-    --card: 0 0% 100%; /* White cards */
-    --card-foreground: 150 15% 20%;
+    --card: 158 22% 24%; /* Slightly lighter dark green for cards */
+    --card-foreground: 150 10% 90%;
     
-    --popover: 0 0% 100%;
-    --popover-foreground: 150 15% 20%;
+    --popover: 158 22% 24%;
+    --popover-foreground: 150 10% 90%;
     
-    --primary: 150 15% 35%; /* Desaturated Green for primary actions */
-    --primary-foreground: 150 15% 95%;
+    --primary: 35 78% 61%; /* Warm gold/orange accent */
+    --primary-foreground: 158 24% 10%;
     
-    --secondary: 150 10% 88%;
-    --secondary-foreground: 150 15% 20%;
+    --secondary: 158 22% 30%;
+    --secondary-foreground: 150 10% 90%;
     
-    --muted: 150 10% 92%;
-    --muted-foreground: 150 10% 45%;
+    --muted: 158 22% 30%;
+    --muted-foreground: 150 10% 65%;
     
-    --accent: 15 33% 56%; /* Terracotta/Orange for accents */
-    --accent-foreground: 0 0% 100%;
+    --accent: 158 22% 35%; /* For hovers */
+    --accent-foreground: 150 10% 95%;
     
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 150 10% 85%;
-    --input: 150 10% 88%;
-    --ring: 15 33% 56%;
+    --border: 158 22% 30%;
+    --input: 158 22% 30%;
+    --ring: 35 78% 61%;
     
     --radius: 1rem;
 
-    /* Charts */
-    --chart-1: 150 15% 45%;
-    --chart-2: 15 33% 66%;
-    --chart-3: 150 20% 60%;
-    --chart-4: 15 25% 75%;
-    --chart-5: 150 30% 70%;
+    /* Light theme variables for specific data cards */
+    --light-background: 0 0% 100%;
+    --light-foreground: 150 15% 20%;
+    --light-card: 0 0% 100%;
+    --light-card-foreground: 150 15% 20%;
+    --light-border: 150 10% 85%;
+    --light-muted-foreground: 150 10% 45%;
+    --light-input: 150 10% 88%;
+    --light-primary: 150 15% 35%;
+    --light-primary-foreground: 150 15% 95%;
+    --light-secondary: 150 10% 88%;
+    --light-secondary-foreground: 150 15% 20%;
+    --light-accent: 150 10% 92%;
+    --light-accent-foreground: 150 15% 20%;
+    --light-ring: 15 33% 56%;
 
-    /* Sidebar specific */
-    --sidebar-background: 150 15% 25%; /* Darker green for contrast */
+    /* Chart colors */
+    --chart-1: 35 78% 61%;
+    --chart-2: 150 40% 60%;
+    --chart-3: 200 50% 65%;
+    --chart-4: 20 60% 70%;
+    --chart-5: 280 40% 70%;
+
+    /* Sidebar theme */
+    --sidebar-background: 158 24% 12%;
     --sidebar-foreground: 150 10% 90%;
-    --sidebar-border: 150 15% 30%;
-    --sidebar-accent: 150 15% 35%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-primary: 15 33% 60%; /* Brighter terracotta for primary actions in sidebar */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-ring: 15 33% 60%;
+    --sidebar-border: 158 22% 20%;
+    --sidebar-accent: 158 22% 24%;
+    --sidebar-accent-foreground: 150 10% 95%;
+    --sidebar-primary: 35 78% 61%;
+    --sidebar-primary-foreground: 158 24% 10%;
+    --sidebar-ring: 35 78% 61%;
   }
 
   .dark {
-    /* The project uses a light theme by default, as per the PRD. 
-       This block is kept for potential future implementation of a dark mode toggle.
-       Currently, it mirrors the light theme to avoid issues if 'dark' class is present. */
-    --background: 120 10% 95%;
-    --foreground: 150 15% 20%;
-    --card: 0 0% 100%;
-    --card-foreground: 150 15% 20%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 150 15% 20%;
-    --primary: 150 15% 35%;
-    --primary-foreground: 150 15% 95%;
-    --secondary: 150 10% 88%;
-    --secondary-foreground: 150 15% 20%;
-    --muted: 150 10% 92%;
-    --muted-foreground: 150 10% 45%;
-    --accent: 15 33% 56%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84.2% 60.2%;
+    /* Kept for potential future toggle, mirrors root for now */
+    --background: 158 24% 18%;
+    --foreground: 150 10% 90%;
+    --card: 158 22% 24%;
+    --card-foreground: 150 10% 90%;
+    --popover: 158 22% 24%;
+    --popover-foreground: 150 10% 90%;
+    --primary: 35 78% 61%;
+    --primary-foreground: 158 24% 10%;
+    --secondary: 158 22% 30%;
+    --secondary-foreground: 150 10% 90%;
+    --muted: 158 22% 30%;
+    --muted-foreground: 150 10% 65%;
+    --accent: 158 22% 35%;
+    --accent-foreground: 150 10% 95%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 150 10% 85%;
-    --input: 150 10% 88%;
-    --ring: 15 33% 56%;
-    
-    --sidebar-background: 150 15% 25%;
-    --sidebar-foreground: 150 10% 90%;
-    --sidebar-border: 150 15% 30%;
-    --sidebar-accent: 150 15% 35%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-primary: 15 33% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-ring: 15 33% 60%;
+    --border: 158 22% 30%;
+    --input: 158 22% 30%;
+    --ring: 35 78% 61%;
   }
 }
 
@@ -97,6 +103,29 @@
 }
 
 @layer components {
+  /* Helper class to switch a component and its children to a light theme context */
+  .light-data-card {
+      --background: var(--light-background);
+      --foreground: var(--light-foreground);
+      --card: var(--light-card);
+      --card-foreground: var(--light-card-foreground);
+      --popover: var(--light-card);
+      --popover-foreground: var(--light-card-foreground);
+      --primary: var(--light-primary);
+      --primary-foreground: var(--light-primary-foreground);
+      --secondary: var(--light-secondary);
+      --secondary-foreground: var(--light-secondary-foreground);
+      --muted: var(--light-accent); /* Use light-accent for muted bg */
+      --muted-foreground: var(--light-muted-foreground);
+      --accent: var(--light-accent);
+      --accent-foreground: var(--light-accent-foreground);
+      --border: var(--light-border);
+      --input: var(--light-input);
+      --ring: var(--light-ring);
+      
+      @apply bg-card text-card-foreground border;
+  }
+
   .day-with-event {
     position: relative;
     font-weight: bold;

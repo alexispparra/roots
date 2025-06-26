@@ -4,7 +4,7 @@ import { BarChart2 } from "lucide-react";
 export default function ReportsPage() {
   return (
     <div className="grid gap-6">
-      <Card>
+      <Card className="light-data-card">
         <CardHeader>
           <CardTitle className="font-headline">Reportes</CardTitle>
           <CardDescription>Análisis visual de tus finanzas y cashflow por proyecto.</CardDescription>

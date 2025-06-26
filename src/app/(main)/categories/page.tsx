@@ -4,7 +4,7 @@ import { LayoutGrid } from "lucide-react";
 export default function CategoriesPage() {
   return (
     <div className="grid gap-6">
-      <Card>
+      <Card className="light-data-card">
         <CardHeader>
           <CardTitle className="font-headline">Categorías</CardTitle>
           <CardDescription>Gestiona las categorías de gastos para todos tus proyectos.</CardDescription>

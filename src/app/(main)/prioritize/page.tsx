@@ -7,7 +7,7 @@ import { WandSparkles } from "lucide-react";
 export default function PrioritizePage() {
   return (
     <div className="grid gap-6">
-      <Card>
+      <Card className="light-data-card">
         <CardHeader>
           <CardTitle className="font-headline">Priorización con IA</CardTitle>
           <CardDescription>

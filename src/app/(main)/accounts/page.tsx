@@ -20,7 +20,7 @@ export default function AccountsPage() {
       </Card>
       <div className="grid gap-6 md:grid-cols-2">
         {accounts.map((account, index) => (
-          <Card key={index}>
+          <Card key={index} className="light-data-card">
             <CardHeader className="flex flex-row items-center justify-between">
               <div className="flex items-center gap-4">
                 {account.icon}

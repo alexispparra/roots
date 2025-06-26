@@ -66,7 +66,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
 
   return (
     <>
-      <Card>
+      <Card className="light-data-card">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
