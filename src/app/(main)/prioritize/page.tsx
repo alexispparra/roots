@@ -11,7 +11,7 @@ export default function PrioritizePage() {
         <CardHeader>
           <CardTitle className="font-headline">Priorización con IA</CardTitle>
           <CardDescription>
-            Usa la IA para analizar los datos de tu proyecto y la información de una Hoja de Cálculo de Google para priorizar tareas y obtener sugerencias.
+            Usa la IA para analizar los datos de tu proyecto para priorizar tareas y obtener sugerencias.
           </CardDescription>
         </CardHeader>
         <CardContent>

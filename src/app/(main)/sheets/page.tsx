@@ -22,10 +22,9 @@ export default function GoogleSheetsPage() {
       <CardContent>
         <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Integración Pausada Temporalmente</AlertTitle>
+            <AlertTitle>Función en Rediseño</AlertTitle>
             <AlertDescription>
-              La integración en tiempo real con Google Sheets está causando inestabilidad en el servidor.
-              Se ha desactivado temporalmente para restaurar el funcionamiento de la aplicación.
+              La integración con Google Sheets se está rediseñando para permitir que cualquier usuario conecte su propia cuenta de forma segura (vía OAuth 2.0). Esta función estará disponible en una futura actualización.
             </AlertDescription>
           </Alert>
       </CardContent>

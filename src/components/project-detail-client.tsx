@@ -8,7 +8,7 @@ import type { Project, UpdateProjectData } from "@/contexts/ProjectsContext";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, AlertTriangle, Briefcase, BarChart2, List, Users, MoreVertical, Pencil, Trash2, CalendarDays, RefreshCw } from "lucide-react";
+import { Loader2, AlertTriangle, Briefcase, BarChart2, List, Users, MoreVertical, Pencil, Trash2, CalendarDays } from "lucide-react";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ProjectCategoriesTab } from '@/components/project-categories-tab';
@@ -29,7 +29,6 @@ export default function ProjectDetailClient() {
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
 
   const project = getProjectById(projectId);
   const userRole = project ? getUserRoleForProject(project.id) : null;
@@ -50,32 +49,6 @@ export default function ProjectDetailClient() {
         router.push('/projects');
     }
   }
-
-  const handleSyncWithSheet = async () => {
-    if (!project) return;
-    setIsSyncing(true);
-    try {
-        const response = await fetch(`/api/projects/${project.id}/sync`, {
-            method: 'POST',
-        });
-        const result = await response.json();
-        if (!response.ok) {
-            throw new Error(result.error || 'Falló la sincronización.');
-        }
-        toast({
-            title: "Sincronización Exitosa",
-            description: `Se importaron ${result.transactionsImported} transacciones y ${result.categoriesImported} categorías.`,
-        });
-    } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Error de Sincronización",
-            description: error.message,
-        });
-    } finally {
-        setIsSyncing(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -124,17 +97,6 @@ export default function ProjectDetailClient() {
                     <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
                         <Pencil className="mr-2 h-4 w-4" />
                         Editar Proyecto
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={handleSyncWithSheet} 
-                      disabled={isSyncing || !project.googleSheetId}
-                    >
-                      {isSyncing ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                      )}
-                      Sincronizar con Sheet
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive">
