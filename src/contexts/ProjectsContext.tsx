@@ -469,16 +469,35 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
           const rawProjectData = convertFirestoreDataToProject(projectDoc);
+          
+          let newCategories = rawProjectData.categories;
+          let newTransactions = rawProjectData.transactions;
+          const nameHasChanged = categoryData.name && categoryData.name !== oldName;
 
-          const newCategories = rawProjectData.categories.map(c => 
+          // Update the category itself
+          newCategories = newCategories.map(c => 
               c.name === oldName ? { ...c, ...categoryData } : c
           );
-
-          let newTransactions = rawProjectData.transactions;
-          if (categoryData.name && categoryData.name !== oldName) {
-            newTransactions = rawProjectData.transactions.map(t => 
-                t.category === oldName ? { ...t, category: categoryData.name } : t
+          
+          // If the name changed, cascade the update to transactions and other categories' dependencies
+          if (nameHasChanged) {
+            const newName = categoryData.name!;
+            
+            // Cascade to transactions
+            newTransactions = newTransactions.map(t => 
+                t.category === oldName ? { ...t, category: newName } : t
             );
+
+            // Cascade to dependencies
+            newCategories = newCategories.map(c => {
+              if (c.dependencies && c.dependencies.includes(oldName)) {
+                return {
+                  ...c,
+                  dependencies: c.dependencies.map(dep => dep === oldName ? newName : dep)
+                };
+              }
+              return c;
+            });
           }
 
           const categoriesForDb = newCategories.map(c => ({
@@ -509,7 +528,20 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           const projectDoc = await getDoc(projectRef);
           if (!projectDoc.exists()) throw new Error("Project not found");
           const rawProjectData = convertFirestoreDataToProject(projectDoc);
-          const newCategories = rawProjectData.categories.filter(c => c.name !== categoryName);
+
+          // Filter out the deleted category AND remove it from other categories' dependencies
+          const newCategories = rawProjectData.categories
+            .filter(c => c.name !== categoryName)
+            .map(c => {
+              if (c.dependencies && c.dependencies.includes(categoryName)) {
+                return {
+                  ...c,
+                  dependencies: c.dependencies.filter(dep => dep !== categoryName)
+                };
+              }
+              return c;
+            });
+
           const categoriesForDb = newCategories.map(c => ({
               ...c,
               startDate: c.startDate ? Timestamp.fromDate(c.startDate) : null,
