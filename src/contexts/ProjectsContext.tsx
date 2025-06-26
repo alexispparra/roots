@@ -94,6 +94,7 @@ const BaseExpenseFormSchema = z.object({
   amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
   attachmentDataUrl: z.string().optional(),
 });
+const UpdateExpenseBaseSchema = BaseExpenseFormSchema.extend({ id: z.string() });
 
 const expenseRefinement = (data: { amountARS: number, amountUSD: number }) => data.amountARS > 0 || data.amountUSD > 0;
 const expenseRefinementMessage = {
@@ -104,8 +105,6 @@ const expenseRefinementMessage = {
 export const AddExpenseFormSchema = BaseExpenseFormSchema.refine(expenseRefinement, expenseRefinementMessage);
 export type AddExpenseInput = z.infer<typeof AddExpenseFormSchema>;
 
-// Extend the base schema first, then refine the extended version.
-const UpdateExpenseBaseSchema = BaseExpenseFormSchema.extend({ id: z.string() });
 export const UpdateExpenseFormSchema = UpdateExpenseBaseSchema.refine(expenseRefinement, expenseRefinementMessage);
 export type UpdateExpenseInput = z.infer<typeof UpdateExpenseFormSchema>;
 
@@ -118,6 +117,7 @@ const BaseIncomeFormSchema = z.object({
   exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").default(1),
   amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
 });
+const UpdateIncomeBaseSchema = BaseIncomeFormSchema.extend({ id: z.string() });
 
 const incomeRefinement = (data: { amountARS: number, amountUSD: number }) => data.amountARS > 0 || data.amountUSD > 0;
 const incomeRefinementMessage = {
@@ -128,8 +128,6 @@ const incomeRefinementMessage = {
 export const AddIncomeFormSchema = BaseIncomeFormSchema.refine(incomeRefinement, incomeRefinementMessage);
 export type AddIncomeInput = z.infer<typeof AddIncomeFormSchema>;
 
-// Extend the base schema first, then refine the extended version.
-const UpdateIncomeBaseSchema = BaseIncomeFormSchema.extend({ id: z.string() });
 export const UpdateIncomeFormSchema = UpdateIncomeBaseSchema.refine(incomeRefinement, incomeRefinementMessage);
 export type UpdateIncomeInput = z.infer<typeof UpdateIncomeFormSchema>;
 
@@ -141,6 +139,12 @@ const BaseCategoryFormSchema = z.object({
   startDate: z.date().optional().nullable(),
   endDate: z.date().optional().nullable(),
 });
+const UpdateCategoryBaseSchema = BaseCategoryFormSchema.extend({
+    icon: z.string().optional().nullable(),
+    progress: z.coerce.number().min(0).max(100).optional().nullable(),
+    dependencies: z.array(z.string()).optional(),
+});
+
 
 const categoryDateRefinement = (data: { startDate?: Date | null, endDate?: Date | null }) => {
     if (data.startDate && data.endDate) return data.endDate >= data.startDate
@@ -151,12 +155,6 @@ const categoryDateRefinementMessage = { message: "La fecha de fin no puede ser a
 export const AddCategoryFormSchema = BaseCategoryFormSchema.refine(categoryDateRefinement, categoryDateRefinementMessage);
 export type AddCategoryInput = z.infer<typeof AddCategoryFormSchema>;
 
-// Extend the base schema first, then refine the extended version.
-const UpdateCategoryBaseSchema = BaseCategoryFormSchema.extend({
-    icon: z.string().optional().nullable(),
-    progress: z.coerce.number().min(0).max(100).optional().nullable(),
-    dependencies: z.array(z.string()).optional(),
-});
 export const UpdateCategoryFormSchema = UpdateCategoryBaseSchema.refine(categoryDateRefinement, categoryDateRefinementMessage);
 export type UpdateCategoryInput = z.infer<typeof UpdateCategoryFormSchema>;
 
