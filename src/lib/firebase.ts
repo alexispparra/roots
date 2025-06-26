@@ -41,10 +41,8 @@ export function getFirebaseInstances() {
   // If Firebase is not configured (missing environment variables),
   // return null. The calling code is responsible for handling this case.
   if (!isFirebaseConfigured) {
-    // This warning is helpful during local development.
-    if (process.env.NODE_ENV === 'development') {
-        console.warn("Firebase is not configured. Please check your environment variables.");
-    }
+    // This warning is helpful for both local and production debugging.
+    console.error("CRITICAL: Firebase configuration is missing. The application cannot connect to Firebase services. This is likely because environment variables (NEXT_PUBLIC_FIREBASE_*) are not set correctly in the production environment (apphosting.yaml) or locally (.env).");
     return null;
   }
 
