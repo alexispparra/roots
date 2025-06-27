@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
 import React from "react";
 
-const ErrorPanel = ({ title, message }: { title: string, message: React.ReactNode }) => {
+const ErrorPanel = ({ title, message, errorCode }: { title: string, message: React.ReactNode, errorCode: string }) => {
     return (
          <div style={{
             fontFamily: "sans-serif",
@@ -22,6 +21,10 @@ const ErrorPanel = ({ title, message }: { title: string, message: React.ReactNod
                 </h1>
                 <div style={{ color: "#cbd5e0", fontSize: "1.1rem" }}>
                   {message}
+                   <p style={{ marginTop: "1.5rem" }}><strong>Mensaje de error REAL del SDK de Firebase:</strong></p>
+                    <pre style={{ backgroundColor: '#171923', padding: '0.8rem 1rem', borderRadius: '0.375rem', fontSize: '0.9em', whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginTop: '0.5rem', border: '1px solid #4a5568' }}>
+                        <code>{errorCode}</code>
+                    </pre>
                 </div>
             </div>
         </div>
@@ -34,16 +37,18 @@ export function AppContent({ children }: { children: React.ReactNode }) {
   if (configError) {
     return (
         <ErrorPanel
-            title="Error Crítico de Configuración de Firebase"
+            title="Error de Conexión con Firebase"
+            errorCode={configError}
             message={
                 <>
-                    <p>La aplicación no puede conectar con Firebase porque las credenciales no están configuradas en el entorno. Esto suele deberse a un problema con el archivo <strong>.env</strong>.</p>
-                    <p style={{ marginTop: "1rem" }}><strong>Pasos para Solucionarlo:</strong></p>
-                    <ul style={{ listStyleType: 'decimal', paddingLeft: '2rem', marginTop: '0.5rem' }}>
-                        <li>Asegúrate de que el archivo <strong>.env</strong> exista en la raíz de tu proyecto.</li>
-                        <li>Verifica que todas las variables <code>NEXT_PUBLIC_...</code> dentro del archivo <strong>.env</strong> tengan valores válidos y no los placeholders "REEMPLAZA_CON_TU...".</li>
-                        <li>Si hiciste cambios en el archivo <strong>.env</strong>, por favor, vuelve a desplegar la aplicación para que tome los nuevos valores.</li>
-                    </ul>
+                    <p>La aplicación no pudo inicializar Firebase. Esto casi siempre se debe a un problema con las credenciales de configuración en tu archivo <strong>.env</strong>.</p>
+                    <p style={{ marginTop: "1rem" }}><strong>Cómo solucionarlo:</strong></p>
+                    <ol style={{ listStyleType: 'decimal', paddingLeft: '2rem', marginTop: '0.5rem' }}>
+                        <li>Abre el archivo <strong>.env</strong> en la raíz de tu proyecto.</li>
+                        <li>Compara cuidadosamente cada clave (<code>NEXT_PUBLIC_FIREBASE_API_KEY</code>, etc.) con los valores que te proporciona tu Firebase Console para asegurarte de que no haya errores de tipeo.</li>
+                        <li>El mensaje de error de abajo es el más importante. Por ejemplo, si dice <code>"Firebase: Error (auth/invalid-api-key)"</code>, significa que la API Key es incorrecta.</li>
+                        <li>Si realizaste cambios, vuelve a desplegar la aplicación para que tome los nuevos valores.</li>
+                    </ol>
                 </>
             }
         />
