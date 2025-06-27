@@ -6,16 +6,16 @@ import { getFirestore, type Firestore } from "firebase/firestore";
 // Por favor, rellena tus credenciales de Firebase aquí. Esta es ahora la
 // única fuente de verdad para la configuración de la aplicación.
 export const firebaseConfig = {
-  apiKey: "AIzaSyDS_pUeLHZAsyPHP1NuPLELXXYQtvTIi-w",
-  authDomain: "projectflow-bvod7.firebaseapp.com",
-  projectId: "projectflow-bvod7",
-  storageBucket: "projectflow-bvod7.firebasestorage.app",
-  messagingSenderId: "980756790749",
-  appId: "1:980756790749:web:7804b032b21501fbfd4a34",
+  apiKey: "REEMPLAZA_CON_TU_API_KEY",
+  authDomain: "REEMPLAZA_CON_TU_AUTH_DOMAIN",
+  projectId: "REEMPLAZA_CON_TU_PROJECT_ID",
+  storageBucket: "REEMPLAZA_CON_TU_STORAGE_BUCKET",
+  messagingSenderId: "REEMPLAZA_CON_TU_MESSAGING_SENDER_ID",
+  appId: "REEMPLAZA_CON_TU_APP_ID",
 };
 
 // El email del administrador también se define aquí.
-export const APP_ADMIN_EMAIL = "alexispparra@gmail.com";
+export const APP_ADMIN_EMAIL = "REEMPLAZA_CON_TU_EMAIL_DE_ADMIN";
 
 
 // --- DO NOT EDIT BELOW THIS LINE ---
