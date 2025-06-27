@@ -1,3 +1,4 @@
+
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
 
@@ -7,16 +8,6 @@ runtime: nodejs20
 # Command to build your Next.js app
 build:
   run: npm run build
-  # Environment variables starting with NEXT_PUBLIC_ are needed at build time.
-  # IMPORTANT: Replace the placeholder values below with your actual
-  # Firebase project credentials before deploying.
-  environmentVariables:
-    NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyDS_pUeLHZAsyPHP1NuPLELXXYQtvTIi-w"
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "projectflow-bvod7.firebaseapp.com"
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID: "projectflow-bvod7"
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "projectflow-bvod7.firebasestorage.app"
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "980756790749"
-    NEXT_PUBLIC_FIREBASE_APP_ID: "1:980756790749:web:7804b032b21501fbfd4a34"
 
 # Command to start your Next.js app
 start:
@@ -26,15 +17,3 @@ runConfig:
   # Increase this value if you'd-like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
-  # Environment variables are secrets that should not be committed to source control.
-  # Learn more: https://firebase.google.com/docs/app-hosting/configure#environment-variables
-  #
-  # IMPORTANT: Replace the placeholder values below with your actual
-  # Firebase project credentials before deploying.
-  environmentVariables:
-    NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyDS_pUeLHZAsyPHP1NuPLELXXYQtvTIi-w"
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "projectflow-bvod7.firebaseapp.com"
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID: "projectflow-bvod7"
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "projectflow-bvod7.firebasestorage.app"
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "980756790749"
-    NEXT_PUBLIC_FIREBASE_APP_ID: "1:980756790749:web:7804b032b21501fbfd4a34"

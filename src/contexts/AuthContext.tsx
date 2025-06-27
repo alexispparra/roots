@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import type { User } from 'firebase/auth';
-import { getFirebaseInstances } from '@/lib/firebase';
+import { getFirebaseInstances, APP_ADMIN_EMAIL } from '@/lib/firebase';
 
 // --- Type Definition ---
 type AuthContextType = {
@@ -27,18 +27,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const firebase = getFirebaseInstances();
     
     if (!firebase) {
-      // Instead of a generic message, create a detailed diagnostic string.
-      // This will be parsed by the AppContent component to show a debug table.
-      const config = {
-        NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-      };
-      const debugString = JSON.stringify(config);
-      setConfigError("FIREBASE_CONFIG_ERROR:::" + debugString);
+      // This path is now less likely but kept as a safeguard.
+      setConfigError("FIREBASE_INIT_FAILED");
       setLoading(false);
       return;
     }
@@ -49,8 +39,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       unsubscribe = onAuthStateChanged(firebase.auth, (user) => {
         setUser(user);
         
-        const adminEmail = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL;
-        if (user && adminEmail && user.email === adminEmail) {
+        // Use the imported admin email constant
+        if (user && APP_ADMIN_EMAIL && user.email === APP_ADMIN_EMAIL) {
           setIsAppAdmin(true);
         } else {
           setIsAppAdmin(false);
@@ -60,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     }).catch(error => {
       console.error("Critical Error: Failed to load Firebase auth modules.", error);
-      setConfigError("Error irrecuperable al cargar los módulos de Firebase. Revisa la consola del navegador y del servidor para más detalles.");
+      setConfigError("Error irrecuperable al cargar los módulos de Firebase.");
       setLoading(false);
     });
 
