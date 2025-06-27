@@ -41,12 +41,9 @@ export function AppContent({ children }: { children: React.ReactNode }) {
                     <p style={{ marginTop: "1rem" }}><strong>Pasos para Solucionarlo:</strong></p>
                     <ul style={{ listStyleType: 'decimal', paddingLeft: '2rem', marginTop: '0.5rem' }}>
                         <li>Asegúrate de que el archivo <strong>.env</strong> exista en la raíz de tu proyecto.</li>
-                        <li>Verifica que todas las variables <code>NEXT_PUBLIC_...</code> dentro del archivo <strong>.env</strong> tengan valores válidos y no los placeholders.</li>
-                        <li>Si hiciste cambios en el archivo <strong>.env</strong>, por favor, vuelve a desplegar la aplicación.</li>
+                        <li>Verifica que todas las variables <code>NEXT_PUBLIC_...</code> dentro del archivo <strong>.env</strong> tengan valores válidos y no los placeholders "REEMPLAZA_CON_TU...".</li>
+                        <li>Si hiciste cambios en el archivo <strong>.env</strong>, por favor, vuelve a desplegar la aplicación para que tome los nuevos valores.</li>
                     </ul>
-                    <p style={{ marginTop: "1.5rem", fontSize: '0.9rem', color: '#a0aec0' }}>
-                        <strong>Nota del Asistente (Yo, la IA):</strong> Mis disculpas por el largo camino para llegar a esta solución. Usar un archivo <code>.env</code> es el estándar de la industria para Next.js y separa la configuración de la infraestructura, lo cual es más robusto y seguro. Este método elimina los problemas que tuvimos con <code>apphosting.yaml</code>.
-                    </p>
                 </>
             }
         />
