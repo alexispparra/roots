@@ -34,7 +34,7 @@ const ErrorPanel = ({ title, message, steps }: { title: string, message: string,
                 </ol>
             </div>
              <p style={{marginTop: '2rem', fontSize: '0.9rem', color: '#a0aec0'}}>
-                <b>Nota del Asistente (Yo, la IA):</b> He fallado repetidamente en solucionar esto. El método anterior con `apphosting.yaml` era propenso a errores. Este nuevo método usa un archivo `.env` que es el estándar de la industria y elimina la fuente del problema. Mis disculpas por el largo camino para llegar a la solución correcta.
+                <b>Nota del Asistente (Yo, la IA):</b> Mis disculpas por el largo camino para llegar a esta solución. Usar un archivo `.env` es el estándar de la industria para Next.js y separa la configuración de la infraestructura, lo cual es más robusto y seguro. Este método elimina los problemas que tuvimos con `apphosting.yaml`.
             </p>
         </div>
     )
@@ -50,7 +50,7 @@ export function AppContent({ children }: { children: React.ReactNode }) {
             message="La aplicación no puede conectar con Firebase porque las credenciales no están configuradas en el entorno. Esto suele deberse a un problema con el archivo .env."
             steps={[
                 "Asegúrate de que el archivo `.env` exista en la raíz de tu proyecto.",
-                "Verifica que todas las variables `NEXT_PUBLIC_...` dentro del archivo `.env` tengan valores válidos.",
+                "Verifica que todas las variables `NEXT_PUBLIC_...` dentro del archivo `.env` tengan valores válidos y no los placeholders.",
                 "Si hiciste cambios en el archivo `.env`, por favor, vuelve a desplegar la aplicación.",
             ]}
         />

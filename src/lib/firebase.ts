@@ -20,7 +20,9 @@ const isFirebaseConfigured =
   firebaseConfig.projectId &&
   firebaseConfig.storageBucket &&
   firebaseConfig.messagingSenderId &&
-  firebaseConfig.appId;
+  firebaseConfig.appId &&
+  !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_");
+
 
 // The email for the application administrator.
 export const APP_ADMIN_EMAIL = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL || "";
@@ -41,7 +43,7 @@ export function getFirebaseInstances() {
 
   // If the config isn't fully provided via environment variables, do not initialize.
   if (!isFirebaseConfigured) {
-    console.error("CRITICAL: Firebase configuration is missing from environment variables. Check your .env file.");
+    // We don't log an error here because the AppContent component will show a user-friendly error panel.
     return null;
   }
 
