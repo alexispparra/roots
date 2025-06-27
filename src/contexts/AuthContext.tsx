@@ -8,7 +8,6 @@ import { Loader2 } from 'lucide-react';
 
 type ConfigError = {
   message: string;
-  debugInfo?: string;
 }
 
 type AuthContextType = {
