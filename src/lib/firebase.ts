@@ -15,18 +15,17 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Check if all required environment variables are set.
+// Check if all required environment variables are set and are not placeholders.
 const isFirebaseConfigured =
-  firebaseConfig.apiKey &&
-  firebaseConfig.authDomain &&
-  firebaseConfig.projectId &&
-  firebaseConfig.storageBucket &&
-  firebaseConfig.messagingSenderId &&
-  firebaseConfig.appId;
+  firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("REEMPLAZA") &&
+  firebaseConfig.authDomain && !firebaseConfig.authDomain.includes("REEMPLAZA") &&
+  firebaseConfig.projectId && !firebaseConfig.projectId.includes("REEMPLAZA") &&
+  firebaseConfig.storageBucket && !firebaseConfig.storageBucket.includes("REEMPLAZA") &&
+  firebaseConfig.messagingSenderId && !firebaseConfig.messagingSenderId.includes("REEMPLAZA") &&
+  firebaseConfig.appId && !firebaseConfig.appId.includes("REEMPLAZA");
 
 // The email for the application administrator.
-// IMPORTANT: Change this to your actual admin email address if it's different.
-export const APP_ADMIN_EMAIL = "alexispparra@gmail.com"; 
+export const APP_ADMIN_EMAIL = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL || "";
 
 // This object will hold the initialized Firebase instances.
 let firebaseInstances: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;
@@ -44,7 +43,7 @@ export function getFirebaseInstances() {
 
   // If the config isn't fully provided via environment variables, do not initialize.
   if (!isFirebaseConfigured) {
-    console.error("CRITICAL: Firebase configuration is missing from environment variables. Check your apphosting.yaml.");
+    console.error("CRITICAL: Firebase configuration is missing or contains placeholders. Check your apphosting.yaml.");
     return null;
   }
 
