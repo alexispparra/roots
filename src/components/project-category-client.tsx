@@ -134,7 +134,7 @@ export default function ProjectCategoryClient() {
             totalProjectExpenses={totalProjectExpenses} 
             categoryName={category.name}
           />
-           <Card className="light-data-card">
+           <Card>
               <CardHeader>
                 <CardTitle>Detalles de Tarea</CardTitle>
                 <CardDescription>Progreso, fechas y dependencias de esta categoría.</CardDescription>
@@ -170,7 +170,7 @@ export default function ProjectCategoryClient() {
             </Card>
         </div>
         <div className="md:col-span-2">
-          <Card className="light-data-card">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Gastos Registrados</CardTitle>

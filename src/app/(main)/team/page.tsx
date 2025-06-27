@@ -7,7 +7,7 @@ import { Users } from "lucide-react";
 export default function TeamPage() {
   return (
     <div className="grid gap-6">
-      <Card className="light-data-card">
+      <Card>
         <CardHeader>
           <CardTitle className="font-headline">Gestión de Equipo</CardTitle>
           <CardDescription>

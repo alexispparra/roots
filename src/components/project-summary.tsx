@@ -77,7 +77,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
   return (
     <div className="grid gap-6">
        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="light-data-card">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Ingresos</CardTitle>
                 <ArrowUpRight className="h-4 w-4 text-emerald-500" />
@@ -86,7 +86,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <div className="text-2xl font-bold text-emerald-500">{formatCurrency(totalIncome)}</div>
             </CardContent>
           </Card>
-          <Card className="light-data-card">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Gastos</CardTitle>
                 <ArrowDownLeft className="h-4 w-4 text-destructive" />
@@ -95,7 +95,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <div className="text-2xl font-bold text-destructive">{formatCurrency(totalExpenses)}</div>
             </CardContent>
           </Card>
-          <Card className="light-data-card">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Balance</CardTitle>
                 <Scale className="h-4 w-4 text-muted-foreground" />
@@ -104,7 +104,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <div className={`text-2xl font-bold ${balance >= 0 ? 'text-foreground' : 'text-destructive'}`}>{formatCurrency(balance)}</div>
             </CardContent>
           </Card>
-           <Card className="light-data-card">
+           <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Avance Total de Obra</CardTitle>
                   <Percent className="h-4 w-4 text-muted-foreground" />
@@ -117,7 +117,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
        </div>
 
        <div className="grid gap-6 md:grid-cols-2">
-         <Card className="light-data-card">
+         <Card>
             <CardHeader>
                 <CardTitle className="font-headline">Gastos por Categoría</CardTitle>
                 <CardDescription>Distribución de los gastos del proyecto.</CardDescription>
@@ -172,7 +172,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
               )}
             </CardContent>
          </Card>
-         <Card className="light-data-card">
+         <Card>
              <CardHeader>
                 <CardTitle className="font-headline">Últimas Transacciones</CardTitle>
                 <CardDescription>Los 5 movimientos más recientes.</CardDescription>

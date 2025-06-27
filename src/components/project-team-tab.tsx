@@ -74,7 +74,7 @@ export function ProjectTeamTab({ project }: { project: Project }) {
 
   return (
     <>
-      <Card className="light-data-card">
+      <Card>
         <CardHeader>
           <CardTitle className="font-headline">Equipo del Proyecto</CardTitle>
           <CardDescription>

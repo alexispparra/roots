@@ -20,7 +20,7 @@ type CategorySpendingChartProps = {
   categoryName: string;
 }
 
-const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))"];
+const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))"];
 
 export function CategorySpendingChart({ categorySpent, totalProjectExpenses, categoryName }: CategorySpendingChartProps) {
   const otherExpenses = Math.max(0, totalProjectExpenses - categorySpent);
@@ -49,7 +49,7 @@ export function CategorySpendingChart({ categorySpent, totalProjectExpenses, cat
   const totalProjectExpensesFormatted = formatCurrency(totalProjectExpenses);
 
   return (
-    <Card className="flex flex-col light-data-card">
+    <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
         <CardTitle>Proporción de Gasto (U$S)</CardTitle>
         <CardDescription>"{categoryName}" vs. Gasto Total del Proyecto</CardDescription>

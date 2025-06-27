@@ -158,11 +158,11 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
                 modifiersClassNames={{
                     hasEvent: 'day-with-event'
                 }}
-                className="rounded-md border w-full sm:w-auto light-data-card"
+                className="rounded-md border w-full sm:w-auto"
             />
         </div>
         <div className="md:col-span-1">
-             <Card className="light-data-card">
+             <Card>
                 <CardHeader className="flex flex-row items-center justify-between gap-2">
                     <div className="flex-1">
                       <CardTitle className="text-lg">
@@ -276,7 +276,7 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
 export function ProjectCalendarTab({ project, canEdit }: { project: Project, canEdit: boolean }) {
   return (
     <div className="grid gap-6">
-      <Card className="light-data-card">
+      <Card>
         <CardHeader>
           <CardTitle className="font-headline flex items-center gap-2">
             <CalendarDays /> Calendario de Actividades
@@ -289,7 +289,7 @@ export function ProjectCalendarTab({ project, canEdit }: { project: Project, can
           <ProjectCalendarView project={project} canEdit={canEdit} />
         </CardContent>
       </Card>
-      <Card className="light-data-card">
+      <Card>
         <CardHeader>
           <CardTitle className="font-headline flex items-center gap-2">
             <GanttChartSquare /> Diagrama de Gantt

@@ -138,7 +138,7 @@ export default function SettingsPage() {
       </Card>
       
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="light-data-card">
+        <Card>
           <Form {...profileForm}>
             <form onSubmit={profileForm.handleSubmit(onProfileSubmit)}>
               <CardHeader>
@@ -182,7 +182,7 @@ export default function SettingsPage() {
           </Form>
         </Card>
 
-        <Card className="light-data-card">
+        <Card>
            <Form {...passwordForm}>
             <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}>
               <CardHeader>

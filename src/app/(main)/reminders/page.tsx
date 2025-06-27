@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function RemindersPage() {
   return (
-    <Card className="light-data-card">
+    <Card>
       <CardHeader>
         <CardTitle className="font-headline">Reminders</CardTitle>
       </CardHeader>

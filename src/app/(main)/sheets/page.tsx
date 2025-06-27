@@ -12,7 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function GoogleSheetsPage() {
   return (
-    <Card className="light-data-card">
+    <Card>
       <CardHeader>
         <CardTitle className="font-headline">Datos de Google Sheets</CardTitle>
         <CardDescription>
