@@ -2,21 +2,22 @@ import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
-// --- DYNAMIC CONFIGURATION FROM ENVIRONMENT VARIABLES ---
-// This is the standard and most secure way for Next.js applications.
-// The configuration is loaded from the `.env` file.
+// --- CONFIGURACIÓN DIRECTA Y CENTRALIZADA ---
+// Por favor, rellena tus credenciales de Firebase aquí. Esta es ahora la
+// única fuente de verdad para la configuración de la aplicación.
+// Esto elimina los problemas con la carga de archivos .env en el entorno.
 
 export const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "REEMPLAZA_CON_TU_API_KEY",
+  authDomain: "REEMPLAZA_CON_TU_AUTH_DOMAIN",
+  projectId: "REEMPLAZA_CON_TU_PROJECT_ID",
+  storageBucket: "REEMPLAZA_CON_TU_STORAGE_BUCKET",
+  messagingSenderId: "REEMPLAZA_CON_TU_MESSAGING_SENDER_ID",
+  appId: "REEMPLAZA_CON_TU_APP_ID",
 };
 
-// The admin email is also loaded from the environment.
-export const APP_ADMIN_EMAIL = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL;
+// El email del administrador también se define aquí.
+export const APP_ADMIN_EMAIL = "REEMPLAZA_CON_TU_EMAIL_DE_ADMIN";
 
 
 // --- DO NOT EDIT BELOW THIS LINE ---
@@ -42,7 +43,7 @@ export function getFirebaseInstances() {
       !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_");
 
   if (!isConfigured) {
-    console.error("Firebase config values are missing or are placeholders. Check your .env file.");
+    console.error("Firebase config values are missing or are placeholders. Check your src/lib/firebase.ts file.");
     return null;
   }
 
@@ -55,7 +56,7 @@ export function getFirebaseInstances() {
     return firebaseInstances;
 
   } catch (error) {
-    console.error("CRITICAL: Firebase initialization failed. This is likely due to invalid values in your .env file.", error);
+    console.error("CRITICAL: Firebase initialization failed. This is likely due to invalid values in your src/lib/firebase.ts file.", error);
     return null;
   }
 }
