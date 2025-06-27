@@ -297,7 +297,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         
         const categoryForDb = {
             name: categoryData.name,
-            icon: predefinedIcon || 'Building',
+            icon: predefinedIcon || null,
             budget: categoryData.budget ?? 0,
             startDate: categoryData.startDate ? Timestamp.fromDate(categoryData.startDate) : null,
             endDate: categoryData.endDate ? Timestamp.fromDate(categoryData.endDate) : null,
@@ -617,3 +617,5 @@ export const useProjects = () => {
   }
   return context;
 };
+
+    

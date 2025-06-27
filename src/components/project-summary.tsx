@@ -56,23 +56,9 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
         .sort((a, b) => b.date.getTime() - a.date.getTime())
         .slice(0, 5)
 
-    const relevantCategories = project.categories.filter(c => c.startDate && c.endDate && c.endDate >= c.startDate);
+    const totalProgress = project.categories.reduce((sum, category) => sum + (category.progress ?? 0), 0);
+    const progress = project.categories.length > 0 ? totalProgress / project.categories.length : 0;
 
-    const totalDurationDays = relevantCategories.reduce((acc, cat) => {
-        const duration = cat.endDate!.getTime() - cat.startDate!.getTime();
-        // Add 1 day to include the start day in the duration
-        const durationInDays = (duration / (1000 * 3600 * 24)) + 1;
-        return acc + durationInDays;
-    }, 0);
-
-    const weightedProgressSum = relevantCategories.reduce((acc, cat) => {
-        const progress = cat.progress ?? 0;
-        const duration = cat.endDate!.getTime() - cat.startDate!.getTime();
-        const durationInDays = (duration / (1000 * 3600 * 24)) + 1;
-        return acc + (progress * durationInDays);
-    }, 0);
-    
-    const progress = totalDurationDays > 0 ? weightedProgressSum / totalDurationDays : 0;
 
     return { 
       totalIncome: income,
@@ -227,3 +213,5 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
     </div>
   )
 }
+
+    

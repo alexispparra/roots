@@ -22,13 +22,6 @@ type ProjectTransactionsTabProps = {
   canEdit: boolean;
 }
 
-const MONTHS = [
-  { value: "0", label: "Enero" }, { value: "1", label: "Febrero" }, { value: "2", label: "Marzo" },
-  { value: "3", label: "Abril" }, { value: "4", label: "Mayo" }, { value: "5", label: "Junio" },
-  { value: "6", label: "Julio" }, { value: "7", label: "Agosto" }, { value: "8", label: "Septiembre" },
-  { value: "9", label: "Octubre" }, { value: "10", label: "Noviembre" }, { value: "11", label: "Diciembre" }
-];
-
 export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactionsTabProps) {
     const { addTransaction, updateTransaction, deleteTransaction } = useProjects()
 
@@ -37,8 +30,8 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
     
-    const [yearFilter, setYearFilter] = useState<string>(String(new Date().getFullYear()));
-    const [monthFilter, setMonthFilter] = useState<string>(String(new Date().getMonth()));
+    const [yearFilter, setYearFilter] = useState<string>('all');
+    const [monthFilter, setMonthFilter] = useState<string>('all');
 
     const sortedTransactions = useMemo(() => 
         [...project.transactions].sort((a, b) => b.date.getTime() - a.date.getTime()), 
@@ -47,6 +40,18 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     const availableYears = useMemo(() => 
         [...new Set(sortedTransactions.map(t => t.date.getFullYear()))].sort((a,b) => b - a), 
     [sortedTransactions]);
+    
+    const availableMonths = useMemo(() => {
+        const months = new Set<number>();
+        sortedTransactions.forEach(t => {
+            if (yearFilter === 'all' || t.date.getFullYear() === parseInt(yearFilter, 10)) {
+                months.add(t.date.getMonth());
+            }
+        });
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        return Array.from(months).map(m => ({ value: String(m), label: monthNames[m] }));
+    }, [sortedTransactions, yearFilter]);
+
 
     const filteredTransactions = useMemo(() => sortedTransactions.filter(t => {
         const date = t.date;
@@ -116,6 +121,10 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
             setSelectedTransaction(null)
         }
     }
+    
+    const formatCurrency = (value: number) => {
+        return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    }
 
   return (
     <>
@@ -129,7 +138,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                         </div>
                         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                             <div className="flex gap-2">
-                                <Select value={yearFilter} onValueChange={setYearFilter}>
+                                <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
                                     <SelectTrigger className="w-full sm:w-[120px]">
                                         <SelectValue placeholder="Año" />
                                     </SelectTrigger>
@@ -146,7 +155,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {MONTHS.map(month => (
+                                        {availableMonths.map(month => (
                                             <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -172,7 +181,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                     <TableHead>Categoría</TableHead>
                                     <TableHead>Usuario</TableHead>
                                     <TableHead>Adjunto</TableHead>
-                                    <TableHead className="text-right">Monto (AR$)</TableHead>
+                                    <TableHead className="text-right">Monto (U$S)</TableHead>
                                     {canEdit && <TableHead className="w-[50px]"></TableHead>}
                                 </TableRow>
                             </TableHeader>
@@ -194,7 +203,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                                 )}
                                             </TableCell>
                                             <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                                {t.type === 'income' ? '+' : '-'}{t.amountARS.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}
+                                                {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountARS / (t.exchangeRate || 1))}
                                             </TableCell>
                                             {canEdit && <TableCell>
                                                 <DropdownMenu>
@@ -286,3 +295,5 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     </>
   )
 }
+
+    
