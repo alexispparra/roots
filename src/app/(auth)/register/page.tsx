@@ -37,8 +37,6 @@ export default function RegisterPage() {
         return;
     }
 
-    // The global AppContent component now handles critical config errors,
-    // so we can safely assume firebase instances are available here.
     const firebase = getFirebaseInstances()!
 
     try {
