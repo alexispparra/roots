@@ -4,7 +4,7 @@ import { getFirestore, type Firestore } from "firebase/firestore";
 
 // --- DYNAMIC CONFIGURATION FROM ENVIRONMENT VARIABLES ---
 // This is the standard and most secure way for Next.js applications.
-// The configuration is now loaded from `apphosting.yaml`.
+// The configuration is loaded from the `.env` file.
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -21,10 +21,13 @@ export const APP_ADMIN_EMAIL = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL;
 
 // --- DO NOT EDIT BELOW THIS LINE ---
 
-// Check that the environment variables have been loaded and are not placeholders.
-const isFirebaseConfigured =
-  firebaseConfig.apiKey &&
-  !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_");
+// A more robust check to ensure all required firebase config values are present
+// and are not the placeholder values.
+export const isFirebaseConfigured =
+  firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_") &&
+  firebaseConfig.authDomain && !firebaseConfig.authDomain.startsWith("REEMPLAZA_CON_TU_") &&
+  firebaseConfig.projectId && !firebaseConfig.projectId.startsWith("REEMPLAZA_CON_TU_");
+
 
 let firebaseInstances: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;
 

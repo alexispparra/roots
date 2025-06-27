@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import type { User } from 'firebase/auth';
-import { getFirebaseInstances, APP_ADMIN_EMAIL } from '@/lib/firebase';
+import { getFirebaseInstances, APP_ADMIN_EMAIL, isFirebaseConfigured } from '@/lib/firebase';
 
 // --- Type Definition ---
 type AuthContextType = {
@@ -21,18 +21,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAppAdmin, setIsAppAdmin] = useState(false);
-  const [configError, setConfigError] = useState<boolean>(false);
+  // The configError is now derived directly from the robust check in firebase.ts
+  const [configError, setConfigError] = useState<boolean>(!isFirebaseConfigured);
 
 
   useEffect(() => {
-    const firebase = getFirebaseInstances();
-    
-    if (!firebase) {
-      setConfigError(true);
-      setLoading(false);
-      return;
+    // If there's a config error, don't even try to initialize.
+    if (!isFirebaseConfigured) {
+        setLoading(false);
+        return;
     }
 
+    const firebase = getFirebaseInstances()!; // We know it's not null here.
+    
     let unsubscribe: () => void;
     
     import('firebase/auth').then(({ onAuthStateChanged }) => {
