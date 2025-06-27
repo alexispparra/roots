@@ -25,26 +25,24 @@ export const APP_ADMIN_EMAIL = "REEMPLAZA_CON_TU_EMAIL_DE_ADMIN";
 let firebaseInstances: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;
 
 /**
- * A robust function to get initialized Firebase services.
- * It ensures Firebase is initialized only once and that the configuration is valid.
- * This function is safe to call from both server and client components.
- * @returns An object with Firebase services (app, auth, db) or null if not configured.
+ * Initializes and returns Firebase services. Throws an error if configuration is invalid.
+ * This is the single source of truth for Firebase initialization.
+ * @returns An object with Firebase services { app, auth, db }.
  */
 export function getFirebaseInstances() {
   if (firebaseInstances) {
     return firebaseInstances;
   }
   
-  // This check is the definitive way to ensure config is loaded.
-  // It checks if the essential keys are present and not placeholders.
+  // This is the definitive check. If the config is a placeholder, Firebase will throw an error.
   const isConfigured = 
       firebaseConfig.apiKey &&
       firebaseConfig.projectId &&
       !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_");
 
   if (!isConfigured) {
-    console.error("Firebase config values are missing or are placeholders. Check your src/lib/firebase.ts file.");
-    return null;
+    // Throw a clear error that the AuthContext can catch and display to the user.
+    throw new Error("La configuración de Firebase en 'src/lib/firebase.ts' no está completa. Por favor, reemplaza los valores de ejemplo.");
   }
 
   try {
@@ -56,7 +54,8 @@ export function getFirebaseInstances() {
     return firebaseInstances;
 
   } catch (error) {
-    console.error("CRITICAL: Firebase initialization failed. This is likely due to invalid values in your src/lib/firebase.ts file.", error);
-    return null;
+    console.error("CRITICAL: Firebase initialization failed. This is likely due to invalid credentials in your src/lib/firebase.ts file.", error);
+    // Re-throw the error so the calling context knows initialization failed.
+    throw error;
   }
 }
