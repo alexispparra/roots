@@ -1,4 +1,3 @@
-
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
@@ -43,7 +42,7 @@ export function getFirebaseInstances() {
 
   // If the config isn't fully provided via environment variables, do not initialize.
   if (!isFirebaseConfigured) {
-    console.error("CRITICAL: Firebase configuration is missing or contains placeholders. Check your apphosting.yaml.");
+    console.error("CRITICAL: Firebase configuration is missing or contains placeholders. Check your apphosting.yaml and ensure all NEXT_PUBLIC_ variables are set.");
     return null;
   }
 

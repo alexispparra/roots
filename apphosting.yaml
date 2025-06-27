@@ -23,7 +23,7 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
     value: "REEMPLAZA_CON_TU_APP_ID"
   - variable: NEXT_PUBLIC_APP_ADMIN_EMAIL
-    value: "alexispparra@gmail.com"
+    value: "REEMPLAZA_CON_TU_ADMIN_EMAIL"
 
 runConfig:
   maxInstances: 1
