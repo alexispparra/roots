@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import type { User } from 'firebase/auth';
-import { getFirebaseInstances, APP_ADMIN_EMAIL, isFirebaseConfigured } from '@/lib/firebase';
+import { getFirebaseInstances, APP_ADMIN_EMAIL, firebaseConfig } from '@/lib/firebase';
 
 // --- Type Definition ---
 type AuthContextType = {
@@ -16,23 +16,41 @@ type AuthContextType = {
 // --- Context Object ---
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// A robust check to ensure all required firebase config values are present
+// and are not the placeholder values. This is now a standalone function.
+const isFirebaseConfigured = () => {
+    return (
+        firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_") &&
+        firebaseConfig.authDomain && !firebaseConfig.authDomain.startsWith("REEMPLAZA_CON_TU_") &&
+        firebaseConfig.projectId && !firebaseConfig.projectId.startsWith("REEMPLAZA_CON_TU_")
+    );
+}
+
 // --- Production-Ready Firebase Auth Provider ---
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAppAdmin, setIsAppAdmin] = useState(false);
-  // The configError is now derived directly from the robust check in firebase.ts
-  const [configError, setConfigError] = useState<boolean>(!isFirebaseConfigured);
+  // configError is now determined within the component's lifecycle, not at the module level.
+  const [configError, setConfigError] = useState<boolean>(false);
 
 
   useEffect(() => {
-    // If there's a config error, don't even try to initialize.
-    if (!isFirebaseConfigured) {
+    // The check now happens here, inside the effect, ensuring it runs
+    // after the environment has been fully loaded.
+    if (!isFirebaseConfigured()) {
+        setConfigError(true);
         setLoading(false);
         return;
     }
 
-    const firebase = getFirebaseInstances()!; // We know it's not null here.
+    const firebase = getFirebaseInstances();
+    // If initialization itself fails, it's also a config error.
+    if (!firebase) {
+        setConfigError(true);
+        setLoading(false);
+        return;
+    }
     
     let unsubscribe: () => void;
     

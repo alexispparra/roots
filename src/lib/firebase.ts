@@ -6,7 +6,7 @@ import { getFirestore, type Firestore } from "firebase/firestore";
 // This is the standard and most secure way for Next.js applications.
 // The configuration is loaded from the `.env` file.
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -21,29 +21,19 @@ export const APP_ADMIN_EMAIL = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL;
 
 // --- DO NOT EDIT BELOW THIS LINE ---
 
-// A more robust check to ensure all required firebase config values are present
-// and are not the placeholder values.
-export const isFirebaseConfigured =
-  firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_") &&
-  firebaseConfig.authDomain && !firebaseConfig.authDomain.startsWith("REEMPLAZA_CON_TU_") &&
-  firebaseConfig.projectId && !firebaseConfig.projectId.startsWith("REEMPLAZA_CON_TU_");
-
-
+// This function now simply initializes Firebase. The check for whether the
+// config is valid has been moved to AuthContext for more robust, timely checks.
 let firebaseInstances: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;
 
 /**
- * A robust function to get initialized Firebase services.
- * It ensures Firebase is initialized only once and that the configuration is valid.
- * This function is safe to call from both server and client components.
- * @returns An object with Firebase services (app, auth, db) or null if not configured.
+ * Gets initialized Firebase services.
+ * It ensures Firebase is initialized only once.
+ * This function should only be called after verifying the config is present.
+ * @returns An object with Firebase services (app, auth, db).
  */
 export function getFirebaseInstances() {
   if (firebaseInstances) {
     return firebaseInstances;
-  }
-
-  if (!isFirebaseConfigured) {
-    return null;
   }
 
   try {
@@ -56,6 +46,7 @@ export function getFirebaseInstances() {
 
   } catch (error) {
     console.error("CRITICAL: Firebase initialization failed.", error);
+    // Return null if initialization fails for any reason.
     return null;
   }
 }
