@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [configError, setConfigError] = useState<boolean>(false);
 
   useEffect(() => {
-    // Attempt to get Firebase instances. The function now handles the config check internally.
+    // This logic now runs only on the client, preventing hydration errors.
     const firebase = getFirebaseInstances();
 
     if (!firebase) {

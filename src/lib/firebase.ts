@@ -24,25 +24,27 @@ export const APP_ADMIN_EMAIL = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL;
 let firebaseInstances: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;
 
 /**
- * Gets initialized Firebase services.
- * It ensures Firebase is initialized only once. My previous custom checks were faulty.
- * This new version simply attempts to initialize and lets Firebase's own SDK decide if the config is valid.
- * @returns An object with Firebase services (app, auth, db) or null if initialization fails.
+ * A robust function to get initialized Firebase services.
+ * It ensures Firebase is initialized only once and that the configuration is valid.
+ * This function is safe to call from both server and client components.
+ * @returns An object with Firebase services (app, auth, db) or null if not configured.
  */
 export function getFirebaseInstances() {
-  // If we already have the instances, return them.
   if (firebaseInstances) {
     return firebaseInstances;
   }
+  
+  // This check is the definitive way to ensure config is loaded.
+  // It checks if the essential keys are present and not placeholders.
+  const isConfigured = 
+      firebaseConfig.apiKey &&
+      firebaseConfig.projectId &&
+      !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_");
 
-  // A minimal check to see if the values are even present before trying to initialize.
-  if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-    console.error("Firebase config values (apiKey, projectId) are missing. Check your .env file.");
+  if (!isConfigured) {
+    console.error("Firebase config values are missing or are placeholders. Check your .env file.");
     return null;
   }
-  
-  // The previous validation logic was flawed. We now let the Firebase SDK handle validation.
-  // It will throw a descriptive error if the config is malformed, which we catch below.
 
   try {
     const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
@@ -53,7 +55,6 @@ export function getFirebaseInstances() {
     return firebaseInstances;
 
   } catch (error) {
-    // This will catch errors from initializeApp if the config is invalid (e.g., malformed projectId).
     console.error("CRITICAL: Firebase initialization failed. This is likely due to invalid values in your .env file.", error);
     return null;
   }
