@@ -5,8 +5,6 @@ import { getFirestore, type Firestore } from "firebase/firestore";
 // --- CONFIGURACIÓN DIRECTA Y CENTRALIZADA ---
 // Por favor, rellena tus credenciales de Firebase aquí. Esta es ahora la
 // única fuente de verdad para la configuración de la aplicación.
-// Esto elimina los problemas con la carga de archivos .env en el entorno.
-
 export const firebaseConfig = {
   apiKey: "AIzaSyDS_pUeLHZAsyPHP1NuPLELXXYQtvTIi-w",
   authDomain: "projectflow-bvod7.firebaseapp.com",
@@ -25,7 +23,7 @@ export const APP_ADMIN_EMAIL = "alexispparra@gmail.com";
 let firebaseInstances: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;
 
 /**
- * Initializes and returns Firebase services. Throws an error if configuration is invalid.
+ * Initializes and returns Firebase services. Throws an error if configuration is invalid or connection fails.
  * This is the single source of truth for Firebase initialization.
  * @returns An object with Firebase services { app, auth, db }.
  */
@@ -35,7 +33,7 @@ export function getFirebaseInstances() {
     return firebaseInstances;
   }
   
-  // This is the definitive check. We check for placeholder values.
+  // Definitive check for placeholder values.
   const isConfigured = 
       firebaseConfig.apiKey &&
       firebaseConfig.projectId &&
@@ -43,12 +41,10 @@ export function getFirebaseInstances() {
 
   if (!isConfigured) {
     // This error is clear: the user has not replaced the placeholder values.
-    throw new Error("La configuración de Firebase en 'src/lib/firebase.ts' no está completa. Por favor, reemplaza los valores de ejemplo.");
+    throw new Error("La configuración de Firebase en 'src/lib/firebase.ts' no está completa. Por favor, reemplaza los valores de ejemplo con tus credenciales reales.");
   }
 
   try {
-    // We attempt to initialize the app. If the credentials from Firebase Console are
-    // incorrect (e.g., mistyped), this is where the official SDK will throw an error.
     const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -58,9 +54,8 @@ export function getFirebaseInstances() {
     return firebaseInstances;
 
   } catch (error: any) {
-    // If the Firebase SDK itself throws an error, we catch it and re-throw it.
-    // This is the most reliable way to know the credentials are fundamentally wrong.
+    // If the Firebase SDK itself throws an error, we catch it and re-throw a more user-friendly message.
     console.error("CRITICAL: Firebase initialization failed. This is likely due to invalid credentials in your src/lib/firebase.ts file.", error);
-    throw new Error(`Error de inicialización de Firebase: ${error.message}. Revisa que las credenciales en 'src/lib/firebase.ts' sean correctas.`);
+    throw new Error(`Error de inicialización de Firebase: ${error.message}. Revisa que las credenciales en 'src/lib/firebase.ts' sean correctas y válidas.`);
   }
 }
