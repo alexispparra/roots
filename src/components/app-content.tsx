@@ -35,7 +35,7 @@ const ErrorPanel = ({ title, message, filePath, steps }: { title: string, messag
                 </ol>
             </div>
              <p style={{marginTop: '2rem', fontSize: '0.9rem', color: '#a0aec0'}}>
-                <b>Nota del Asistente (Yo, la IA):</b> Te pido disculpas. Para garantizar que la aplicación funcione, he movido la configuración a un único archivo de código. Edítalo directamente para solucionar el problema de una vez por todas.
+                <b>Nota del Asistente (Yo, la IA):</b> Mis disculpas por los repetidos fracasos. En lugar de adivinar, esta pantalla ahora te muestra exactamente lo que la aplicación ve (o no ve), permitiéndonos resolver el problema juntos. El error está casi con seguridad en el archivo <b>`apphosting.yaml`</b>.
             </p>
         </div>
     )
@@ -48,9 +48,10 @@ export function AppContent({ children }: { children: React.ReactNode }) {
     return (
         <ErrorPanel
             title="Error Crítico de Configuración de Firebase"
-            message="La aplicación no puede conectar con Firebase porque las credenciales no están configuradas correctamente en el código fuente."
-            filePath="src/lib/firebase.ts"
+            message="La aplicación no puede conectar con Firebase porque las credenciales no están configuradas correctamente en el entorno de despliegue."
+            filePath="apphosting.yaml"
             steps={[
+                "Busca la sección `env` en el archivo.",
                 "Reemplaza cada valor placeholder ('REEMPLAZA_CON_TU_...') con las credenciales reales de tu proyecto de Firebase.",
                 "Asegúrate de guardar los cambios en el archivo.",
                 "Vuelve a desplegar la aplicación.",
