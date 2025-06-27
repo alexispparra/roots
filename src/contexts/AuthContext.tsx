@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
-import type { User, Auth, AuthProvider as FirebaseAuthProvider, UserCredential } from 'firebase/auth';
+import type { User, Auth, UserCredential } from 'firebase/auth';
 import { getFirebaseInstances, APP_ADMIN_EMAIL } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 
@@ -10,7 +10,6 @@ type AuthContextType = {
   loading: boolean;
   isAppAdmin: boolean;
   configError: string | null;
-  auth: Auth | null;
   signOut: () => Promise<void>;
   signInWithEmail: (email:string, password:string) => Promise<UserCredential>;
   signInWithGoogle: () => Promise<UserCredential>;
@@ -30,48 +29,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [firebaseAuth, setFirebaseAuth] = useState<Auth | null>(null);
 
   useEffect(() => {
-    let firebase;
     try {
-      firebase = getFirebaseInstances();
-      if (!firebase) {
-        throw new Error("La configuración de Firebase no está disponible.");
-      }
+      // Attempt to initialize Firebase. If it fails, the error will be caught.
+      const firebase = getFirebaseInstances();
       setFirebaseAuth(firebase.auth);
       setConfigError(null);
+      
+      // Dynamically import auth functions and set up the listener.
+      const authModulePromise = import('firebase/auth');
+      authModulePromise.then(({ onAuthStateChanged }) => {
+        const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser) => {
+          setUser(currentUser);
+          const adminEmail = APP_ADMIN_EMAIL || "";
+          setIsAppAdmin(!!(currentUser && adminEmail && currentUser.email === adminEmail && !adminEmail.startsWith("REEMPLAZA")));
+          setLoading(false);
+        });
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
+      }).catch(err => {
+          console.error("Failed to load firebase/auth module", err);
+          setConfigError("Error crítico al cargar los módulos de Firebase.");
+          setLoading(false);
+      });
+
     } catch (error: any) {
-      console.error("CRITICAL: Firebase initialization failed.", error.message);
+      // If getFirebaseInstances throws, it's a configuration error.
+      // We capture the REAL error message from the Firebase SDK here.
+      console.error("Caught Firebase initialization error in AuthContext:", error.message);
       setConfigError(error.message);
       setLoading(false);
-      return;
     }
-
-    const authModulePromise = import('firebase/auth');
-    
-    authModulePromise.then(({ onAuthStateChanged }) => {
-      const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser) => {
-        setUser(currentUser);
-        const adminEmail = APP_ADMIN_EMAIL || "";
-        setIsAppAdmin(!!(currentUser && adminEmail && currentUser.email === adminEmail && !adminEmail.startsWith("REEMPLAZA")));
-        setLoading(false);
-      });
-      return () => unsubscribe();
-    }).catch(err => {
-        console.error("Failed to load firebase/auth module", err);
-        setConfigError("Error crítico al cargar los módulos de Firebase.");
-        setLoading(false);
-    });
-
   }, []);
 
+  // useMemo ensures that our auth operation functions are stable and don't cause
+  // unnecessary re-renders in consumer components.
   const authOperations = useMemo(() => {
     if (!firebaseAuth) return {
-      signOut: async () => {},
-      signInWithEmail: async () => { throw new Error("Auth not initialized")},
-      signInWithGoogle: async () => { throw new Error("Auth not initialized")},
-      registerWithEmail: async () => { throw new Error("Auth not initialized")},
-      updateUserProfile: async () => { throw new Error("Auth not initialized")},
-      sendPasswordReset: async () => { throw new Error("Auth not initialized")},
-      reauthenticateAndPasswordChange: async () => { throw new Error("Auth not initialized")},
+      signOut: async () => { throw new Error("Firebase no inicializado")},
+      signInWithEmail: async () => { throw new Error("Firebase no inicializado")},
+      signInWithGoogle: async () => { throw new Error("Firebase no inicializado")},
+      registerWithEmail: async () => { throw new Error("Firebase no inicializado")},
+      updateUserProfile: async () => { throw new Error("Firebase no inicializado")},
+      sendPasswordReset: async () => { throw new Error("Firebase no inicializado")},
+      reauthenticateAndPasswordChange: async () => { throw new Error("Firebase no inicializado")},
     };
 
     return {
@@ -117,10 +117,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loading,
     isAppAdmin,
     configError,
-    auth: firebaseAuth,
     ...authOperations
   };
 
+  // While checking auth state, show a loader to prevent screen flicker.
+  // We don't render children until loading is false.
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-svh bg-background">

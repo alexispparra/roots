@@ -26,10 +26,11 @@ let firebaseInstances: { app: FirebaseApp; auth: Auth; db: Firestore } | null = 
 /**
  * A robust function to get initialized Firebase services.
  * It ensures Firebase is initialized only once and that the configuration is valid.
- * Throws an error if configuration is invalid.
+ * Throws an error if configuration is invalid, allowing the caller to handle it.
  * @returns An object with Firebase services { app, auth, db }.
  */
 export function getFirebaseInstances() {
+  // If an instance already exists, return it to avoid re-initializing.
   if (firebaseInstances) {
     return firebaseInstances;
   }
@@ -41,6 +42,7 @@ export function getFirebaseInstances() {
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // Store the initialized instances for subsequent calls.
     firebaseInstances = { app, auth, db };
     return firebaseInstances;
 
@@ -49,6 +51,7 @@ export function getFirebaseInstances() {
     // This provides a much more informative error message to the user
     // than a generic "configuration is missing" message.
     console.error("CRITICAL: Firebase initialization failed.", error.message);
+    // Re-throwing the original error is crucial for the AuthContext to catch it.
     throw new Error(error.message); 
   }
 }
