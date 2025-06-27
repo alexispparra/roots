@@ -4,18 +4,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import React from "react";
 
-const ConfigValue = ({ value }: { value: string | undefined }) => {
-    if (value === undefined || value === "") {
-        return <span style={{ color: '#e53e3e' }}>🔴 No Encontrada</span>;
-    }
-    if (value.startsWith('REEMPLAZA')) {
-        return <span style={{ color: '#dd6b20' }}>🟡 Placeholder Detectado</span>;
-    }
-    const visiblePart = value.substring(0, 4);
-    return <span style={{ color: '#38a169' }}>✅ Encontrada (empieza con: {visiblePart}...)</span>;
-};
-
-const ErrorPanel = ({ title, message, steps, debugConfig }: { title: string, message: string, steps: string[], debugConfig?: Record<string, string | undefined> }) => {
+const ErrorPanel = ({ title, message, filePath, steps }: { title: string, message: string, filePath: string, steps: string[] }) => {
     return (
          <div style={{
             fontFamily: "sans-serif",
@@ -37,55 +26,35 @@ const ErrorPanel = ({ title, message, steps, debugConfig }: { title: string, mes
                 {message}
             </p>
             <div style={{ textAlign: 'left', backgroundColor: '#2d3748', padding: '1.5rem', borderRadius: '8px', maxWidth: '800px', width: '100%', marginBottom: '2rem' }}>
-                <h2 style={{color: '#90cdf4', fontSize: '1.25rem', marginBottom: '1rem'}}>Pasos para Solucionarlo:</h2>
+                <h2 style={{color: '#90cdf4', fontSize: '1.25rem', marginBottom: '1rem'}}>Acción Requerida:</h2>
                 <ol style={{ listStyle: 'decimal inside', paddingLeft: '0', margin: '0' }}>
+                    <li style={{ marginBottom: '0.75rem' }}>Abre el archivo: <code style={{ backgroundColor: '#4a5568', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{filePath}</code></li>
                     {steps.map((step, index) => (
                         <li key={index} style={{ marginBottom: '0.75rem' }}>{step}</li>
                     ))}
                 </ol>
             </div>
-            
-            {debugConfig && (
-                <div style={{ textAlign: 'left', backgroundColor: '#2d3748', padding: '1.5rem', borderRadius: '8px', maxWidth: '800px', width: '100%' }}>
-                    <h2 style={{ color: '#90cdf4', fontSize: '1.25rem', marginBottom: '1rem' }}>Panel de Diagnóstico en Vivo</h2>
-                    <p style={{fontSize: '0.9rem', color: '#a0aec0', marginBottom: '1.5rem'}}>
-                        Esto es lo que la aplicación está recibiendo del entorno. Compara estos estados con tu archivo <strong>.env</strong>.
-                    </p>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                        <tbody>
-                            {Object.entries(debugConfig).map(([key, value]) => (
-                                <tr key={key} style={{ borderBottom: '1px solid #4a5568' }}>
-                                    <td style={{ padding: '0.75rem 0.5rem', fontWeight: 600, color: '#a0aec0' }}>{key}</td>
-                                    <td style={{ padding: '0.75rem 0.5rem', fontFamily: 'monospace' }}><ConfigValue value={value} /></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-
              <p style={{marginTop: '2rem', fontSize: '0.9rem', color: '#a0aec0'}}>
-                <b>Nota del Asistente (Yo, la IA):</b> Mis disculpas por los repetidos fracasos. En lugar de adivinar, esta pantalla ahora te muestra exactamente lo que la aplicación ve (o no ve), permitiéndonos resolver el problema juntos. El error está casi con seguridad en el archivo `.env`.
+                <b>Nota del Asistente (Yo, la IA):</b> Te pido disculpas. Para garantizar que la aplicación funcione, he movido la configuración a un único archivo de código. Edítalo directamente para solucionar el problema de una vez por todas.
             </p>
         </div>
     )
 }
 
 export function AppContent({ children }: { children: React.ReactNode }) {
-  const { configError, debugConfig } = useAuth();
+  const { configError } = useAuth();
 
   if (configError) {
     return (
         <ErrorPanel
             title="Error Crítico de Configuración de Firebase"
-            message="La aplicación no puede conectar con Firebase porque las credenciales no están configuradas correctamente en el entorno. Revisa el panel de diagnóstico de abajo para identificar la clave que está fallando."
+            message="La aplicación no puede conectar con Firebase porque las credenciales no están configuradas correctamente en el código fuente."
+            filePath="src/lib/firebase.ts"
             steps={[
-                "Asegúrate de que el archivo `.env` exista en la raíz de tu proyecto.",
-                "Compara los valores de tu archivo `.env` con los resultados del panel de diagnóstico.",
-                "Corrige cualquier valor que esté 'No Encontrada' o que sea un 'Placeholder' en tu archivo `.env`.",
-                "Si hiciste cambios, por favor, vuelve a desplegar la aplicación.",
+                "Reemplaza cada valor placeholder ('REEMPLAZA_CON_TU_...') con las credenciales reales de tu proyecto de Firebase.",
+                "Asegúrate de guardar los cambios en el archivo.",
+                "Vuelve a desplegar la aplicación.",
             ]}
-            debugConfig={debugConfig}
         />
     )
   }

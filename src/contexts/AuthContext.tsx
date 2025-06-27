@@ -10,8 +10,7 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   isAppAdmin: boolean;
-  configError: string | null;
-  debugConfig?: Record<string, string | undefined>;
+  configError: boolean;
 };
 
 // --- Context Object ---
@@ -22,25 +21,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAppAdmin, setIsAppAdmin] = useState(false);
-  const [configError, setConfigError] = useState<string | null>(null);
-  const [debugConfig, setDebugConfig] = useState<Record<string, string | undefined> | undefined>(undefined);
+  const [configError, setConfigError] = useState<boolean>(false);
 
 
   useEffect(() => {
     const firebase = getFirebaseInstances();
     
     if (!firebase) {
-      const rawConfig = {
-        NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-        NEXT_PUBLIC_APP_ADMIN_EMAIL: process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL,
-      };
-      setDebugConfig(rawConfig);
-      setConfigError("FIREBASE_INIT_FAILED");
+      setConfigError(true);
       setLoading(false);
       return;
     }
@@ -51,8 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       unsubscribe = onAuthStateChanged(firebase.auth, (user) => {
         setUser(user);
         
-        // Use the imported admin email constant
-        if (user && APP_ADMIN_EMAIL && user.email === APP_ADMIN_EMAIL) {
+        if (user && APP_ADMIN_EMAIL && user.email === APP_ADMIN_EMAIL && !APP_ADMIN_EMAIL.startsWith("REEMPLAZA")) {
           setIsAppAdmin(true);
         } else {
           setIsAppAdmin(false);
@@ -62,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     }).catch(error => {
       console.error("Critical Error: Failed to load Firebase auth modules.", error);
-      setConfigError("Error irrecuperable al cargar los módulos de Firebase.");
+      setConfigError(true);
       setLoading(false);
     });
 
@@ -75,7 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAppAdmin, configError, debugConfig }}>
+    <AuthContext.Provider value={{ user, loading, isAppAdmin, configError }}>
       {children}
     </AuthContext.Provider>
   );

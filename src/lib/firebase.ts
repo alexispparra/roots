@@ -3,31 +3,29 @@ import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 // --- SINGLE SOURCE OF TRUTH FOR CONFIGURATION ---
-// These environment variables are populated by Next.js from the .env file.
+// Edita los valores de abajo con tus credenciales de Firebase.
+// Esta es la solución definitiva para asegurar que la configuración se cargue siempre.
+
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "REEMPLAZA_CON_TU_API_KEY",
+  authDomain: "REEMPLAZA_CON_TU_AUTH_DOMAIN",
+  projectId: "REEMPLAZA_CON_TU_PROJECT_ID",
+  storageBucket: "REEMPLAZA_CON_TU_STORAGE_BUCKET",
+  messagingSenderId: "REEMPLAZA_CON_TU_MESSAGING_SENDER_ID",
+  appId: "REEMPLAZA_CON_TU_APP_ID",
 };
 
-// Check if all required environment variables are set.
+// El correo del administrador principal de la aplicación.
+export const APP_ADMIN_EMAIL = "REEMPLAZA_CON_TU_EMAIL_DE_ADMIN";
+
+
+// --- DO NOT EDIT BELOW THIS LINE ---
+
+// Verifica que los valores de arriba hayan sido reemplazados.
 const isFirebaseConfigured =
   firebaseConfig.apiKey &&
-  firebaseConfig.authDomain &&
-  firebaseConfig.projectId &&
-  firebaseConfig.storageBucket &&
-  firebaseConfig.messagingSenderId &&
-  firebaseConfig.appId &&
   !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_");
 
-
-// The email for the application administrator.
-export const APP_ADMIN_EMAIL = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL || "";
-
-// This object will hold the initialized Firebase instances.
 let firebaseInstances: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;
 
 /**
@@ -41,9 +39,7 @@ export function getFirebaseInstances() {
     return firebaseInstances;
   }
 
-  // If the config isn't fully provided via environment variables, do not initialize.
   if (!isFirebaseConfigured) {
-    // We don't log an error here because the AppContent component will show a user-friendly error panel.
     return null;
   }
 
