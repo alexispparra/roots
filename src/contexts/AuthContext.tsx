@@ -36,8 +36,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       authModulePromise.then(({ onAuthStateChanged }) => {
         const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser) => {
           setUser(currentUser);
-          const adminEmail = APP_ADMIN_EMAIL || "";
-          setIsAppAdmin(!!(currentUser && adminEmail && currentUser.email === adminEmail && !adminEmail.startsWith("REEMPLAZA")));
+          
+          // Robust admin check
+          const adminEmailFromEnv = (APP_ADMIN_EMAIL || "").trim().toLowerCase();
+          const userEmail = (currentUser?.email || "").trim().toLowerCase();
+          
+          setIsAppAdmin(!!(adminEmailFromEnv && userEmail && adminEmailFromEnv === userEmail));
+          
           setLoading(false);
         });
         return () => unsubscribe();
@@ -48,7 +53,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     } catch (error: any) {
       console.error("CRITICAL: Firebase initialization failed.", error);
-      // Let the app show a generic error boundary, no need for custom state.
       setLoading(false);
     }
   }, []);
