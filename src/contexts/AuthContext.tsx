@@ -19,10 +19,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // A robust check to ensure all required firebase config values are present
 // and are not the placeholder values. This is now a standalone function.
 const isFirebaseConfigured = () => {
+    // This check is now robust against undefined values to prevent crashes.
     return (
-        firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_") &&
-        firebaseConfig.authDomain && !firebaseConfig.authDomain.startsWith("REEMPLAZA_CON_TU_") &&
-        firebaseConfig.projectId && !firebaseConfig.projectId.startsWith("REEMPLAZA_CON_TU_")
+        !!firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_") &&
+        !!firebaseConfig.authDomain && !firebaseConfig.authDomain.startsWith("REEMPLAZA_CON_TU_") &&
+        !!firebaseConfig.projectId && !firebaseConfig.projectId.startsWith("REEMPLAZA_CON_TU_")
     );
 }
 
