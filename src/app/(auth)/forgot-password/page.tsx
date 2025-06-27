@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { getFirebaseInstances } from "@/lib/firebase"
+import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -18,6 +18,7 @@ import { Loader2, AlertCircle, CheckCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function ForgotPasswordPage() {
+  const { sendPasswordReset } = useAuth();
   const [email, setEmail] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -30,13 +31,8 @@ export default function ForgotPasswordPage() {
     setSuccess(null)
     setIsLoading(true)
 
-    // The global AppContent component now handles critical config errors,
-    // so we can safely assume firebase instances are available here.
-    const firebase = getFirebaseInstances()!
-
     try {
-        const { sendPasswordResetEmail } = await import("firebase/auth")
-        await sendPasswordResetEmail(firebase.auth, email)
+        await sendPasswordReset(email)
         setSuccess("Si existe una cuenta con este correo, recibirás un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y spam.")
     } catch (error: any) {
         console.error("Firebase Password Reset Error:", error.code, error.message)

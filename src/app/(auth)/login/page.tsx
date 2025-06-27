@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { getFirebaseInstances } from "@/lib/firebase"
+import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -26,6 +26,7 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 )
 
 export default function LoginPage() {
+  const { signInWithEmail, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -37,11 +38,8 @@ export default function LoginPage() {
     setError(null)
     setIsLoading(true)
 
-    const firebase = getFirebaseInstances()!
-
     try {
-      const { signInWithEmailAndPassword } = await import("firebase/auth")
-      await signInWithEmailAndPassword(firebase.auth, email, password)
+      await signInWithEmail(email, password)
       // Redirection is handled by AuthLayout
     } catch (error: any) {
       console.error("Firebase Login Error:", error.code, error.message)
@@ -58,18 +56,8 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setError(null)
     setIsGoogleLoading(true)
-
-    const firebase = getFirebaseInstances()
-    if (!firebase) {
-      setError("El servicio de autenticación no está disponible.")
-      setIsGoogleLoading(false)
-      return
-    }
-
     try {
-      const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth")
-      const provider = new GoogleAuthProvider()
-      await signInWithPopup(firebase.auth, provider)
+      await signInWithGoogle();
       // Redirection is handled by AuthLayout
     } catch (error: any) {
       console.error("Google Login Error:", error)

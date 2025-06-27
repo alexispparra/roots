@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { getFirebaseInstances } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
@@ -34,7 +32,7 @@ const passwordFormSchema = z.object({
 });
 
 export default function SettingsPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, updateUserProfile, reauthenticateAndPasswordChange, signOut } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -67,16 +65,10 @@ export default function SettingsPage() {
   }, [user, profileForm]);
 
   async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
-    const firebase = getFirebaseInstances();
-    if (!user || !firebase) {
-        toast({ variant: "destructive", title: "Error de Configuración", description: "No se pudo conectar a Firebase. Revisa 'apphosting.yaml'." });
-        return;
-    }
-
+    if (!user) return;
     setIsProfileLoading(true);
     try {
-      const { updateProfile } = await import("firebase/auth");
-      await updateProfile(user, { displayName: values.displayName });
+      await updateUserProfile(user, { displayName: values.displayName });
       toast({
         title: "Perfil Actualizado",
         description: "Tu nombre ha sido actualizado.",
@@ -95,27 +87,20 @@ export default function SettingsPage() {
   }
 
   async function onPasswordSubmit(values: z.infer<typeof passwordFormSchema>) {
-    const firebase = getFirebaseInstances();
-    if (!user || !user.email || !firebase) {
-        setPasswordError("Error de Configuración: No se pudo conectar a Firebase. Revisa 'apphosting.yaml'.");
-        return;
-    }
+    if (!user) return;
 
     setIsPasswordLoading(true);
     setPasswordError(null);
 
     try {
-      const { EmailAuthProvider, reauthenticateWithCredential, updatePassword } = await import("firebase/auth");
-      const credential = EmailAuthProvider.credential(user.email, values.currentPassword);
-      await reauthenticateWithCredential(user, credential);
-      await updatePassword(user, values.newPassword);
+      await reauthenticateAndPasswordChange(values.currentPassword, values.newPassword);
       
       toast({
         title: "Contraseña Actualizada",
         description: "Tu contraseña ha sido cambiada. Se cerrará tu sesión por seguridad.",
       });
 
-      await firebase.auth.signOut();
+      await signOut();
       router.push("/login");
 
     } catch (error: any) {

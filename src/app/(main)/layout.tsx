@@ -17,7 +17,6 @@ import { Navigation } from "@/components/navigation";
 import { Logo } from "@/components/logo";
 import { ProjectsProvider } from "@/contexts/ProjectsContext";
 import { Button } from "@/components/ui/button";
-import { getFirebaseInstances } from "@/lib/firebase";
 import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -27,7 +26,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -40,17 +39,8 @@ export default function MainLayout({
 
 
   const handleLogout = async () => {
-    const firebase = getFirebaseInstances();
-    if (!firebase) {
-        toast({
-            variant: "destructive",
-            title: "Error de Configuración",
-            description: "El servicio de autenticación no está disponible.",
-        });
-        return;
-    }
     try {
-        await firebase.auth.signOut();
+        await signOut();
         toast({ title: "Has cerrado sesión." });
         // La redirección a /login es manejada por el useEffect de arriba
         // cuando el estado del usuario se vuelve nulo.

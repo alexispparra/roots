@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -74,13 +73,18 @@ const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined
 
 // --- Production-Ready Firebase Projects Provider ---
 export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
+  const { user, configError } = useAuth();
   const { toast } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
 
   useEffect(() => {
+    if (configError) {
+        setLoading(false);
+        return;
+    }
+
     const firebase = getFirebaseInstances();
     if (!user || !firebase) {
       setProjects([]);
@@ -126,7 +130,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
             unsubscribe();
         }
     };
-  }, [user, toast]);
+  }, [user, toast, configError]);
 
   const getProjectById = useCallback((id: string | null) => {
     if (!id) return undefined;
@@ -617,5 +621,3 @@ export const useProjects = () => {
   }
   return context;
 };
-
-    

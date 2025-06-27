@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { getFirebaseInstances } from "@/lib/firebase"
+import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -18,6 +18,7 @@ import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function RegisterPage() {
+  const { registerWithEmail, updateUserProfile } = useAuth();
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
@@ -36,14 +37,11 @@ export default function RegisterPage() {
         return;
     }
 
-    const firebase = getFirebaseInstances()!
-
     try {
-      const { createUserWithEmailAndPassword, updateProfile } = await import("firebase/auth")
-      const userCredential = await createUserWithEmailAndPassword(firebase.auth, email, password)
+      const userCredential = await registerWithEmail(email, password)
       
       const fullName = `${firstName} ${lastName}`.trim();
-      await updateProfile(userCredential.user, { displayName: fullName })
+      await updateUserProfile(userCredential.user, { displayName: fullName })
       
       // Redirection is handled by AuthLayout upon detecting the new logged-in user.
     } catch (error: any) {
