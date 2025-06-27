@@ -55,18 +55,6 @@ export function Navigation() {
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            asChild
-            isActive={pathname === "/accounts"}
-            tooltip="Cuentas"
-          >
-            <Link href="/accounts">
-              <Wallet />
-              <span>Cuentas</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
         
         {isAppAdmin && (
           <SidebarMenuItem>
