@@ -22,16 +22,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let firebase;
     try {
-      // This is the single point of truth for initialization.
-      // If it throws, we catch it and set the error state.
       firebase = getFirebaseInstances();
-      setConfigError(null); // Clear any previous errors if initialization succeeds this far
+      setConfigError(null); 
     } catch (error: any) {
       console.error("Caught Firebase Initialization Error in AuthContext:", error.message);
-      // Set the user-friendly error message from the exception thrown by getFirebaseInstances.
       setConfigError(error.message);
       setLoading(false);
-      return; // Stop execution if config is invalid
+      return; 
     }
       
     const authModulePromise = import('firebase/auth');
@@ -46,7 +43,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       });
 
-      // Cleanup subscription on component unmount
       return () => unsubscribe();
     }).catch(err => {
         console.error("Failed to load firebase/auth module", err);

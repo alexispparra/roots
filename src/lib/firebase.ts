@@ -2,20 +2,21 @@ import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
-// --- CONFIGURACIÓN DIRECTA Y CENTRALIZADA ---
-// Por favor, rellena tus credenciales de Firebase aquí. Esta es ahora la
-// única fuente de verdad para la configuración de la aplicación.
-export const firebaseConfig = {
-  apiKey: "REEMPLAZA_CON_TU_API_KEY",
-  authDomain: "REEMPLAZA_CON_TU_AUTH_DOMAIN",
-  projectId: "REEMPLAZA_CON_TU_PROJECT_ID",
-  storageBucket: "REEMPLAZA_CON_TU_STORAGE_BUCKET",
-  messagingSenderId: "REEMPLAZA_CON_TU_MESSAGING_SENDER_ID",
-  appId: "REEMPLAZA_CON_TU_APP_ID",
+// --- DYNAMIC CONFIGURATION FROM ENVIRONMENT VARIABLES ---
+// This is the standard and most secure way for Next.js applications.
+// The configuration is loaded from the `.env` file.
+
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// El email del administrador también se define aquí.
-export const APP_ADMIN_EMAIL = "REEMPLAZA_CON_TU_EMAIL_DE_ADMIN";
+// The admin email is also loaded from the environment.
+export const APP_ADMIN_EMAIL = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL;
 
 
 // --- DO NOT EDIT BELOW THIS LINE ---
@@ -23,39 +24,35 @@ export const APP_ADMIN_EMAIL = "REEMPLAZA_CON_TU_EMAIL_DE_ADMIN";
 let firebaseInstances: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;
 
 /**
- * Initializes and returns Firebase services. Throws an error if configuration is invalid or connection fails.
- * This is the single source of truth for Firebase initialization.
+ * A robust function to get initialized Firebase services.
+ * It ensures Firebase is initialized only once and that the configuration is valid.
+ * Throws an error if configuration is invalid.
  * @returns An object with Firebase services { app, auth, db }.
  */
 export function getFirebaseInstances() {
-  // If an instance already exists, return it to prevent re-initialization.
   if (firebaseInstances) {
     return firebaseInstances;
   }
-  
-  // Definitive check for placeholder values.
+
   const isConfigured = 
       firebaseConfig.apiKey &&
       firebaseConfig.projectId &&
       !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_");
 
   if (!isConfigured) {
-    // This error is clear: the user has not replaced the placeholder values.
-    throw new Error("La configuración de Firebase en 'src/lib/firebase.ts' no está completa. Por favor, reemplaza los valores de ejemplo con tus credenciales reales.");
+    throw new Error("La configuración de Firebase en el archivo .env no está completa o no se ha cargado. Asegúrate de que el archivo .env existe y tiene los valores correctos, y luego reinicia el servidor.");
   }
-
+  
   try {
     const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Store the successfully created instances.
     firebaseInstances = { app, auth, db };
     return firebaseInstances;
 
   } catch (error: any) {
-    // If the Firebase SDK itself throws an error, we catch it and re-throw a more user-friendly message.
-    console.error("CRITICAL: Firebase initialization failed. This is likely due to invalid credentials in your src/lib/firebase.ts file.", error);
-    throw new Error(`Error de inicialización de Firebase: ${error.message}. Revisa que las credenciales en 'src/lib/firebase.ts' sean correctas y válidas.`);
+    console.error("CRITICAL: Firebase initialization failed. This is likely due to invalid credentials in your .env file.", error);
+    throw new Error(`Error de inicialización de Firebase: ${error.message}. Revisa que las credenciales en tu archivo .env sean correctas y válidas.`);
   }
 }

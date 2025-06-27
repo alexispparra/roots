@@ -45,15 +45,16 @@ export function AppContent({ children }: { children: React.ReactNode }) {
             title="Error Crítico de Configuración de Firebase"
             message={
                 <>
-                    <p>{configError}</p>
-                    <p style={{ marginTop: "1rem" }}><strong>La Solución Final y Definitiva:</strong></p>
+                    <p>La aplicación no puede conectar con Firebase porque las credenciales no están configuradas en el entorno. Esto suele deberse a un problema con el archivo <strong>.env</strong>.</p>
+                    <p style={{ marginTop: "1rem" }}><strong>Error específico:</strong> <code style={{ backgroundColor: '#4a5568', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', fontSize: '0.95em' }}>{configError}</code></p>
+                    <p style={{ marginTop: "1rem" }}><strong>Pasos para Solucionarlo:</strong></p>
                     <ol style={{ listStyleType: 'decimal', paddingLeft: '2rem', marginTop: '0.5rem' }}>
-                        <li>Abre el archivo: <code style={{ backgroundColor: '#4a5568', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', fontSize: '0.95em' }}>src/lib/firebase.ts</code></li>
-                        <li>Dentro de ese archivo, rellena los valores "REEMPLAZA_CON_TU_..." con tus credenciales reales de Firebase.</li>
-                        <li>Guarda el archivo y vuelve a desplegar la aplicación (o reinicia el servidor local).</li>
+                        <li>Asegúrate de que el archivo <strong>.env</strong> exista en la raíz de tu proyecto.</li>
+                        <li>Verifica que todas las variables <code>NEXT_PUBLIC_...</code> dentro del archivo <strong>.env</strong> tengan valores válidos y no los placeholders "REEMPLAZA_CON_TU...".</li>
+                        <li>Si hiciste cambios en el archivo <strong>.env</strong>, por favor, vuelve a desplegar la aplicación para que tome los nuevos valores.</li>
                     </ol>
-                    <p style={{ marginTop: '1rem', fontStyle: 'italic', color: '#a0aec0' }}>
-                        Si el error persiste después de rellenar las claves, significa que las credenciales que copiaste de la consola de Firebase son incorrectas. Por favor, verifícalas de nuevo.
+                     <p style={{ marginTop: '1rem', fontStyle: 'italic', color: '#a0aec0' }}>
+                        Si el error persiste, significa que las credenciales que copiaste de la consola de Firebase son incorrectas. Por favor, verifícalas de nuevo.
                     </p>
                 </>
             }
