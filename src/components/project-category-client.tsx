@@ -21,7 +21,7 @@ export default function ProjectCategoryClient() {
   const searchParams = useSearchParams()
   const projectId = searchParams.get('projectId')
   const categoryName = searchParams.get('categoryName')
-  const { getProjectById, loading, updateTransaction, deleteTransaction, addTransaction } = useProjects()
+  const { getProjectById, loading, updateTransaction, deleteTransaction, addTransaction, getUserRoleForProject } = useProjects()
 
   const [isEditExpenseDialogOpen, setIsEditExpenseDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -33,8 +33,8 @@ export default function ProjectCategoryClient() {
     [project, categoryName]
   );
   
-  // TODO: Get user role to determine if they can edit
-  const canEdit = true; // Placeholder
+  const userRole = project ? getUserRoleForProject(project.id) : null;
+  const canEdit = userRole === 'admin' || userRole === 'editor';
 
   const categoryTransactions = useMemo(() => {
     if (!project || !categoryName) return [];
@@ -44,7 +44,7 @@ export default function ProjectCategoryClient() {
   }, [project, categoryName])
 
   const categorySpent = useMemo(() => 
-    categoryTransactions.reduce((acc, t) => acc + (t.amountARS / (t.exchangeRate || 1)), 0),
+    categoryTransactions.reduce((acc, t) => acc + (t.amountUSD || 0), 0),
     [categoryTransactions]
   );
   
@@ -52,7 +52,7 @@ export default function ProjectCategoryClient() {
     if (!project) return 0;
     return project.transactions
         .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + (t.amountARS / (t.exchangeRate || 1)), 0);
+        .reduce((sum, t) => sum + (t.amountUSD || 0), 0);
   }, [project]);
 
 
@@ -203,7 +203,7 @@ export default function ProjectCategoryClient() {
                                     <TableCell className="font-medium">{t.description}</TableCell>
                                     <TableCell>{t.user}</TableCell>
                                     <TableCell className="text-right font-medium text-destructive">
-                                      -${(t.amountARS / (t.exchangeRate || 1)).toFixed(2)}
+                                      -${(t.amountUSD || 0).toFixed(2)}
                                     </TableCell>
                                     {canEdit && <TableCell>
                                         <DropdownMenu>
