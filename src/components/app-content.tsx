@@ -42,19 +42,22 @@ export function AppContent({ children }: { children: React.ReactNode }) {
   if (configError) {
     return (
         <ErrorPanel
-            title="Error Crítico de Configuración de Firebase"
+            title="Error de Conexión con Firebase"
             message={
                 <>
-                    <p>La aplicación no puede conectar con Firebase porque las credenciales no están configuradas en el entorno. Esto suele deberse a un problema con el archivo <strong>.env</strong>.</p>
-                    <p style={{ marginTop: "1rem" }}><strong>Error específico:</strong> <code style={{ backgroundColor: '#4a5568', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', fontSize: '0.95em' }}>{configError}</code></p>
-                    <p style={{ marginTop: "1rem" }}><strong>Pasos para Solucionarlo:</strong></p>
+                    <p>La aplicación no pudo inicializar Firebase. Esto significa que hay un problema con las credenciales de configuración.</p>
+                    <p style={{ marginTop: "1rem" }}><strong>Mensaje de error directo de Firebase:</strong></p>
+                    <pre style={{ backgroundColor: '#4a5568', padding: '0.5rem 0.8rem', borderRadius: '0.25rem', fontSize: '0.9em', whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginTop: '0.5rem' }}>
+                        <code>{configError}</code>
+                    </pre>
+                    <p style={{ marginTop: "1rem" }}><strong>Cómo solucionarlo:</strong></p>
                     <ol style={{ listStyleType: 'decimal', paddingLeft: '2rem', marginTop: '0.5rem' }}>
-                        <li>Asegúrate de que el archivo <strong>.env</strong> exista en la raíz de tu proyecto.</li>
-                        <li>Verifica que todas las variables <code>NEXT_PUBLIC_...</code> dentro del archivo <strong>.env</strong> tengan valores válidos y no los placeholders "REEMPLAZA_CON_TU...".</li>
-                        <li>Si hiciste cambios en el archivo <strong>.env</strong>, por favor, vuelve a desplegar la aplicación para que tome los nuevos valores.</li>
+                        <li>Abre el archivo <strong>.env</strong> en la raíz de tu proyecto.</li>
+                        <li>Compara cuidadosamente cada clave (<code>NEXT_PUBLIC_FIREBASE_API_KEY</code>, etc.) con los valores de tu Firebase Console para asegurarte de que no haya errores de tipeo. El error de arriba te dará una pista (ej: "invalid-api-key").</li>
+                        <li>Si realizaste cambios, vuelve a desplegar la aplicación para que tome los nuevos valores.</li>
                     </ol>
                      <p style={{ marginTop: '1rem', fontStyle: 'italic', color: '#a0aec0' }}>
-                        Si el error persiste, significa que las credenciales que copiaste de la consola de Firebase son incorrectas. Por favor, verifícalas de nuevo.
+                        Este error es directamente del SDK de Firebase. La causa más común es un valor incorrecto o faltante en el archivo <strong>.env</strong>.
                     </p>
                 </>
             }

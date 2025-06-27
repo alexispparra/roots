@@ -33,17 +33,10 @@ export function getFirebaseInstances() {
   if (firebaseInstances) {
     return firebaseInstances;
   }
-
-  const isConfigured = 
-      firebaseConfig.apiKey &&
-      firebaseConfig.projectId &&
-      !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_");
-
-  if (!isConfigured) {
-    throw new Error("La configuración de Firebase en el archivo .env no está completa o no se ha cargado. Asegúrate de que el archivo .env existe y tiene los valores correctos, y luego reinicia el servidor.");
-  }
   
   try {
+    // Pass the config object directly to the Firebase SDK.
+    // If any key is missing or invalid, initializeApp will throw a specific and useful error.
     const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -52,7 +45,10 @@ export function getFirebaseInstances() {
     return firebaseInstances;
 
   } catch (error: any) {
-    console.error("CRITICAL: Firebase initialization failed. This is likely due to invalid credentials in your .env file.", error);
-    throw new Error(`Error de inicialización de Firebase: ${error.message}. Revisa que las credenciales en tu archivo .env sean correctas y válidas.`);
+    // Catch the specific error from the Firebase SDK and re-throw it.
+    // This provides a much more informative error message to the user
+    // than a generic "configuration is missing" message.
+    console.error("CRITICAL: Firebase initialization failed.", error.message);
+    throw new Error(error.message); 
   }
 }
