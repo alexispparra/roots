@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
 import React from "react";
 
-const ErrorPanel = ({ title, message, errorData }: { title: string, message: React.ReactNode, errorData: { message: string, debugInfo?: string } }) => {
+const ErrorPanel = ({ title, message, errorData }: { title: string, message: React.ReactNode, errorData: { message: string; debugInfo?: string } }) => {
     return (
          <div style={{
             fontFamily: "sans-serif",
@@ -49,7 +50,7 @@ export function AppContent({ children }: { children: React.ReactNode }) {
             errorData={configError}
             message={
                 <>
-                    <p>La aplicación no pudo inicializar Firebase. Esto casi siempre se debe a un problema con las credenciales de configuración en tu archivo <strong>.env</strong>.</p>
+                    <p>La aplicación no pudo inicializar Firebase. Esto casi siempre se debe a un problema con las credenciales de configuración.</p>
                     <p style={{ marginTop: "1rem" }}><strong>Cómo solucionarlo:</strong></p>
                     <ol style={{ listStyleType: 'decimal', paddingLeft: '2rem', marginTop: '0.5rem' }}>
                         <li>Abre el archivo <strong>.env</strong> en la raíz de tu proyecto.</li>

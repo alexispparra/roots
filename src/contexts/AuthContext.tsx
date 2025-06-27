@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
@@ -5,11 +6,16 @@ import type { User, Auth, UserCredential } from 'firebase/auth';
 import { getFirebaseInstances, APP_ADMIN_EMAIL } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 
+type ConfigError = {
+  message: string;
+  debugInfo?: string;
+}
+
 type AuthContextType = {
   user: User | null;
   loading: boolean;
   isAppAdmin: boolean;
-  configError: { message: string; debugInfo?: string } | null;
+  configError: ConfigError | null;
   signOut: () => Promise<void>;
   signInWithEmail: (email:string, password:string) => Promise<UserCredential>;
   signInWithGoogle: () => Promise<UserCredential>;
@@ -25,7 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAppAdmin, setIsAppAdmin] = useState(false);
-  const [configError, setConfigError] = useState<{ message: string; debugInfo?: string } | null>(null);
+  const [configError, setConfigError] = useState<ConfigError | null>(null);
   const [firebaseAuth, setFirebaseAuth] = useState<Auth | null>(null);
 
   useEffect(() => {
@@ -57,10 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // We capture the REAL error message from the Firebase SDK here.
       console.error("CRITICAL: Firebase initialization failed.", error.message);
       
-      // This is the debug info you requested
-      const debugString = `Leída: "${process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? `${process.env.NEXT_PUBLIC_FIREBASE_API_KEY.slice(0, 5)}...${process.env.NEXT_PUBLIC_FIREBASE_API_KEY.slice(-5)}` : "No Leída"}"`;
-      
-      setConfigError({ message: error.message, debugInfo: debugString });
+      setConfigError({ message: error.message });
       setLoading(false);
     }
   }, []);
