@@ -3,7 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import React from "react";
 
-const ErrorPanel = ({ title, message, errorCode, debugInfo }: { title: string, message: React.ReactNode, errorCode: string, debugInfo?: string }) => {
+const ErrorPanel = ({ title, message, errorData }: { title: string, message: React.ReactNode, errorData: { message: string, debugInfo?: string } }) => {
     return (
          <div style={{
             fontFamily: "sans-serif",
@@ -23,13 +23,13 @@ const ErrorPanel = ({ title, message, errorCode, debugInfo }: { title: string, m
                   {message}
                    <p style={{ marginTop: "1.5rem" }}><strong>Mensaje de error REAL del SDK de Firebase:</strong></p>
                     <pre style={{ backgroundColor: '#171923', padding: '0.8rem 1rem', borderRadius: '0.375rem', fontSize: '0.9em', whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginTop: '0.5rem', border: '1px solid #4a5568' }}>
-                        <code>{errorCode}</code>
+                        <code>{errorData.message}</code>
                     </pre>
-                    {debugInfo && (
+                    {errorData.debugInfo && (
                         <>
                            <p style={{ marginTop: "1.5rem" }}><strong>Información de Depuración:</strong></p>
                            <pre style={{ backgroundColor: '#171923', padding: '0.8rem 1rem', borderRadius: '0.375rem', fontSize: '0.9em', whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginTop: '0.5rem', border: '1px solid #4a5568' }}>
-                               <code>{debugInfo}</code>
+                               <code>{errorData.debugInfo}</code>
                            </pre>
                         </>
                    )}
@@ -46,8 +46,7 @@ export function AppContent({ children }: { children: React.ReactNode }) {
     return (
         <ErrorPanel
             title="Error de Conexión con Firebase"
-            errorCode={configError.message}
-            debugInfo={configError.debugInfo}
+            errorData={configError}
             message={
                 <>
                     <p>La aplicación no pudo inicializar Firebase. Esto casi siempre se debe a un problema con las credenciales de configuración en tu archivo <strong>.env</strong>.</p>
