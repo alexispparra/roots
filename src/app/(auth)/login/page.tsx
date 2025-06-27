@@ -11,41 +11,46 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Link from "next/link"
 import { Logo } from "@/components/logo"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
+// Inline SVG for Google Logo to avoid extra dependencies
+const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.62 1.98-4.66 1.98-3.56 0-6.47-2.92-6.47-6.5s2.91-6.5 6.47-6.5c1.96 0 3.37.79 4.31 1.74l2.52-2.52C17.44 3.12 15.21 2 12.48 2 7.23 2 3.23 6.01 3.23 11.25s4 9.25 9.25 9.25c5.33 0 9.09-3.75 9.09-9.16 0-.58-.06-1.15-.15-1.71h-9.09z" />
+  </svg>
+)
+
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const [isFormLoading, setIsFormLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleGoogleLogin = async () => {
     setError(null)
-    setIsFormLoading(true)
+    setIsLoading(true)
 
-    // The global AppContent component now handles critical config errors,
-    // so we can safely assume firebase instances are available here.
-    const firebase = getFirebaseInstances()!
+    const firebase = getFirebaseInstances()
+    if (!firebase) {
+      setError("El servicio de autenticación no está disponible en este momento. Revisa la configuración de Firebase.")
+      setIsLoading(false)
+      return
+    }
 
     try {
-      const { signInWithEmailAndPassword } = await import("firebase/auth")
-      await signInWithEmailAndPassword(firebase.auth, email, password)
+      const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth")
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(firebase.auth, provider)
       // Redirection is handled by AuthLayout upon detecting the new auth state.
     } catch (error: any) {
-      console.error("Firebase Login Error:", error.code, error.message)
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-        setError("El correo electrónico o la contraseña son incorrectos.")
+      console.error("Google Login Error:", error)
+      if (error.code === 'auth/popup-closed-by-user') {
+        // Don't show an error if the user intentionally closes the popup.
       } else {
-        setError("Ocurrió un error inesperado. Por favor, inténtalo de nuevo.")
+        setError("Ocurrió un error al intentar iniciar sesión con Google. Por favor, inténtalo de nuevo.")
       }
     } finally {
-      setIsFormLoading(false)
+      setIsLoading(false)
     }
   }
 
@@ -56,60 +61,30 @@ export default function LoginPage() {
           <div className="flex justify-center p-6">
             <Logo className="h-10 w-auto" />
           </div>
-          <CardTitle className="text-2xl font-headline text-center">Iniciar Sesión</CardTitle>
+          <CardTitle className="text-2xl font-headline text-center">Bienvenido</CardTitle>
           <CardDescription className="text-center">
-            Ingresa tus datos para acceder a tus proyectos
+            Inicia sesión para acceder a tus proyectos
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="grid gap-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error de Inicio de Sesión</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+        <CardContent className="grid gap-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error de Inicio de Sesión</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <Button onClick={handleGoogleLogin} variant="outline" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <>
+                <GoogleIcon className="mr-2 h-4 w-4" />
+                Iniciar Sesión con Google
+              </>
             )}
-            <div className="grid gap-2">
-              <Label htmlFor="email">Correo Electrónico</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="usuario@ejemplo.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isFormLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-               <div className="flex items-center">
-                <Label htmlFor="password">Contraseña</Label>
-                 <Link
-                  href="/forgot-password"
-                  className="ml-auto inline-block text-sm underline hover:text-primary"
-                >
-                  ¿Olvidaste tu contraseña?
-                </Link>
-              </div>
-              <Input id="password" 
-                type="password" 
-                required 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isFormLoading}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isFormLoading}>
-              {isFormLoading ? <Loader2 className="animate-spin" /> : "Ingresar"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            ¿No tienes una cuenta?{" "}
-            <Link href="/register" className="underline hover:text-primary">
-              Regístrate
-            </Link>
-          </div>
+          </Button>
         </CardContent>
       </Card>
     </div>
