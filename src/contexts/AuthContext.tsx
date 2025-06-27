@@ -26,18 +26,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // This effect now robustly handles initialization.
     try {
+      // The getFirebaseInstances function is now the single source of truth for validation.
+      // If it throws, we catch it and display the error.
       const firebase = getFirebaseInstances();
-      // If getFirebaseInstances succeeds, we proceed. If it fails, it throws and we catch.
-      if (!firebase) {
-        throw new Error("La configuración de Firebase en 'src/lib/firebase.ts' no es válida o está incompleta. Por favor, revisa que todas las claves estén correctamente rellenas y no sean placeholders.");
-      }
       
+      // We only proceed if we get valid instances.
       const authModulePromise = import('firebase/auth');
       
       authModulePromise.then(({ onAuthStateChanged }) => {
         const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser) => {
           setUser(currentUser);
           
+          // The admin email might also be a placeholder, so we check that too.
           const adminEmail = APP_ADMIN_EMAIL || "";
           setIsAppAdmin(!!(currentUser && adminEmail && currentUser.email === adminEmail && !adminEmail.startsWith("REEMPLAZA")));
           
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     } catch (error: any) {
       console.error("Firebase Initialization Failed:", error.message);
-      // Set a user-friendly error message to be displayed.
+      // Set the user-friendly error message caught from getFirebaseInstances.
       setConfigError(error.message);
       setLoading(false);
     }

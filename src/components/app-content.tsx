@@ -53,6 +53,9 @@ export function AppContent({ children }: { children: React.ReactNode }) {
                         <li>Dentro de ese archivo, rellena los valores "REEMPLAZA_CON_TU_..." con tus credenciales reales de Firebase.</li>
                         <li>Guarda el archivo y vuelve a desplegar la aplicación (o reinicia el servidor local).</li>
                     </ol>
+                    <p style={{ marginTop: '1rem', fontStyle: 'italic', color: '#a0aec0' }}>
+                        Si el error persiste después de rellenar las claves, significa que las credenciales que copiaste de la consola de Firebase son incorrectas. Por favor, verifícalas de nuevo.
+                    </p>
                 </>
             }
         />
