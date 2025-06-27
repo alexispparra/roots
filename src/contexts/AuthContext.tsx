@@ -20,38 +20,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [configError, setConfigError] = useState<string | null>(null);
 
   useEffect(() => {
+    let firebase;
     try {
       // This is the single point of truth for initialization.
       // If it throws, we catch it and set the error state.
-      const firebase = getFirebaseInstances();
-      
-      const authModulePromise = import('firebase/auth');
-      
-      authModulePromise.then(({ onAuthStateChanged }) => {
-        const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser) => {
-          setUser(currentUser);
-          
-          const adminEmail = APP_ADMIN_EMAIL || "";
-          setIsAppAdmin(!!(currentUser && adminEmail && currentUser.email === adminEmail && !adminEmail.startsWith("REEMPLAZA")));
-          
-          setLoading(false);
-          setConfigError(null); // Clear error on successful auth state change
-        });
-
-        // Cleanup subscription on component unmount
-        return () => unsubscribe();
-      }).catch(err => {
-         console.error("Failed to load firebase/auth module", err);
-         setConfigError("Error crítico al cargar los módulos de Firebase.");
-         setLoading(false);
-      });
-
+      firebase = getFirebaseInstances();
+      setConfigError(null); // Clear any previous errors if initialization succeeds this far
     } catch (error: any) {
       console.error("Caught Firebase Initialization Error in AuthContext:", error.message);
       // Set the user-friendly error message from the exception thrown by getFirebaseInstances.
       setConfigError(error.message);
       setLoading(false);
+      return; // Stop execution if config is invalid
     }
+      
+    const authModulePromise = import('firebase/auth');
+    
+    authModulePromise.then(({ onAuthStateChanged }) => {
+      const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser) => {
+        setUser(currentUser);
+        
+        const adminEmail = APP_ADMIN_EMAIL || "";
+        setIsAppAdmin(!!(currentUser && adminEmail && currentUser.email === adminEmail && !adminEmail.startsWith("REEMPLAZA")));
+        
+        setLoading(false);
+      });
+
+      // Cleanup subscription on component unmount
+      return () => unsubscribe();
+    }).catch(err => {
+        console.error("Failed to load firebase/auth module", err);
+        setConfigError("Error crítico al cargar los módulos de Firebase.");
+        setLoading(false);
+    });
+
   }, []);
   
   const value = { user, loading, isAppAdmin, configError };
