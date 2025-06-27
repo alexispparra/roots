@@ -35,16 +35,6 @@ export function getFirebaseInstances() {
     return firebaseInstances;
   }
   
-  // --- TEMPORARY DEBUGGING LOG ---
-  // This will print the environment variables to the server logs
-  // to help us verify they are being loaded correctly.
-  console.log("--- Firebase Config Loaded by App ---");
-  console.log("API Key:", process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
-  console.log("Auth Domain:", process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN);
-  console.log("Project ID:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
-  console.log("-------------------------------------");
-  // --- END DEBUGGING LOG ---
-
   try {
     // Pass the config object directly to the Firebase SDK.
     // If any key is missing or invalid, initializeApp will throw a specific and useful error.
