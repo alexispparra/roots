@@ -2,18 +2,26 @@ import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
-// --- DYNAMIC CONFIGURATION FROM ENVIRONMENT VARIABLES ---
-// This is the standard and most secure way for Next.js applications.
-// The configuration is loaded from the `.env` file.
+// --- DYNAMIC CONFIGURATION ---
+// This logic handles both deployed Firebase environments and local development.
+let firebaseConfig;
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+// Firebase App Hosting automatically provides this environment variable.
+if (process.env.FIREBASE_WEBAPP_CONFIG) {
+  // We are in a deployed environment.
+  firebaseConfig = JSON.parse(process.env.FIREBASE_WEBAPP_CONFIG);
+} else {
+  // We are in a local environment, so we use the .env file.
+  firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  };
+}
+
 
 // The admin email is also loaded from the environment.
 export const APP_ADMIN_EMAIL = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL;

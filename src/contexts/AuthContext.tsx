@@ -9,7 +9,7 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   isAppAdmin: boolean;
-  configError: { message: string, debugInfo?: string } | null;
+  configError: string | null;
   signOut: () => Promise<void>;
   signInWithEmail: (email:string, password:string) => Promise<UserCredential>;
   signInWithGoogle: () => Promise<UserCredential>;
@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAppAdmin, setIsAppAdmin] = useState(false);
-  const [configError, setConfigError] = useState<{ message: string, debugInfo?: string } | null>(null);
+  const [configError, setConfigError] = useState<string | null>(null);
   const [firebaseAuth, setFirebaseAuth] = useState<Auth | null>(null);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return () => unsubscribe();
       }).catch(err => {
           console.error("Failed to load firebase/auth module", err);
-          setConfigError({ message: "Error crítico al cargar los módulos de Firebase." });
+          setConfigError("Error crítico al cargar los módulos de Firebase.");
           setLoading(false);
       });
 
@@ -57,13 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // We capture the REAL error message from the Firebase SDK here.
       console.error("Caught Firebase initialization error in AuthContext:", error.message);
       
-      const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-      const keySnippet = apiKey ? `Leída: "${apiKey.substring(0, 5)}...${apiKey.slice(-5)}"` : "No Leída";
-
-      setConfigError({
-        message: error.message,
-        debugInfo: `Valor de NEXT_PUBLIC_FIREBASE_API_KEY - ${keySnippet}`
-      });
+      setConfigError(error.message);
       setLoading(false);
     }
   }, []);
