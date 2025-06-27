@@ -8,7 +8,7 @@ import type { Project, UpdateProjectData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, AlertTriangle, Briefcase, BarChart2, List, Users, MoreVertical, Pencil, Trash2, CalendarDays } from "lucide-react";
+import { Loader2, AlertTriangle, LayoutGrid, BarChart2, List, Users, MoreVertical, Pencil, Trash2, CalendarDays } from "lucide-react";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ProjectCategoriesTab } from '@/components/project-categories-tab';
@@ -113,7 +113,7 @@ export default function ProjectDetailClient() {
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
           <TabsTrigger value="dashboard"><BarChart2 className="mr-2 h-4 w-4" />Resumen</TabsTrigger>
           <TabsTrigger value="transactions"><List className="mr-2 h-4 w-4" />Transacciones</TabsTrigger>
-          <TabsTrigger value="categories"><Briefcase className="mr-2 h-4 w-4" />Categorías</TabsTrigger>
+          <TabsTrigger value="categories"><LayoutGrid className="mr-2 h-4 w-4" />Categorías</TabsTrigger>
           <TabsTrigger value="calendar"><CalendarDays className="mr-2 h-4 w-4" />Calendario</TabsTrigger>
           {isAdmin && <TabsTrigger value="team"><Users className="mr-2 h-4 w-4" />Equipo</TabsTrigger>}
         </TabsList>
