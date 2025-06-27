@@ -57,8 +57,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // We capture the REAL error message from the Firebase SDK here.
       console.error("Caught Firebase initialization error in AuthContext:", error.message);
       
-      const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "No Leída";
-      const keySnippet = `Leída: "${apiKey.substring(0, 5)}...${apiKey.slice(-5)}"`;
+      const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+      const keySnippet = apiKey ? `Leída: "${apiKey.substring(0, 5)}...${apiKey.slice(-5)}"` : "No Leída";
 
       setConfigError({
         message: error.message,
