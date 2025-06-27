@@ -4,16 +4,25 @@ import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 // --- SINGLE SOURCE OF TRUTH FOR CONFIGURATION ---
-// To break the deployment loop, the Firebase config is now hardcoded here.
-// This is not standard practice for security, but it guarantees the app uses the correct keys.
+// These environment variables are populated by apphosting.yaml and MUST be prefixed
+// with NEXT_PUBLIC_ to be available in the browser-side code.
 const firebaseConfig = {
-  apiKey: "AIzaSyDS_pUeLHZAsyPHP1NuPLELXXYQtvTIi-w",
-  authDomain: "projectflow-bvod7.firebaseapp.com",
-  projectId: "projectflow-bvod7",
-  storageBucket: "projectflow-bvod7.firebasestorage.app",
-  messagingSenderId: "980756790749",
-  appId: "1:980756790749:web:7804b032b21501fbfd4a34",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
+
+// Check if all required environment variables are set.
+const isFirebaseConfigured =
+  firebaseConfig.apiKey &&
+  firebaseConfig.authDomain &&
+  firebaseConfig.projectId &&
+  firebaseConfig.storageBucket &&
+  firebaseConfig.messagingSenderId &&
+  firebaseConfig.appId;
 
 // The email for the application administrator.
 // IMPORTANT: Change this to your actual admin email address if it's different.
@@ -33,7 +42,12 @@ export function getFirebaseInstances() {
     return firebaseInstances;
   }
 
-  // The configuration is now always valid because it's hardcoded.
+  // If the config isn't fully provided via environment variables, do not initialize.
+  if (!isFirebaseConfigured) {
+    console.error("CRITICAL: Firebase configuration is missing from environment variables. Check your apphosting.yaml.");
+    return null;
+  }
+
   try {
     const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     const auth = getAuth(app);
