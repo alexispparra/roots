@@ -27,11 +27,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const firebase = getFirebaseInstances();
     
     if (!firebase) {
-      setConfigError(
-        "La aplicación no puede conectar con Firebase porque las credenciales no están configuradas en el entorno. " +
-        "Esto es un problema de configuración del despliegue, no un error en el código de la aplicación. " +
-        "La aplicación no puede funcionar sin estas claves."
-      );
+      // Instead of a generic message, create a detailed diagnostic string.
+      // This will be parsed by the AppContent component to show a debug table.
+      const config = {
+        NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+        NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+      };
+      const debugString = JSON.stringify(config);
+      setConfigError("FIREBASE_CONFIG_ERROR:::" + debugString);
       setLoading(false);
       return;
     }
