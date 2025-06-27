@@ -11,6 +11,7 @@ type AuthContextType = {
   loading: boolean;
   isAppAdmin: boolean;
   configError: string | null;
+  debugConfig?: Record<string, string | undefined>;
 };
 
 // --- Context Object ---
@@ -22,12 +23,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isAppAdmin, setIsAppAdmin] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
+  const [debugConfig, setDebugConfig] = useState<Record<string, string | undefined> | undefined>(undefined);
+
 
   useEffect(() => {
     const firebase = getFirebaseInstances();
     
     if (!firebase) {
-      // This path is now less likely but kept as a safeguard.
+      const rawConfig = {
+        NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+        NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+        NEXT_PUBLIC_APP_ADMIN_EMAIL: process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL,
+      };
+      setDebugConfig(rawConfig);
       setConfigError("FIREBASE_INIT_FAILED");
       setLoading(false);
       return;
@@ -63,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAppAdmin, configError }}>
+    <AuthContext.Provider value={{ user, loading, isAppAdmin, configError, debugConfig }}>
       {children}
     </AuthContext.Provider>
   );
