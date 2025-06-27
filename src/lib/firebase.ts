@@ -21,19 +21,30 @@ export const APP_ADMIN_EMAIL = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL;
 
 // --- DO NOT EDIT BELOW THIS LINE ---
 
-// This function now simply initializes Firebase. The check for whether the
-// config is valid has been moved to AuthContext for more robust, timely checks.
 let firebaseInstances: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;
 
 /**
  * Gets initialized Firebase services.
- * It ensures Firebase is initialized only once.
- * This function should only be called after verifying the config is present.
- * @returns An object with Firebase services (app, auth, db).
+ * It ensures Firebase is initialized only once and that the configuration is valid.
+ * This function is safe to call from both server and client components.
+ * @returns An object with Firebase services (app, auth, db) or null if not configured.
  */
 export function getFirebaseInstances() {
   if (firebaseInstances) {
     return firebaseInstances;
+  }
+
+  // Robust check to ensure all required firebase config values are present
+  // and are not the placeholder values. This prevents initialization errors.
+  const isConfigValid = (
+    firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_") &&
+    firebaseConfig.authDomain && !firebaseConfig.authDomain.startsWith("REEMPLAZA_CON_TU_") &&
+    firebaseConfig.projectId && !firebaseConfig.projectId.startsWith("REEMPLAZA_CON_TU_")
+  );
+
+  if (!isConfigValid) {
+    console.error("Firebase config is invalid or missing. Check your .env file.");
+    return null;
   }
 
   try {

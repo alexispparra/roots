@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import type { User } from 'firebase/auth';
-import { getFirebaseInstances, APP_ADMIN_EMAIL, firebaseConfig } from '@/lib/firebase';
+import { getFirebaseInstances, APP_ADMIN_EMAIL } from '@/lib/firebase';
 
 // --- Type Definition ---
 type AuthContextType = {
@@ -16,50 +16,34 @@ type AuthContextType = {
 // --- Context Object ---
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// A robust check to ensure all required firebase config values are present
-// and are not the placeholder values. This is now a standalone function.
-const isFirebaseConfigured = () => {
-    // This check is now robust against undefined values to prevent crashes.
-    return (
-        !!firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("REEMPLAZA_CON_TU_") &&
-        !!firebaseConfig.authDomain && !firebaseConfig.authDomain.startsWith("REEMPLAZA_CON_TU_") &&
-        !!firebaseConfig.projectId && !firebaseConfig.projectId.startsWith("REEMPLAZA_CON_TU_")
-    );
-}
-
 // --- Production-Ready Firebase Auth Provider ---
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAppAdmin, setIsAppAdmin] = useState(false);
-  // configError is now determined within the component's lifecycle, not at the module level.
   const [configError, setConfigError] = useState<boolean>(false);
 
-
   useEffect(() => {
-    // The check now happens here, inside the effect, ensuring it runs
-    // after the environment has been fully loaded.
-    if (!isFirebaseConfigured()) {
-        setConfigError(true);
-        setLoading(false);
-        return;
-    }
-
+    // Attempt to get Firebase instances. The function now handles the config check internally.
     const firebase = getFirebaseInstances();
-    // If initialization itself fails, it's also a config error.
+
     if (!firebase) {
-        setConfigError(true);
-        setLoading(false);
-        return;
+      // If instances are null, it means the config is invalid or initialization failed.
+      setConfigError(true);
+      setLoading(false);
+      return;
     }
     
+    // If we get here, config is valid and Firebase is initialized.
     let unsubscribe: () => void;
     
     import('firebase/auth').then(({ onAuthStateChanged }) => {
       unsubscribe = onAuthStateChanged(firebase.auth, (user) => {
         setUser(user);
         
-        if (user && APP_ADMIN_EMAIL && user.email === APP_ADMIN_EMAIL && !APP_ADMIN_EMAIL.startsWith("REEMPLAZA")) {
+        // Use a safe check for APP_ADMIN_EMAIL
+        const adminEmail = APP_ADMIN_EMAIL || "";
+        if (user && adminEmail && user.email === adminEmail && !adminEmail.startsWith("REEMPLAZA")) {
           setIsAppAdmin(true);
         } else {
           setIsAppAdmin(false);
@@ -81,8 +65,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  const value = { user, loading, isAppAdmin, configError };
+
   return (
-    <AuthContext.Provider value={{ user, loading, isAppAdmin, configError }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
