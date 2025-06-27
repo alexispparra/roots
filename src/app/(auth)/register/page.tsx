@@ -37,12 +37,9 @@ export default function RegisterPage() {
         return;
     }
 
-    const firebase = getFirebaseInstances()
-    if (!firebase) {
-      setError("Error de Configuración: El servicio de autenticación no está disponible. Por favor, contacta al administrador.")
-      setIsLoading(false)
-      return
-    }
+    // The global AppContent component now handles critical config errors,
+    // so we can safely assume firebase instances are available here.
+    const firebase = getFirebaseInstances()!
 
     try {
       const { createUserWithEmailAndPassword, updateProfile } = await import("firebase/auth")
@@ -51,7 +48,7 @@ export default function RegisterPage() {
       const fullName = `${firstName} ${lastName}`.trim();
       await updateProfile(userCredential.user, { displayName: fullName })
       
-      // La redirección es manejada por el AuthLayout al detectar el nuevo usuario logueado
+      // Redirection is handled by AuthLayout upon detecting the new logged-in user.
     } catch (error: any) {
       console.error("Firebase Register Error:", error.code, error.message)
       if (error.code === 'auth/email-already-in-use') {

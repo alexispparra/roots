@@ -29,17 +29,14 @@ export default function LoginPage() {
     setError(null)
     setIsFormLoading(true)
 
-    const firebase = getFirebaseInstances()
-    if (!firebase) {
-      setError("Error de Configuración: El servicio de autenticación no está disponible. Por favor, contacta al administrador.")
-      setIsFormLoading(false)
-      return
-    }
+    // The global AppContent component now handles critical config errors,
+    // so we can safely assume firebase instances are available here.
+    const firebase = getFirebaseInstances()!
 
     try {
       const { signInWithEmailAndPassword } = await import("firebase/auth")
       await signInWithEmailAndPassword(firebase.auth, email, password)
-      // La redirección es manejada por el AuthLayout al detectar el nuevo estado de autenticación
+      // Redirection is handled by AuthLayout upon detecting the new auth state.
     } catch (error: any) {
       console.error("Firebase Login Error:", error.code, error.message)
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {

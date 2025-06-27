@@ -31,12 +31,9 @@ export default function ForgotPasswordPage() {
     setSuccess(null)
     setIsLoading(true)
 
-    const firebase = getFirebaseInstances()
-    if (!firebase) {
-      setError("Error de Configuración: El servicio de autenticación no está disponible. Por favor, contacta al administrador.")
-      setIsLoading(false)
-      return
-    }
+    // The global AppContent component now handles critical config errors,
+    // so we can safely assume firebase instances are available here.
+    const firebase = getFirebaseInstances()!
 
     try {
         const { sendPasswordResetEmail } = await import("firebase/auth")
@@ -44,8 +41,8 @@ export default function ForgotPasswordPage() {
         setSuccess("Si existe una cuenta con este correo, recibirás un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y spam.")
     } catch (error: any) {
         console.error("Firebase Password Reset Error:", error.code, error.message)
-        // No mostramos un error de "usuario no encontrado" por seguridad.
-        // Siempre mostramos el mensaje de éxito.
+        // For security, we don't reveal if a user doesn't exist.
+        // We always show the success message.
         setSuccess("Si existe una cuenta con este correo, recibirás un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y spam.")
     } finally {
         setIsLoading(false)
