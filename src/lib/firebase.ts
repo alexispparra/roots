@@ -1,10 +1,22 @@
+
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 // --- DYNAMIC CONFIGURATION ---
 // This logic handles both deployed Firebase environments and local development.
-let firebaseConfig;
+
+// Define a type for the Firebase configuration object to satisfy TypeScript.
+type FirebaseConfig = {
+  apiKey?: string;
+  authDomain?: string;
+  projectId?: string;
+  storageBucket?: string;
+  messagingSenderId?: string;
+  appId?: string;
+};
+
+let firebaseConfig: FirebaseConfig;
 
 // Firebase App Hosting automatically provides this environment variable.
 if (process.env.FIREBASE_WEBAPP_CONFIG) {
