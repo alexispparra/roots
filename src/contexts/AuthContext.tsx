@@ -9,7 +9,7 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   isAppAdmin: boolean;
-  configError: string | null;
+  configError: { message: string; debugInfo?: string } | null;
   signOut: () => Promise<void>;
   signInWithEmail: (email:string, password:string) => Promise<UserCredential>;
   signInWithGoogle: () => Promise<UserCredential>;
@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAppAdmin, setIsAppAdmin] = useState(false);
-  const [configError, setConfigError] = useState<string | null>(null);
+  const [configError, setConfigError] = useState<{ message: string; debugInfo?: string } | null>(null);
   const [firebaseAuth, setFirebaseAuth] = useState<Auth | null>(null);
 
   useEffect(() => {
@@ -48,16 +48,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return () => unsubscribe();
       }).catch(err => {
           console.error("Failed to load firebase/auth module", err);
-          setConfigError("Error crítico al cargar los módulos de Firebase.");
+          setConfigError({ message: "Error crítico al cargar los módulos de Firebase."});
           setLoading(false);
       });
 
     } catch (error: any) {
       // If getFirebaseInstances throws, it's a configuration error.
       // We capture the REAL error message from the Firebase SDK here.
-      console.error("Caught Firebase initialization error in AuthContext:", error.message);
+      console.error("CRITICAL: Firebase initialization failed.", error.message);
       
-      setConfigError(error.message);
+      // This is the debug info you requested
+      const debugString = `Leída: "${process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? `${process.env.NEXT_PUBLIC_FIREBASE_API_KEY.slice(0, 5)}...${process.env.NEXT_PUBLIC_FIREBASE_API_KEY.slice(-5)}` : "No Leída"}"`;
+      
+      setConfigError({ message: error.message, debugInfo: debugString });
       setLoading(false);
     }
   }, []);
