@@ -44,7 +44,7 @@ export default function ProjectCategoryClient() {
   }, [project, categoryName])
 
   const categorySpent = useMemo(() => 
-    categoryTransactions.reduce((acc, t) => acc + t.amountARS, 0),
+    categoryTransactions.reduce((acc, t) => acc + (t.amountARS / (t.exchangeRate || 1)), 0),
     [categoryTransactions]
   );
   
@@ -52,7 +52,7 @@ export default function ProjectCategoryClient() {
     if (!project) return 0;
     return project.transactions
         .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amountARS, 0);
+        .reduce((sum, t) => sum + (t.amountARS / (t.exchangeRate || 1)), 0);
   }, [project]);
 
 

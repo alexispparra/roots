@@ -41,13 +41,17 @@ export function CategorySpendingChart({ categorySpent, totalProjectExpenses, cat
     },
   }
 
-  const categorySpentFormatted = categorySpent.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
-  const totalProjectExpensesFormatted = totalProjectExpenses.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  }
+
+  const categorySpentFormatted = formatCurrency(categorySpent);
+  const totalProjectExpensesFormatted = formatCurrency(totalProjectExpenses);
 
   return (
     <Card className="flex flex-col light-data-card">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Proporción de Gasto</CardTitle>
+        <CardTitle>Proporción de Gasto (U$S)</CardTitle>
         <CardDescription>"{categoryName}" vs. Gasto Total del Proyecto</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
@@ -59,7 +63,7 @@ export function CategorySpendingChart({ categorySpent, totalProjectExpenses, cat
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Tooltip
-                  formatter={(value: number) => value.toLocaleString("es-AR", { style: "currency", currency: "ARS" })}
+                  formatter={(value: number) => formatCurrency(value)}
                 />
                 <Pie
                   data={chartData}
