@@ -1,5 +1,5 @@
-
 import { useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { type Project } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -8,7 +8,12 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
-import { ProjectMap } from '@/components/project-map'
+import { Skeleton } from '@/components/ui/skeleton'
+
+const ProjectMap = dynamic(() => import('@/components/project-map').then(mod => mod.ProjectMap), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />,
+});
 
 
 type ProjectSummaryProps = {
