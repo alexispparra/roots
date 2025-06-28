@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -30,6 +29,7 @@ export function ProjectMap({ address }: ProjectMapProps) {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: apiKey,
     libraries,
+    mapIds: [mapId],
   });
 
   const [center, setCenter] = useState(defaultCenter);
