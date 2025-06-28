@@ -34,14 +34,12 @@ const convertFirestoreDataToProject = (docData: any): Project => {
             endDate: c.endDate ? c.endDate.toDate() : null,
         })),
         transactions: (data.transactions || []).map((t: any) => {
-            // Backwards compatibility for old transactions without amountUSD
-            const exchangeRate = t.exchangeRate || 1;
-            const amountUSD = t.amountUSD ?? (t.amountARS / exchangeRate);
             return {
                 ...t,
                 date: t.date.toDate(),
-                amountUSD: amountUSD,
-                exchangeRate: exchangeRate,
+                amountUSD: t.amountUSD ?? 0,
+                amountARS: t.amountARS ?? 0,
+                exchangeRate: t.exchangeRate ?? 1,
             }
         }),
         events: (data.events || []).map((e: any) => ({
@@ -81,7 +79,7 @@ const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined
 
 // --- Production-Ready Firebase Projects Provider ---
 export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,6 +87,14 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const firebase = getFirebaseInstances();
+    
+    // Explicitly wait for auth to finish before doing anything.
+    if (authLoading) {
+        setLoading(true);
+        return;
+    }
+    
+    // If auth is done and there's no user, clear projects and stop.
     if (!user || !user.email) {
       setProjects([]);
       setLoading(false);
@@ -135,7 +141,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
             unsubscribe();
         }
     };
-  }, [user, toast]);
+  }, [user, authLoading, toast]);
 
   const getProjectById = useCallback((id: string | null) => {
     if (!id) return undefined;

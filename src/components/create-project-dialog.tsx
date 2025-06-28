@@ -51,24 +51,35 @@ export function CreateProjectDialog() {
     setIsSubmitting(true);
     try {
       const newProjectId = await addProject(values);
-
+      // This is the key change: we use the returned ID to navigate.
+      // If the ID is null, it means creation failed, and we stay on the page.
       if (newProjectId) {
-        // Success: Navigate away. The component will unmount.
-        setOpen(false);
-        form.reset();
+        setOpen(false); // Close the dialog on success
         router.push(`/project-detail?id=${newProjectId}`);
       } else {
-        // Failure: The project was not created. Reset the button to allow another attempt.
+        // If addProject returns null, it means there was an error (handled by toast in context)
+        // We just need to re-enable the button for another attempt.
         setIsSubmitting(false);
       }
     } catch (error) {
-        // Handle any unexpected errors during project creation
+        // Catch any unexpected errors from the creation process
+        console.error("Unexpected error creating project:", error);
         setIsSubmitting(false);
     }
   }
 
+  // Reset form when dialog is closed
+  const onOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      form.reset();
+      setIsSubmitting(false);
+    }
+  };
+
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2" />
