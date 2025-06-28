@@ -83,7 +83,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[250px]">Nombre</TableHead>
+                <TableHead>Nombre</TableHead>
                 <TableHead>Progreso</TableHead>
                 <TableHead>Fechas</TableHead>
                 <TableHead className="text-right">Presupuesto</TableHead>

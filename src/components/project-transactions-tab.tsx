@@ -129,7 +129,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
   return (
     <>
         <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
-            <div className="lg:col-span-2 grid gap-6">
+            <div className="lg:col-span-2 grid gap-6 min-w-0">
                 <Card>
                     <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div>
