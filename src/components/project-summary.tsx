@@ -8,6 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
+import dynamic from 'next/dynamic'
+import { Skeleton } from './ui/skeleton'
+
+const ProjectMapClient = dynamic(() => import('@/components/project-map-client'), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />
+})
 
 type ProjectSummaryProps = {
   project: Project
@@ -22,14 +29,7 @@ const COLORS = [
 ];
 
 export function ProjectSummary({ project }: ProjectSummaryProps) {
-  const { 
-    totalIncome, 
-    totalExpenses, 
-    balance, 
-    expensesByCategory, 
-    recentTransactions, 
-    overallProgress 
-  } = useMemo(() => {
+  const data = useMemo(() => {
     const income = project.transactions
       .filter(t => t.type === 'income')
       .reduce((acc, t) => acc + t.amountUSD, 0);
@@ -62,7 +62,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
     const totalProgress = project.categories.reduce((sum, category) => sum + (category.progress ?? 0), 0);
     const progress = project.categories.length > 0 ? totalProgress / project.categories.length : 0;
 
-    return { 
+    return {
       totalIncome: income,
       totalExpenses: expenses,
       balance: bal,
@@ -85,7 +85,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <ArrowUpRight className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-emerald-500">{formatCurrency(totalIncome)}</div>
+                <div className="text-2xl font-bold text-emerald-500">{formatCurrency(data.totalIncome)}</div>
             </CardContent>
           </Card>
           <Card>
@@ -94,7 +94,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <ArrowDownLeft className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-destructive">{formatCurrency(totalExpenses)}</div>
+                <div className="text-2xl font-bold text-destructive">{formatCurrency(data.totalExpenses)}</div>
             </CardContent>
           </Card>
           <Card>
@@ -103,7 +103,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <Scale className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className={`text-2xl font-bold ${balance >= 0 ? 'text-foreground' : 'text-destructive'}`}>{formatCurrency(balance)}</div>
+                <div className={`text-2xl font-bold ${data.balance >= 0 ? 'text-foreground' : 'text-destructive'}`}>{formatCurrency(data.balance)}</div>
             </CardContent>
           </Card>
            <Card>
@@ -112,8 +112,8 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                   <Percent className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                  <div className="text-2xl font-bold">{`${overallProgress.toFixed(1)}%`}</div>
-                  <Progress value={overallProgress} className="mt-2" />
+                  <div className="text-2xl font-bold">{`${data.overallProgress.toFixed(1)}%`}</div>
+                  <Progress value={data.overallProgress} className="mt-2" />
               </CardContent>
             </Card>
        </div>
@@ -125,13 +125,13 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <CardDescription>Distribución de los gastos del proyecto.</CardDescription>
             </CardHeader>
             <CardContent>
-              {expensesByCategory.length > 0 ? (
+              {data.expensesByCategory.length > 0 ? (
                 <>
                   <div className="h-[250px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={expensesByCategory}
+                          data={data.expensesByCategory}
                           cx="50%"
                           cy="50%"
                           labelLine={false}
@@ -141,7 +141,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                           nameKey="name"
                           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         >
-                          {expensesByCategory.map((entry, index) => (
+                          {data.expensesByCategory.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
@@ -158,7 +158,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {expensesByCategory.map((category) => (
+                      {data.expensesByCategory.map((category) => (
                         <TableRow key={category.name}>
                           <TableCell className="font-medium">{category.name}</TableCell>
                           <TableCell className="text-right">{formatCurrency(category.value)}</TableCell>
@@ -188,8 +188,8 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {recentTransactions.length > 0 ? (
-                            recentTransactions.map((t) => (
+                        {data.recentTransactions.length > 0 ? (
+                            data.recentTransactions.map((t) => (
                                 <TableRow key={t.id}>
                                     <TableCell>
                                         <div className="font-medium">{t.description}</div>
@@ -212,6 +212,17 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
              </CardContent>
          </Card>
        </div>
+        {project.address && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline">Ubicación del Proyecto</CardTitle>
+            <CardDescription>{project.address}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProjectMapClient address={project.address} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
