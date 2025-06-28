@@ -1,13 +1,25 @@
 "use client"
 
 import { useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { type Project } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
+import { ArrowUpRight, ArrowDownLeft, Scale, Percent, Loader2, MapPin } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
+
+const ProjectMap = dynamic(() => import('@/components/project-map-client'), {
+  ssr: false,
+  loading: () => (
+      <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin mb-2" />
+        <p>Cargando mapa...</p>
+      </div>
+  ),
+});
+
 
 type ProjectSummaryProps = {
   project: Project
@@ -112,8 +124,8 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
             </Card>
        </div>
 
-       <div className="grid gap-6 md:grid-cols-2">
-         <Card>
+       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+         <Card className="md:col-span-2 lg:col-span-2">
             <CardHeader>
                 <CardTitle className="font-headline">Gastos por Categoría</CardTitle>
                 <CardDescription>Distribución de los gastos del proyecto.</CardDescription>
@@ -168,7 +180,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
               )}
             </CardContent>
          </Card>
-         <Card>
+         <Card className="md:col-span-2 lg:col-span-1">
              <CardHeader>
                 <CardTitle className="font-headline">Últimas Transacciones</CardTitle>
                 <CardDescription>Los 5 movimientos más recientes.</CardDescription>
@@ -206,6 +218,20 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
              </CardContent>
          </Card>
        </div>
+       
+       {project.address && (
+          <Card className="col-span-full">
+            <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-2">
+                <MapPin /> Ubicación del Proyecto
+              </CardTitle>
+              <CardDescription>{project.address}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProjectMap address={project.address} />
+            </CardContent>
+          </Card>
+       )}
     </div>
   )
 }
