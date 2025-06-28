@@ -19,6 +19,11 @@ const nextConfig = {
       },
     ],
   },
+  experimental: {
+    allowedDevOrigins: [
+      'https://3000-firebase-studio-1750685226437.cluster-4xpux6pqdzhrktbhjf2cumyqtg.cloudworkstations.dev',
+    ],
+  },
   reactStrictMode: true,
   // Manually expose the environment variables to the client.
   env: {
