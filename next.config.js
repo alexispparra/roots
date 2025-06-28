@@ -11,10 +11,6 @@ if (process.env.FIREBASE_WEBAPP_CONFIG) {
 }
 
 const nextConfig = {
-  // The `allowedDevOrigins` option is not supported in `next start` and is only
-  // used in development.
-  // It's safe to commit this to version control.
-  allowedDevOrigins: ['https://6000-firebase-studio-1750685226437.cluster-4xpux6pqdzhrktbhjf2cumyqtg.cloudworkstations.dev'],
   images: {
     remotePatterns: [
       {
@@ -33,8 +29,6 @@ const nextConfig = {
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: firebaseConfig.messagingSenderId || process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     NEXT_PUBLIC_FIREBASE_APP_ID: firebaseConfig.appId || process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
     NEXT_PUBLIC_APP_ADMIN_EMAIL: process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL,
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-    NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID: process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID,
   },
 };
 
