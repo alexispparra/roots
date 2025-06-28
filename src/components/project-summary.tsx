@@ -11,11 +11,10 @@ import { Progress } from '@/components/ui/progress'
 import dynamic from 'next/dynamic'
 import { Skeleton } from './ui/skeleton'
 
-// Dynamic import for the map component to avoid SSR issues
 const ProjectMapClient = dynamic(() => import('@/components/project-map-client'), {
   ssr: false,
-  loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />
-})
+  loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />,
+});
 
 type ProjectSummaryProps = {
   project: Project
@@ -29,6 +28,10 @@ const COLORS = [
   "hsl(var(--chart-5))",
 ];
 
+const formatCurrency = (value: number) => {
+  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+};
+
 export function ProjectSummary({ project }: ProjectSummaryProps) {
   
   const data = useMemo(() => {
@@ -40,43 +43,39 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
       .filter(t => t.type === 'expense')
       .reduce((acc, t) => acc + t.amountUSD, 0);
 
-    const bal = income - expenses;
+    const balance = income - expenses;
 
-    const catExpenses: { [key: string]: number } = {};
+    const expensesByCategory: { [key: string]: number } = {};
     project.transactions
       .filter(t => t.type === 'expense' && t.category)
       .forEach(t => {
         const category = t.category!;
-        if (!catExpenses[category]) {
-          catExpenses[category] = 0;
+        if (!expensesByCategory[category]) {
+          expensesByCategory[category] = 0;
         }
-        catExpenses[category] += t.amountUSD;
+        expensesByCategory[category] += t.amountUSD;
       });
     
-    const expByCategory = Object.entries(catExpenses)
+    const expensesByCategoryChartData = Object.entries(expensesByCategory)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
 
-    const recTransactions = [...project.transactions]
+    const recentTransactions = [...project.transactions]
         .sort((a, b) => b.date.getTime() - a.date.getTime())
         .slice(0, 5);
 
     const totalProgress = project.categories.reduce((sum, category) => sum + (category.progress ?? 0), 0);
-    const progress = project.categories.length > 0 ? totalProgress / project.categories.length : 0;
+    const overallProgress = project.categories.length > 0 ? totalProgress / project.categories.length : 0;
 
     return {
       totalIncome: income,
       totalExpenses: expenses,
-      balance: bal,
-      expensesByCategory: expByCategory,
-      recentTransactions: recTransactions,
-      overallProgress: progress,
+      balance: balance,
+      expensesByCategory: expensesByCategoryChartData,
+      recentTransactions: recentTransactions,
+      overallProgress: overallProgress,
     };
   }, [project]);
-
-  const formatCurrency = (value: number) => {
-    return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-  };
 
   return (
     <div className="grid gap-6">
