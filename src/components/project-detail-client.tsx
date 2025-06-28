@@ -110,15 +110,13 @@ export default function ProjectDetailClient() {
       </Card>
 
       <Tabs defaultValue="dashboard" className="grid gap-6">
-        <div className="w-full overflow-x-auto">
-          <TabsList>
-              <TabsTrigger value="dashboard"><BarChart2 className="mr-2 h-4 w-4" />Resumen</TabsTrigger>
-              <TabsTrigger value="transactions"><List className="mr-2 h-4 w-4" />Transacciones</TabsTrigger>
-              <TabsTrigger value="categories"><LayoutGrid className="mr-2 h-4 w-4" />Categorías</TabsTrigger>
-              <TabsTrigger value="calendar"><CalendarDays className="mr-2 h-4 w-4" />Calendario</TabsTrigger>
-              {isAdmin && <TabsTrigger value="team"><Users className="mr-2 h-4 w-4" />Equipo</TabsTrigger>}
-          </TabsList>
-        </div>
+        <TabsList>
+            <TabsTrigger value="dashboard"><BarChart2 className="mr-2 h-4 w-4" />Resumen</TabsTrigger>
+            <TabsTrigger value="transactions"><List className="mr-2 h-4 w-4" />Transacciones</TabsTrigger>
+            <TabsTrigger value="categories"><LayoutGrid className="mr-2 h-4 w-4" />Categorías</TabsTrigger>
+            <TabsTrigger value="calendar"><CalendarDays className="mr-2 h-4 w-4" />Calendario</TabsTrigger>
+            {isAdmin && <TabsTrigger value="team"><Users className="mr-2 h-4 w-4" />Equipo</TabsTrigger>}
+        </TabsList>
 
         <TabsContent value="dashboard">
           <ProjectSummary project={project} />
