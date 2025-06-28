@@ -1,6 +1,7 @@
 'use client';
 
-import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+import { useState, useEffect } from 'react';
+import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
@@ -17,9 +18,48 @@ const defaultCenter = {
   lng: -58.3816,
 };
 
+type GeocodeResult = {
+  lat: number;
+  lng: number;
+};
+
 export function ProjectMap({ address }: { address: string | null | undefined }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const [center, setCenter] = useState<GeocodeResult>(defaultCenter);
+  const [geocodingError, setGeocodingError] = useState<string | null>(null);
 
+  // useJsApiLoader is the recommended way to load the Google Maps script.
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: apiKey!, // The '!' is safe because we check for apiKey's existence below.
+    preventGoogleFontsLoading: true,
+  });
+
+  useEffect(() => {
+    // Geocoding logic now runs safely inside useEffect, only on the client-side.
+    if (isLoaded && address) {
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ address: address }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
+          const location = results[0].geometry.location;
+          setCenter({
+            lat: location.lat(),
+            lng: location.lng(),
+          });
+          setGeocodingError(null);
+        } else {
+          console.warn(`Geocode was not successful for the following reason: ${status}`);
+          setGeocodingError(`No se pudo encontrar la dirección: "${address}". Mostrando ubicación predeterminada.`);
+          setCenter(defaultCenter);
+        }
+      });
+    } else if (!address) {
+      setCenter(defaultCenter);
+      setGeocodingError(null);
+    }
+  }, [address, isLoaded]);
+
+  // Graceful handling of missing API key.
   if (!apiKey) {
     return (
        <Alert variant="destructive">
@@ -29,14 +69,10 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
           La clave de API de Google Maps no está configurada. Por favor, añádela a tu archivo `.env` para mostrar el mapa.
         </AlertDescription>
       </Alert>
-    )
+    );
   }
 
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: apiKey,
-  });
-
+  // Graceful handling of script loading errors.
   if (loadError) {
     return (
       <Alert variant="destructive">
@@ -49,18 +85,33 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
     );
   }
 
+  // Show a skeleton while the map is loading.
   if (!isLoaded) {
     return <Skeleton className="h-[400px] w-full rounded-lg" />;
   }
 
+  // Render the map only when everything is ready.
   return (
-    <GoogleMap
-      mapContainerStyle={containerStyle}
-      center={defaultCenter}
-      zoom={10}
-      options={{ disableDefaultUI: true, zoomControl: true }}
-    >
-      {/* Markers and other features will be added back once this base map works */}
-    </GoogleMap>
+    <>
+      {geocodingError && (
+        <Alert variant="default" className="mb-4">
+           <AlertTriangle className="h-4 w-4" />
+           <AlertTitle>Aviso de Ubicación</AlertTitle>
+           <AlertDescription>{geocodingError}</AlertDescription>
+        </Alert>
+      )}
+      <GoogleMap
+        mapContainerStyle={containerStyle}
+        center={center}
+        zoom={address && !geocodingError ? 15 : 10}
+        options={{ 
+            disableDefaultUI: true, 
+            zoomControl: true,
+            mapId: process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
+        }}
+      >
+        {address && !geocodingError && <Marker position={center} />}
+      </GoogleMap>
+    </>
   );
 }

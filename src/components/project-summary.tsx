@@ -12,7 +12,8 @@ import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from './ui/skeleton'
 
-// Dynamic import for the map component with SSR turned off
+// Dynamically import the map component with SSR turned off.
+// This is the key to preventing server-side rendering crashes.
 const ProjectMap = dynamic(() => import('@/components/project-map').then(mod => mod.ProjectMap), {
   ssr: false, 
   loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />,
