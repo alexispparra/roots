@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -18,6 +17,8 @@ const defaultCenter = {
   lng: -58.3816, // Buenos Aires
 };
 
+const libraries: ("geocoding")[] = ['geocoding'];
+
 type ProjectMapProps = {
   address: string;
 };
@@ -25,7 +26,7 @@ type ProjectMapProps = {
 export function ProjectMap({ address }: ProjectMapProps) {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-    libraries: ['geocoding'],
+    libraries,
   });
 
   const [center, setCenter] = useState(defaultCenter);
