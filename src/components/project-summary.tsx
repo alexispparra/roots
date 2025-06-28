@@ -10,10 +10,12 @@ import { ArrowUpRight, ArrowDownLeft, Scale, Percent, Loader2, MapPin } from 'lu
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
 
+// This component is loaded dynamically ONLY on the client-side.
+// ssr: false is the key to preventing server-side rendering issues.
 const ProjectMap = dynamic(() => import('@/components/project-map-client'), {
   ssr: false,
   loading: () => (
-      <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+      <div className="flex flex-col items-center justify-center h-full min-h-[400px] rounded-lg bg-muted">
         <Loader2 className="h-8 w-8 animate-spin mb-2" />
         <p>Cargando mapa...</p>
       </div>
@@ -34,6 +36,7 @@ const COLORS = [
 ]
 
 export function ProjectSummary({ project }: ProjectSummaryProps) {
+  // All calculations are done inside the component.
   const { totalIncome, totalExpenses, balance, expensesByCategory, recentTransactions, overallProgress } = useMemo(() => {
     const income = project.transactions
       .filter(t => t.type === 'income')
@@ -82,6 +85,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
     return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
   }
 
+  // The return statement is correctly placed inside the component function.
   return (
     <div className="grid gap-6">
        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -233,5 +237,5 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
           </Card>
        )}
     </div>
-  )
+  );
 }
