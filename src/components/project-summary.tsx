@@ -34,48 +34,37 @@ const formatCurrency = (value: number) => {
 
 export function ProjectSummary({ project }: ProjectSummaryProps) {
   
-  const data = useMemo(() => {
-    const income = project.transactions
+    const totalIncome = project.transactions
       .filter(t => t.type === 'income')
       .reduce((acc, t) => acc + t.amountUSD, 0);
 
-    const expenses = project.transactions
+    const totalExpenses = project.transactions
       .filter(t => t.type === 'expense')
       .reduce((acc, t) => acc + t.amountUSD, 0);
 
-    const balance = income - expenses;
+    const balance = totalIncome - totalExpenses;
 
-    const expensesByCategory: { [key: string]: number } = {};
-    project.transactions
-      .filter(t => t.type === 'expense' && t.category)
-      .forEach(t => {
-        const category = t.category!;
-        if (!expensesByCategory[category]) {
-          expensesByCategory[category] = 0;
-        }
-        expensesByCategory[category] += t.amountUSD;
-      });
-    
-    const expensesByCategoryChartData = Object.entries(expensesByCategory)
+    const expensesByCategoryChartData = Object.entries(
+        project.transactions
+          .filter(t => t.type === 'expense' && t.category)
+          .reduce((acc, t) => {
+            const category = t.category!;
+            if (!acc[category]) {
+              acc[category] = 0;
+            }
+            acc[category] += t.amountUSD;
+            return acc;
+          }, {} as { [key: string]: number })
+      )
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-
+    
     const recentTransactions = [...project.transactions]
-        .sort((a, b) => b.date.getTime() - a.date.getTime())
-        .slice(0, 5);
-
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, 5);
+    
     const totalProgress = project.categories.reduce((sum, category) => sum + (category.progress ?? 0), 0);
     const overallProgress = project.categories.length > 0 ? totalProgress / project.categories.length : 0;
-
-    return {
-      totalIncome: income,
-      totalExpenses: expenses,
-      balance: balance,
-      expensesByCategory: expensesByCategoryChartData,
-      recentTransactions: recentTransactions,
-      overallProgress: overallProgress,
-    };
-  }, [project]);
 
   return (
     <div className="grid gap-6">
@@ -86,7 +75,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <ArrowUpRight className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-emerald-500">{formatCurrency(data.totalIncome)}</div>
+                <div className="text-2xl font-bold text-emerald-500">{formatCurrency(totalIncome)}</div>
             </CardContent>
           </Card>
           <Card>
@@ -95,7 +84,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <ArrowDownLeft className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-destructive">{formatCurrency(data.totalExpenses)}</div>
+                <div className="text-2xl font-bold text-destructive">{formatCurrency(totalExpenses)}</div>
             </CardContent>
           </Card>
           <Card>
@@ -104,7 +93,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <Scale className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className={`text-2xl font-bold ${data.balance >= 0 ? 'text-foreground' : 'text-destructive'}`}>{formatCurrency(data.balance)}</div>
+                <div className={`text-2xl font-bold ${balance >= 0 ? 'text-foreground' : 'text-destructive'}`}>{formatCurrency(balance)}</div>
             </CardContent>
           </Card>
            <Card>
@@ -113,8 +102,8 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                   <Percent className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                  <div className="text-2xl font-bold">{`${data.overallProgress.toFixed(1)}%`}</div>
-                  <Progress value={data.overallProgress} className="mt-2" />
+                  <div className="text-2xl font-bold">{`${overallProgress.toFixed(1)}%`}</div>
+                  <Progress value={overallProgress} className="mt-2" />
               </CardContent>
             </Card>
        </div>
@@ -126,13 +115,13 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <CardDescription>Distribución de los gastos del proyecto.</CardDescription>
             </CardHeader>
             <CardContent>
-              {data.expensesByCategory.length > 0 ? (
+              {expensesByCategoryChartData.length > 0 ? (
                 <>
                   <div className="h-[250px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={data.expensesByCategory}
+                          data={expensesByCategoryChartData}
                           cx="50%"
                           cy="50%"
                           labelLine={false}
@@ -142,7 +131,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                           nameKey="name"
                           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         >
-                          {data.expensesByCategory.map((entry, index) => (
+                          {expensesByCategoryChartData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
@@ -159,7 +148,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {data.expensesByCategory.map((category) => (
+                      {expensesByCategoryChartData.map((category) => (
                         <TableRow key={category.name}>
                           <TableCell className="font-medium">{category.name}</TableCell>
                           <TableCell className="text-right">{formatCurrency(category.value)}</TableCell>
@@ -189,8 +178,8 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {data.recentTransactions.length > 0 ? (
-                            data.recentTransactions.map((t) => (
+                        {recentTransactions.length > 0 ? (
+                            recentTransactions.map((t) => (
                                 <TableRow key={t.id}>
                                     <TableCell>
                                         <div className="font-medium">{t.description}</div>
