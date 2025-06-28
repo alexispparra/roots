@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -11,6 +10,7 @@ import {
   SidebarSeparator,
   SidebarGroupLabel,
   SidebarMenuSkeleton,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Accordion,
@@ -36,6 +36,14 @@ export function Navigation() {
   const searchParams = useSearchParams();
   const { isAppAdmin } = useAuth();
   const { projects, loading } = useProjects();
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  // This function will be called on link clicks
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
   
   const currentProjectId = searchParams.get('id') ?? searchParams.get('projectId');
 
@@ -48,7 +56,7 @@ export function Navigation() {
       <SidebarMenu>
         {/* Static links */}
          <SidebarMenuItem>
-          <SidebarMenuButton asChild isActive={pathname === "/projects"}>
+          <SidebarMenuButton asChild isActive={pathname === "/projects"} onClick={handleLinkClick}>
             <Link href="/projects">
               <Briefcase />
               <span>Todos los Proyectos</span>
@@ -62,6 +70,7 @@ export function Navigation() {
               asChild
               isActive={pathname === "/admin"}
               tooltip="Administración"
+              onClick={handleLinkClick}
             >
               <Link href="/admin">
                 <Shield />
@@ -91,7 +100,7 @@ export function Navigation() {
                   className="p-2 justify-start gap-2 text-sm rounded-md hover:bg-sidebar-accent hover:no-underline [&>svg]:size-4"
                   asChild
                 >
-                  <Link href={`/project-detail?id=${project.id}`} className="flex flex-1 items-center">
+                  <Link href={`/project-detail?id=${project.id}`} className="flex flex-1 items-center" onClick={handleLinkClick}>
                     <span className="truncate flex-1 text-left">{project.name}</span>
                     <ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-90" />
                   </Link>
@@ -100,7 +109,7 @@ export function Navigation() {
                  <ul className="flex flex-col gap-1 border-l border-sidebar-border ml-2 pl-4 py-1">
                     {project.categories.length > 0 ? project.categories.map(category => (
                        <li key={category.name}>
-                         <Link href={`/project-category?projectId=${project.id}&categoryName=${encodeURIComponent(category.name)}`} className={cn("flex items-center gap-2 p-1.5 rounded-md text-sm hover:bg-sidebar-accent", pathname === '/project-category' && searchParams.get('projectId') === project.id && decodeURIComponent(searchParams.get('categoryName') ?? '') === category.name && 'bg-sidebar-accent font-semibold')}>
+                         <Link href={`/project-category?projectId=${project.id}&categoryName=${encodeURIComponent(category.name)}`} className={cn("flex items-center gap-2 p-1.5 rounded-md text-sm hover:bg-sidebar-accent", pathname === '/project-category' && searchParams.get('projectId') === project.id && decodeURIComponent(searchParams.get('categoryName') ?? '') === category.name && 'bg-sidebar-accent font-semibold')} onClick={handleLinkClick}>
                            <ChevronRight className="h-4 w-4 shrink-0" /> <span className="truncate">{category.name}</span>
                          </Link>
                        </li>
@@ -128,6 +137,7 @@ export function Navigation() {
             asChild
             isActive={pathname === "/settings"}
             tooltip="Configuración"
+            onClick={handleLinkClick}
           >
             <Link href="/settings">
               <Settings />
