@@ -210,7 +210,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
              </CardContent>
          </Card>
        </div>
-       {project.address && (
+       {/* {project.address && (
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline">Ubicación del Proyecto</CardTitle>
@@ -220,7 +220,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                 <ProjectMap address={project.address} />
             </CardContent>
         </Card>
-       )}
+       )} */}
     </div>
   )
 }
