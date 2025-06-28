@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -24,33 +25,26 @@ type GeocodeResult = {
 };
 
 export function ProjectMap({ address }: { address: string | null | undefined }) {
+  const [isClient, setIsClient] = useState(false);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const [center, setCenter] = useState<GeocodeResult>(defaultCenter);
   const [geocodingError, setGeocodingError] = useState<string | null>(null);
 
-  // Graceful handling of missing API key. This is the first line of defense.
-  if (!apiKey) {
-    return (
-       <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Configuración Incompleta</AlertTitle>
-        <AlertDescription>
-          La clave de API de Google Maps no está configurada. Por favor, añádela a tu archivo `.env` para mostrar el mapa.
-        </AlertDescription>
-      </Alert>
-    );
-  }
+  // This ensures the component only renders on the client, preventing server-side crashes.
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-  // useJsApiLoader is the recommended way to load the Google Maps script.
-  // It handles loading states and errors gracefully.
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: apiKey,
+    googleMapsApiKey: apiKey || '',
     preventGoogleFontsLoading: true,
+    // The disabled property ensures useJsApiLoader doesn't run until the API key is present and we're on the client
+    disabled: !isClient || !apiKey, 
   });
 
   useEffect(() => {
-    // Geocoding logic now runs safely inside useEffect, only on the client-side.
+    // Geocoding logic now runs safely inside this useEffect, only on the client-side.
     if (isLoaded && address) {
       const geocoder = new window.google.maps.Geocoder();
       geocoder.geocode({ address: address }, (results, status) => {
@@ -67,15 +61,32 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
           setCenter(defaultCenter);
         }
       });
-    } else if (!address) {
+    } else if (isLoaded && !address) {
       // If no address is provided, just use the default center without an error message.
       setCenter(defaultCenter);
       setGeocodingError(null);
     }
   }, [address, isLoaded]);
 
+  // Render a skeleton during server-side rendering or before the client has mounted.
+  if (!isClient) {
+    return <Skeleton className="h-[400px] w-full rounded-lg" />;
+  }
 
-  // Graceful handling of script loading errors.
+  // Graceful handling of missing API key. This is the first line of defense.
+  if (!apiKey) {
+    return (
+       <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Configuración Incompleta</AlertTitle>
+        <AlertDescription>
+          La clave de API de Google Maps no está configurada. Por favor, añádela a tu archivo `.env` para mostrar el mapa.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  
+  // Handle script loading errors.
   if (loadError) {
     return (
       <Alert variant="destructive">
@@ -88,8 +99,7 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
     );
   }
 
-  // This check is redundant because of the dynamic import's loading state,
-  // but it's good practice to keep it for robustness.
+  // Show skeleton while the script is loading.
   if (!isLoaded) {
     return <Skeleton className="h-[400px] w-full rounded-lg" />;
   }
