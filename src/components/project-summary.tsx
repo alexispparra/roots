@@ -1,7 +1,7 @@
-
 "use client"
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { type Project } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -11,7 +11,12 @@ import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from './ui/skeleton'
-import { ProjectMap } from './project-map'
+
+// Dynamic import for the map component with SSR turned off
+const ProjectMap = dynamic(() => import('@/components/project-map').then(mod => mod.ProjectMap), {
+  ssr: false, 
+  loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />,
+});
 
 
 type ProjectSummaryProps = {
