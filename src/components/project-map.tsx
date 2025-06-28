@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { GoogleMap, useLoadScript, MarkerF } from '@react-google-maps/api';
 import { Skeleton } from './ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { AlertTriangle, KeyRound } from 'lucide-react';
+import { AlertTriangle, KeyRound, MapPin } from 'lucide-react';
 
 const mapContainerStyle = {
   height: '400px',
@@ -52,6 +52,18 @@ export function ProjectMap({ address }: ProjectMapProps) {
       });
     }
   }, [isLoaded, address]);
+
+  if (!address) {
+     return (
+        <Alert>
+            <MapPin className="h-4 w-4" />
+            <AlertTitle>Sin Ubicación</AlertTitle>
+            <AlertDescription>
+                Este proyecto no tiene una dirección definida. Edita el proyecto para añadir una y verla en el mapa.
+            </AlertDescription>
+        </Alert>
+    );
+  }
 
   if (!apiKey) {
     return (
