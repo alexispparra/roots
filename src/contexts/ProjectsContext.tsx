@@ -98,7 +98,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     let unsubscribe: () => void;
     
-    const normalizedUserEmail = user.email.toLowerCase();
+    const normalizedUserEmail = user.email.trim().toLowerCase();
 
     Promise.all([
       import('firebase/firestore'),
@@ -147,8 +147,8 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     const project = getProjectById(projectId);
     if (!project) return null;
     
-    const normalizedUserEmail = user.email.toLowerCase();
-    const participant = project.participants.find(p => p.email.toLowerCase() === normalizedUserEmail);
+    const normalizedUserEmail = user.email.trim().toLowerCase();
+    const participant = project.participants.find(p => p.email.trim().toLowerCase() === normalizedUserEmail);
     return participant ? participant.role : null;
   }, [projects, user, getProjectById]);
 
@@ -161,7 +161,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     
     try {
       const { collection, addDoc, Timestamp } = await import('firebase/firestore');
-      const normalizedEmail = user.email.toLowerCase();
+      const normalizedEmail = user.email.trim().toLowerCase();
 
       const newProjectRef = await addDoc(collection(firebase.db, "projects"), {
         ...projectData,
@@ -520,8 +520,8 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       if (!projectDoc.exists()) throw new Error("Project not found");
       const projectData = projectDoc.data() as Project;
       
-      const normalizedEmail = email.toLowerCase();
-      if (projectData.participants.some(p => p.email.toLowerCase() === normalizedEmail)) {
+      const normalizedEmail = email.trim().toLowerCase();
+      if (projectData.participants.some(p => p.email.trim().toLowerCase() === normalizedEmail)) {
         toast({ variant: "destructive", title: "Usuario ya existente", description: "Este usuario ya es miembro del proyecto." });
         return;
       }
@@ -552,9 +552,9 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       if (!projectDoc.exists()) throw new Error("Project not found");
       const projectData = projectDoc.data() as Project;
       
-      const normalizedEmail = participantEmail.toLowerCase();
+      const normalizedEmail = participantEmail.trim().toLowerCase();
       const newParticipants = projectData.participants.map(p => 
-        p.email.toLowerCase() === normalizedEmail ? { ...p, role: newRole } : p
+        p.email.trim().toLowerCase() === normalizedEmail ? { ...p, role: newRole } : p
       );
       
       await updateDoc(projectRef, { participants: newParticipants });
@@ -578,16 +578,16 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       if (!projectDoc.exists()) throw new Error("Project not found");
       const projectData = projectDoc.data() as Project;
       
-      const normalizedEmail = participantEmail.toLowerCase();
+      const normalizedEmail = participantEmail.trim().toLowerCase();
       
       const admins = projectData.participants.filter(p => p.role === 'admin');
-      if (admins.length === 1 && admins[0].email.toLowerCase() === normalizedEmail) {
+      if (admins.length === 1 && admins[0].email.trim().toLowerCase() === normalizedEmail) {
         toast({ variant: "destructive", title: "Acción no permitida", description: "No se puede eliminar al último administrador del proyecto." });
         return;
       }
       
-      const newParticipants = projectData.participants.filter(p => p.email.toLowerCase() !== normalizedEmail);
-      const newParticipantEmails = projectData.participantsEmails.filter(email => email.toLowerCase() !== normalizedEmail);
+      const newParticipants = projectData.participants.filter(p => p.email.trim().toLowerCase() !== normalizedEmail);
+      const newParticipantEmails = projectData.participantsEmails.filter(email => email.trim().toLowerCase() !== normalizedEmail);
       
       await updateDoc(projectRef, {
         participants: newParticipants,

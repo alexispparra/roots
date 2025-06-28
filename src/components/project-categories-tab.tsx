@@ -80,71 +80,137 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
           />}
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Progreso</TableHead>
-                <TableHead>Fechas</TableHead>
-                <TableHead className="text-right">Presupuesto</TableHead>
-                {canEdit && <TableHead className="w-[50px]"></TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {project.categories.length > 0 ? (
-                project.categories.map((category) => (
-                  <TableRow key={category.name}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-3">
-                        <CategoryIcon name={category.icon ?? undefined} className="h-5 w-5 text-muted-foreground" />
-                        <span>{category.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                         <Progress value={category.progress ?? 0} className="h-2 w-24" />
-                         <span className="text-xs text-muted-foreground">{category.progress ?? 0}%</span>
-                      </div>
-                    </TableCell>
-                     <TableCell>
-                      <div className="text-xs">
-                        <div>Inicio: {category.startDate ? category.startDate.toLocaleDateString('es-ES') : 'N/A'}</div>
-                        <div>Fin: {category.endDate ? category.endDate.toLocaleDateString('es-ES') : 'N/A'}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">${category.budget.toLocaleString('es-AR')}</TableCell>
-                    {canEdit && <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Abrir menú</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditClick(category)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteClick(category)} className="text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Eliminar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>}
-                  </TableRow>
-                ))
-              ) : (
+           {/* Desktop Table */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={canEdit ? 5 : 4} className="h-24 text-center text-muted-foreground">
-                    No hay categorías.
-                    {canEdit && " ¡Añade la primera!"}
-                  </TableCell>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Progreso</TableHead>
+                  <TableHead>Fechas</TableHead>
+                  <TableHead className="text-right">Presupuesto</TableHead>
+                  {canEdit && <TableHead className="w-[50px]"></TableHead>}
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {project.categories.length > 0 ? (
+                  project.categories.map((category) => (
+                    <TableRow key={category.name}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-3">
+                          <CategoryIcon name={category.icon ?? undefined} className="h-5 w-5 text-muted-foreground" />
+                          <span>{category.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Progress value={category.progress ?? 0} className="h-2 w-24" />
+                          <span className="text-xs text-muted-foreground">{category.progress ?? 0}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-xs">
+                          <div>Inicio: {category.startDate ? category.startDate.toLocaleDateString('es-ES') : 'N/A'}</div>
+                          <div>Fin: {category.endDate ? category.endDate.toLocaleDateString('es-ES') : 'N/A'}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">${category.budget.toLocaleString('es-AR')}</TableCell>
+                      {canEdit && <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Abrir menú</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditClick(category)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteClick(category)} className="text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={canEdit ? 5 : 4} className="h-24 text-center text-muted-foreground">
+                      No hay categorías.
+                      {canEdit && " ¡Añade la primera!"}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Card List */}
+          <div className="block md:hidden space-y-4">
+            {project.categories.length > 0 ? (
+              project.categories.map((category) => (
+                <Card key={category.name}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between text-lg">
+                       <div className="flex items-center gap-3">
+                        <CategoryIcon name={category.icon ?? undefined} className="h-5 w-5 text-muted-foreground" />
+                        <span className="flex-1 truncate">{category.name}</span>
+                      </div>
+                      {canEdit && (
+                         <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Abrir menú</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditClick(category)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteClick(category)} className="text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-sm">
+                     <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-medium">Progreso</span>
+                          <span className="text-muted-foreground">{category.progress ?? 0}%</span>
+                        </div>
+                        <Progress value={category.progress ?? 0} />
+                      </div>
+                      <div className="flex justify-between items-baseline">
+                        <span className="font-medium">Presupuesto</span>
+                        <span className="font-semibold">${category.budget.toLocaleString('es-AR')}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium">Fechas</span>
+                        <div className="text-muted-foreground">
+                          <p>Inicio: {category.startDate ? category.startDate.toLocaleDateString('es-ES') : 'N/A'}</p>
+                          <p>Fin: {category.endDate ? category.endDate.toLocaleDateString('es-ES') : 'N/A'}</p>
+                        </div>
+                      </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+               <div className="h-24 text-center text-muted-foreground flex items-center justify-center">
+                  No hay categorías.
+                  {canEdit && " ¡Añade la primera!"}
+                </div>
+            )}
+          </div>
         </CardContent>
       </Card>
       {canEdit && <>
