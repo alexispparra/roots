@@ -95,8 +95,10 @@ export default function MainLayout({
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6 md:hidden">
+          <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background px-4 sm:px-6 md:hidden">
             <SidebarTrigger />
+            <Logo className="h-7 w-auto" />
+            <div className="w-7" /> {/* Spacer to center the logo */}
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
         </SidebarInset>

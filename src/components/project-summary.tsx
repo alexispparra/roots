@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useMemo } from 'react'
@@ -10,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
+import { ProjectMap } from './project-map'
 
 type ProjectSummaryProps = {
   project: Project
@@ -210,8 +210,17 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
              </CardContent>
          </Card>
        </div>
+       {project.address && (
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Ubicación del Proyecto</CardTitle>
+                <CardDescription>{project.address}</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ProjectMap address={project.address} />
+            </CardContent>
+        </Card>
+       )}
     </div>
   )
 }
-
-    
