@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useMemo, useState, useEffect } from 'react'
@@ -26,11 +27,6 @@ const COLORS = [
 ]
 
 export function ProjectSummary({ project }: ProjectSummaryProps) {
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
 
   const { totalIncome, totalExpenses, balance, expensesByCategory, recentTransactions, overallProgress } = useMemo(() => {
     const income = project.transactions
@@ -224,7 +220,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
               </CardDescription>
           </CardHeader>
           <CardContent>
-             {isClient ? <ProjectMap address={project.address} /> : <Skeleton className="h-[400px] w-full rounded-lg" />}
+             <ProjectMap address={project.address} />
           </CardContent>
        </Card>
     </div>
