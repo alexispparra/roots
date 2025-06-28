@@ -28,10 +28,24 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
   const [center, setCenter] = useState<GeocodeResult>(defaultCenter);
   const [geocodingError, setGeocodingError] = useState<string | null>(null);
 
+  // Graceful handling of missing API key. This is the first line of defense.
+  if (!apiKey) {
+    return (
+       <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Configuración Incompleta</AlertTitle>
+        <AlertDescription>
+          La clave de API de Google Maps no está configurada. Por favor, añádela a tu archivo `.env` para mostrar el mapa.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   // useJsApiLoader is the recommended way to load the Google Maps script.
+  // It handles loading states and errors gracefully.
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: apiKey!, // The '!' is safe because we check for apiKey's existence below.
+    googleMapsApiKey: apiKey,
     preventGoogleFontsLoading: true,
   });
 
@@ -54,23 +68,12 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
         }
       });
     } else if (!address) {
+      // If no address is provided, just use the default center without an error message.
       setCenter(defaultCenter);
       setGeocodingError(null);
     }
   }, [address, isLoaded]);
 
-  // Graceful handling of missing API key.
-  if (!apiKey) {
-    return (
-       <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Configuración Incompleta</AlertTitle>
-        <AlertDescription>
-          La clave de API de Google Maps no está configurada. Por favor, añádela a tu archivo `.env` para mostrar el mapa.
-        </AlertDescription>
-      </Alert>
-    );
-  }
 
   // Graceful handling of script loading errors.
   if (loadError) {
@@ -85,7 +88,8 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
     );
   }
 
-  // Show a skeleton while the map is loading.
+  // This check is redundant because of the dynamic import's loading state,
+  // but it's good practice to keep it for robustness.
   if (!isLoaded) {
     return <Skeleton className="h-[400px] w-full rounded-lg" />;
   }
