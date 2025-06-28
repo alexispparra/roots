@@ -110,14 +110,14 @@ export default function ProjectDetailClient() {
       </Card>
 
       <Tabs defaultValue="dashboard" className="grid gap-6">
-        <div className="w-full overflow-x-auto pb-2">
-            <TabsList className="inline-flex w-max [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="w-full">
+          <TabsList className="flex flex-wrap h-auto justify-start">
               <TabsTrigger value="dashboard"><BarChart2 className="mr-2 h-4 w-4" />Resumen</TabsTrigger>
               <TabsTrigger value="transactions"><List className="mr-2 h-4 w-4" />Transacciones</TabsTrigger>
               <TabsTrigger value="categories"><LayoutGrid className="mr-2 h-4 w-4" />Categorías</TabsTrigger>
               <TabsTrigger value="calendar"><CalendarDays className="mr-2 h-4 w-4" />Calendario</TabsTrigger>
               {isAdmin && <TabsTrigger value="team"><Users className="mr-2 h-4 w-4" />Equipo</TabsTrigger>}
-            </TabsList>
+          </TabsList>
         </div>
 
         <TabsContent value="dashboard">
