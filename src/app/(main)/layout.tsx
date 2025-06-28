@@ -100,7 +100,7 @@ export default function MainLayout({
             <Logo className="h-7 w-auto" />
             <div className="w-7" /> {/* Spacer to center the logo */}
           </header>
-          <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+          <main className="flex-1 overflow-auto p-4 sm:p-6 min-h-0">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     </ProjectsProvider>
