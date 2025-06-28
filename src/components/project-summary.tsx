@@ -1,7 +1,6 @@
-
 "use client"
 
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { type Project } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -11,6 +10,7 @@ import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
 import { ProjectMap } from './project-map'
+import { Skeleton } from './ui/skeleton'
 
 
 type ProjectSummaryProps = {
@@ -26,6 +26,11 @@ const COLORS = [
 ]
 
 export function ProjectSummary({ project }: ProjectSummaryProps) {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const { totalIncome, totalExpenses, balance, expensesByCategory, recentTransactions, overallProgress } = useMemo(() => {
     const income = project.transactions
@@ -219,7 +224,11 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
               </CardDescription>
           </CardHeader>
           <CardContent>
-              <ProjectMap address={project.address} />
+              {isClient ? (
+                <ProjectMap address={project.address} />
+              ) : (
+                <Skeleton className="h-[400px] w-full rounded-lg" />
+              )}
           </CardContent>
        </Card>
     </div>
