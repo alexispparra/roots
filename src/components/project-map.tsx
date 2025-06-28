@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { GoogleMap, useLoadScript, MarkerF } from '@react-google-maps/api';
 import { Skeleton } from './ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, KeyRound } from 'lucide-react';
 
 const mapContainerStyle = {
   height: '400px',
@@ -18,14 +18,11 @@ const defaultCenter = {
 };
 
 const libraries: ("geocoding")[] = ['geocoding'];
-
-type ProjectMapProps = {
-  address: string;
-};
+const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
 export function ProjectMap({ address }: ProjectMapProps) {
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    googleMapsApiKey: apiKey,
     libraries,
   });
 
@@ -52,13 +49,25 @@ export function ProjectMap({ address }: ProjectMapProps) {
     }
   }, [isLoaded, address]);
 
+  if (!apiKey) {
+    return (
+        <Alert variant="destructive">
+            <KeyRound className="h-4 w-4" />
+            <AlertTitle>Falta la API Key de Google Maps</AlertTitle>
+            <AlertDescription>
+                Debes añadir tu clave de API al archivo `.env` en la raíz de tu proyecto. El archivo debe contener la línea: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=TU_CLAVE_AQUI`.
+            </AlertDescription>
+        </Alert>
+    );
+  }
+
   if (loadError) {
     return (
         <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Error al cargar el mapa</AlertTitle>
             <AlertDescription>
-                No se pudo cargar Google Maps. Esto puede deberse a una API Key inválida, a que no has habilitado la facturación en tu proyecto de Google Cloud, o a que no has restringido la clave a este dominio.
+                No se pudo cargar Google Maps. Esto puede deberse a que la API Key es inválida, no has habilitado la facturación en Google Cloud, o la URL de este sitio no está autorizada.
             </AlertDescription>
         </Alert>
     );
