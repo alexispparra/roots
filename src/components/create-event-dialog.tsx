@@ -77,15 +77,15 @@ export function CreateEventDialog({ onAddEvent, defaultDate, trigger }: CreateEv
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Añadir Nuevo Evento</DialogTitle>
+          <DialogDescription>
+            Añade un recordatorio o tarea simple a tu calendario.
+          </DialogDescription>
+        </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <DialogHeader>
-              <DialogTitle>Añadir Nuevo Evento</DialogTitle>
-              <DialogDescription>
-                Añade un recordatorio o tarea simple a tu calendario.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+            <div className="grid gap-4">
                <FormField
                 control={form.control}
                 name="title"

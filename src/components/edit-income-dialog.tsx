@@ -83,15 +83,15 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Editar Ingreso</DialogTitle>
+          <DialogDescription>
+            Actualiza los detalles de este movimiento.
+          </DialogDescription>
+        </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <DialogHeader>
-              <DialogTitle>Editar Ingreso</DialogTitle>
-              <DialogDescription>
-                Actualiza los detalles de este movimiento.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="description"

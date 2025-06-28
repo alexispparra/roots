@@ -76,15 +76,15 @@ export function EditCategoryDialog({ category, allCategories, isOpen, onOpenChan
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Editar Categoría</DialogTitle>
+          <DialogDescription>
+            Actualiza los detalles de la categoría. El icono no se puede cambiar.
+          </DialogDescription>
+        </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <DialogHeader>
-              <DialogTitle>Editar Categoría</DialogTitle>
-              <DialogDescription>
-                Actualiza los detalles de la categoría. El icono no se puede cambiar.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+            <div className="grid gap-4">
               <FormField
                 control={form.control}
                 name="name"

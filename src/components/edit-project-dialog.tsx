@@ -63,15 +63,15 @@ export function EditProjectDialog({ project, isOpen, onOpenChange, onUpdateProje
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Editar Proyecto</DialogTitle>
+          <DialogDescription>
+            Actualiza los detalles de tu proyecto.
+          </DialogDescription>
+        </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <DialogHeader>
-              <DialogTitle>Editar Proyecto</DialogTitle>
-              <DialogDescription>
-                Actualiza los detalles de tu proyecto.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+            <div className="grid gap-4">
               <FormField
                 control={form.control}
                 name="name"

@@ -130,15 +130,15 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-3xl">
+           <DialogHeader>
+            <DialogTitle>Registrar Nuevo Gasto</DialogTitle>
+            <DialogDescription>
+              Añade un nuevo movimiento a las finanzas del proyecto.
+            </DialogDescription>
+          </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <DialogHeader>
-                <DialogTitle>Registrar Nuevo Gasto</DialogTitle>
-                <DialogDescription>
-                  Añade un nuevo movimiento a las finanzas del proyecto.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="description"
@@ -306,7 +306,7 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
                 />
               </div>
 
-              <Separator className="my-4" />
+              <Separator />
 
               <div className="grid gap-4">
                 <h3 className="text-sm font-medium text-muted-foreground">Adjuntar Comprobante (Opcional)</h3>
@@ -344,7 +344,7 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
                 )}
               </div>
 
-              <DialogFooter className="pt-8">
+              <DialogFooter>
                 <Button type="submit">Registrar Gasto</Button>
               </DialogFooter>
             </form>

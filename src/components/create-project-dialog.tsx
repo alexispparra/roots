@@ -87,15 +87,15 @@ export function CreateProjectDialog() {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
+          <DialogDescription>
+            Completa los detalles para iniciar tu nuevo emprendimiento.
+          </DialogDescription>
+        </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <DialogHeader>
-              <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
-              <DialogDescription>
-                Completa los detalles para iniciar tu nuevo emprendimiento.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+            <div className="grid gap-4">
               <FormField
                 control={form.control}
                 name="name"

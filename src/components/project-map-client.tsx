@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, type Libraries } from '@react-google-maps/api';
 import { Loader2, AlertTriangle } from 'lucide-react';
 
 const containerStyle = {
@@ -15,6 +15,8 @@ const defaultCenter = {
   lng: -58.3816,
 };
 
+const libraries: Libraries = ['places'];
+
 type ProjectMapClientProps = {
   address: string;
 };
@@ -25,7 +27,7 @@ export default function ProjectMapClient({ address }: ProjectMapClientProps) {
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: apiKey || '',
-    libraries: ['places'],
+    libraries: libraries,
   });
 
   // For now, we will just center on Buenos Aires.
