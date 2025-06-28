@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { GoogleMap, useJsApiLoader, AdvancedMarker } from '@react-google-maps/api';
+import { useMemo } from 'react';
+import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, MapPin } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 const containerStyle = {
   width: '100%',
@@ -24,9 +25,7 @@ type GeocodedLocation = {
 
 export function ProjectMap({ address }: { address: string | null | undefined }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 
-  // --- API Key Check: This is the critical new part ---
   if (!apiKey) {
     return (
       <Alert variant="destructive">
@@ -43,7 +42,6 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: apiKey,
-    mapIds: mapId ? [mapId] : [],
   });
 
   const [location, setLocation] = useState<GeocodedLocation | null>(null);
@@ -95,12 +93,10 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
       mapContainerStyle={containerStyle}
       center={mapCenter}
       zoom={location ? 15 : 10}
-      options={{ mapId: mapId, disableDefaultUI: true, zoomControl: true }}
+      options={{ disableDefaultUI: true, zoomControl: true }}
     >
       {geocodingStatus === 'success' && location && (
-        <AdvancedMarker position={location}>
-            <MapPin className="h-8 w-8 text-primary" />
-        </AdvancedMarker>
+        <Marker position={location} />
       )}
       
       {geocodingStatus === 'error' && (
