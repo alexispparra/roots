@@ -26,6 +26,12 @@ const COLORS = [
 ]
 
 export function ProjectSummary({ project }: ProjectSummaryProps) {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   const { totalIncome, totalExpenses, balance, expensesByCategory, recentTransactions, overallProgress } = useMemo(() => {
     const income = project.transactions
       .filter(t => t.type === 'income')
@@ -218,7 +224,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
               </CardDescription>
           </CardHeader>
           <CardContent>
-            <ProjectMap address={project.address} />
+             {isClient ? <ProjectMap address={project.address} /> : <Skeleton className="h-[400px] w-full rounded-lg" />}
           </CardContent>
        </Card>
     </div>
