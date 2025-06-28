@@ -1,34 +1,22 @@
 "use client"
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
-import dynamic from 'next/dynamic'
 import { type Project } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
-import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
+import dynamic from 'next/dynamic'
 import { Skeleton } from './ui/skeleton'
-
-const COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-];
-
-const formatCurrency = (value: number) => {
-  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-};
+import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
 
 const ProjectMapClient = dynamic(() => import('@/components/project-map-client'), {
   ssr: false,
   loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />,
 });
 
+const formatCurrency = (value: number) => {
+  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+};
+
 export function ProjectSummary({ project }: { project: Project }) {
-  
   const totalIncome = project.transactions
     .filter(t => t.type === 'income')
     .reduce((acc, t) => acc + t.amountUSD, 0);
@@ -39,25 +27,6 @@ export function ProjectSummary({ project }: { project: Project }) {
 
   const balance = totalIncome - totalExpenses;
 
-  const expensesByCategoryChartData = Object.entries(
-      project.transactions
-        .filter(t => t.type === 'expense' && t.category)
-        .reduce((acc, t) => {
-          const category = t.category!;
-          if (!acc[category]) {
-            acc[category] = 0;
-          }
-          acc[category] += t.amountUSD;
-          return acc;
-        }, {} as { [key: string]: number })
-    )
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
-  
-  const recentTransactions = [...project.transactions]
-    .sort((a, b) => b.date.getTime() - a.date.getTime())
-    .slice(0, 5);
-  
   const totalProgress = project.categories.reduce((sum, category) => sum + (category.progress ?? 0), 0);
   const overallProgress = project.categories.length > 0 ? totalProgress / project.categories.length : 0;
 
@@ -93,7 +62,7 @@ export function ProjectSummary({ project }: { project: Project }) {
           </Card>
            <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Avance Total de Obra</CardTitle>
+                  <CardTitle className="text-sm font-medium">Avance Total</CardTitle>
                   <Percent className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -102,105 +71,11 @@ export function ProjectSummary({ project }: { project: Project }) {
               </CardContent>
             </Card>
        </div>
-
-       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-         <Card className="md:col-span-2 lg:col-span-2">
-            <CardHeader>
-                <CardTitle className="font-headline">Gastos por Categoría</CardTitle>
-                <CardDescription>Distribución de los gastos del proyecto.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {expensesByCategoryChartData.length > 0 ? (
-                <>
-                  <div className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={expensesByCategoryChartData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                          nameKey="name"
-                          label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                        >
-                          {expensesByCategoryChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value) => formatCurrency(value as number)} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <Separator className="my-4" />
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Categoría</TableHead>
-                        <TableHead className="text-right">Gasto (U$S)</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {expensesByCategoryChartData.map((category) => (
-                        <TableRow key={category.name}>
-                          <TableCell className="font-medium">{category.name}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(category.value)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </>
-                 ) : (
-                <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                    No hay gastos para mostrar.
-                </div>
-              )}
-            </CardContent>
-         </Card>
-         <Card className="md:col-span-2 lg:col-span-1">
-             <CardHeader>
-                <CardTitle className="font-headline">Últimas Transacciones</CardTitle>
-                <CardDescription>Los 5 movimientos más recientes.</CardDescription>
-             </Header>
-             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Descripción</TableHead>
-                            <TableHead className="text-right">Monto (U$S)</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {recentTransactions.length > 0 ? (
-                            recentTransactions.map((t) => (
-                                <TableRow key={t.id}>
-                                    <TableCell>
-                                        <div className="font-medium">{t.description}</div>
-                                        <div className="text-xs text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
-                                    </TableCell>
-                                    <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                      {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        ) : (
-                             <TableRow>
-                                <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
-                                    No hay transacciones.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-             </CardContent>
-         </Card>
-       </div>
-        {project.address && (
+      
+      {project.address && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Ubicación del Proyecto</CardTitle>
+            <CardTitle>Ubicación del Proyecto</CardTitle>
             <CardDescription>{project.address}</CardDescription>
           </CardHeader>
           <CardContent>
