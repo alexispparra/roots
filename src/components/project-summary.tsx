@@ -1,6 +1,8 @@
+
 "use client"
 
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { type Project } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -9,7 +11,11 @@ import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ProjectMap } from '@/components/project-map';
+
+const ProjectMap = dynamic(() => import('@/components/project-map-client').then(mod => mod.ProjectMapClient), {
+    ssr: false,
+    loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />
+});
 
 
 type ProjectSummaryProps = {
@@ -25,12 +31,6 @@ const COLORS = [
 ]
 
 export function ProjectSummary({ project }: ProjectSummaryProps) {
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
   const { totalIncome, totalExpenses, balance, expensesByCategory, recentTransactions, overallProgress } = useMemo(() => {
     const income = project.transactions
       .filter(t => t.type === 'income')
@@ -223,7 +223,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
               </CardDescription>
           </CardHeader>
           <CardContent>
-             {isClient ? <ProjectMap address={project.address} /> : <Skeleton className="h-[400px] w-full rounded-lg" />}
+             <ProjectMap address={project.address} />
           </CardContent>
        </Card>
     </div>
