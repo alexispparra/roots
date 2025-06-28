@@ -53,7 +53,7 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
       .sort((a, b) => b.value - a.value)
 
     const recTransactions = [...project.transactions]
-        .sort((a, b) => b.date.getTime() - a.date.getTime())
+        .sort((a, b) => b.date.getTime() - a.createdAt.getTime())
         .slice(0, 5)
 
     const totalProgress = project.categories.reduce((sum, category) => sum + (category.progress ?? 0), 0);
@@ -210,6 +210,17 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
              </CardContent>
          </Card>
        </div>
+       <Card>
+          <CardHeader>
+              <CardTitle className="font-headline">Ubicación del Proyecto</CardTitle>
+              <CardDescription>
+                  {project.address ? `Mostrando ubicación para: ${project.address}` : 'No se ha especificado una dirección para este proyecto.'}
+              </CardDescription>
+          </CardHeader>
+          <CardContent>
+              <ProjectMap address={project.address} />
+          </CardContent>
+       </Card>
     </div>
   )
 }

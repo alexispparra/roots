@@ -11,6 +11,10 @@ if (process.env.FIREBASE_WEBAPP_CONFIG) {
 }
 
 const nextConfig = {
+  // The `allowedDevOrigins` option is not supported in `next start` and is only
+  // used in development.
+  // It's safe to commit this to version control.
+  allowedDevOrigins: ['https://6000-firebase-studio-1750685226437.cluster-4xpux6pqdzhrktbhjf2cumyqtg.cloudworkstations.dev'],
   images: {
     remotePatterns: [
       {
