@@ -50,12 +50,16 @@ export function CreateProjectDialog() {
   async function onSubmit(values: AddProjectData) {
     setIsSubmitting(true);
     const newProjectId = await addProject(values);
+
     if (newProjectId) {
-      setOpen(false)
-      form.reset()
+      // Success: Navigate away. The component will unmount, so no need to reset submitting state.
+      setOpen(false);
+      form.reset();
       router.push(`/project-detail?id=${newProjectId}`);
+    } else {
+      // Failure: The project was not created. Reset the button to allow another attempt.
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   }
 
   return (
