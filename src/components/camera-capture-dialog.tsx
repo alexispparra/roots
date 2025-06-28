@@ -26,48 +26,45 @@ export function CameraCaptureDialog({ isOpen, onOpenChange, onCapture }: CameraC
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hasPermission, setHasPermission] = useState(true);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const cleanupCamera = useCallback(() => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
-  }, [stream]);
+  }, []);
 
   useEffect(() => {
-    const getCameraPermission = async () => {
-      if (isOpen) {
-        try {
-          const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
-          setStream(mediaStream);
-          if (videoRef.current) {
-            videoRef.current.srcObject = mediaStream;
-            videoRef.current.play().catch(e => {
-                console.error("Error attempting to play video:", e);
-            });
-          }
-          setHasPermission(true);
-        } catch (error) {
-          console.error("Error accessing camera:", error);
-          setHasPermission(false);
-          toast({
-            variant: "destructive",
-            title: "Acceso a la cámara denegado",
-            description: "Por favor, habilita el permiso de la cámara en tu navegador.",
-          });
+    const setupCamera = async () => {
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        streamRef.current = mediaStream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
         }
-      } else {
-        cleanupCamera();
+        setHasPermission(true);
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+        setHasPermission(false);
+        toast({
+          variant: "destructive",
+          title: "Acceso a la cámara denegado",
+          description: "Por favor, habilita el permiso de la cámara en tu navegador.",
+        });
       }
     };
 
-    getCameraPermission();
+    if (isOpen) {
+      setupCamera();
+    } else {
+      cleanupCamera();
+    }
 
     return () => {
       cleanupCamera();
     };
-  }, [isOpen, toast, cleanupCamera]);
+  }, [isOpen, cleanupCamera, toast]);
 
   const handleCapture = () => {
     if (videoRef.current && canvasRef.current) {
@@ -89,6 +86,12 @@ export function CameraCaptureDialog({ isOpen, onOpenChange, onCapture }: CameraC
     onOpenChange(false);
   }
 
+  const handleCanPlay = () => {
+    videoRef.current?.play().catch(err => {
+      console.error("Video play failed:", err);
+    });
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -106,6 +109,7 @@ export function CameraCaptureDialog({ isOpen, onOpenChange, onCapture }: CameraC
               autoPlay
               muted
               playsInline
+              onCanPlay={handleCanPlay}
             />
           ) : (
             <Alert variant="destructive">
