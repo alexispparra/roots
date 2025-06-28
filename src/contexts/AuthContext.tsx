@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import type { User, Auth, UserCredential } from 'firebase/auth';
-import { getFirebaseInstances, APP_ADMIN_EMAIL } from '@/lib/firebase';
+import { getFirebaseInstances } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 
 type AuthContextType = {
@@ -37,8 +37,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser) => {
           setUser(currentUser);
           
-          // Robust admin check
-          const adminEmailFromEnv = (APP_ADMIN_EMAIL || "").trim().toLowerCase();
+          // Robust admin check, now reading directly from process.env
+          const adminEmailFromEnv = (process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL || "").trim().toLowerCase();
           const userEmail = (currentUser?.email || "").trim().toLowerCase();
           
           setIsAppAdmin(!!(adminEmailFromEnv && userEmail && adminEmailFromEnv === userEmail));
