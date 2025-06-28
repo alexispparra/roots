@@ -182,9 +182,15 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       });
       toast({ title: "¡Proyecto Creado!", description: `El proyecto "${projectData.name}" ha sido creado.` });
       return newProjectRef.id;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating project: ", error);
-      toast({ variant: "destructive", title: "Error", description: "No se pudo crear el proyecto." });
+      const description = error.message ? `Detalle: ${error.message}` : "Por favor, revisa la configuración de Firestore en tu proyecto de Firebase.";
+      toast({
+        variant: "destructive",
+        title: "Error al Crear Proyecto",
+        description: description,
+        duration: 10000,
+      });
       return null;
     }
   };
