@@ -7,7 +7,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -90,6 +91,9 @@ export function CameraCaptureDialog({ isOpen, onOpenChange, onCapture }: CameraC
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Tomar Foto</DialogTitle>
+          <DialogDescription>
+            Apunta con la cámara al comprobante y presiona capturar.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center gap-4">
           {hasPermission ? (
