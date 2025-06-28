@@ -3,7 +3,6 @@
 
 import { useMemo } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
-import dynamic from 'next/dynamic'
 import { type Project } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -11,16 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
-import { Skeleton } from './ui/skeleton'
-
-function MapLoadingSkeleton() {
-  return <Skeleton className="h-[400px] w-full rounded-lg" />;
-}
-
-const ProjectMap = dynamic(() => import('./project-map').then(mod => mod.ProjectMap), {
-  ssr: false,
-  loading: () => <MapLoadingSkeleton />,
-});
+import { ProjectMap } from './project-map'
 
 
 type ProjectSummaryProps = {
