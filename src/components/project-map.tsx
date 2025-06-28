@@ -26,9 +26,23 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 
+  // --- API Key Check: This is the critical new part ---
+  if (!apiKey) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Configuración Requerida</AlertTitle>
+        <AlertDescription>
+          La clave de API de Google Maps no está configurada. Por favor, añade 
+          `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` a tu archivo `.env` y reinicia el servidor.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: apiKey || '',
+    googleMapsApiKey: apiKey,
     mapIds: mapId ? [mapId] : [],
   });
 
@@ -60,13 +74,13 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
     return location || defaultCenter;
   }, [location]);
 
-  if (loadError || !apiKey) {
+  if (loadError) {
     return (
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Error al Cargar el Mapa</AlertTitle>
         <AlertDescription>
-          No se pudo cargar el script de Google Maps. Por favor, verifica que la clave de API (`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`) sea correcta y esté configurada en tu archivo `.env`.
+          No se pudo cargar el script de Google Maps. Revisa la consola para más detalles.
         </AlertDescription>
       </Alert>
     );
