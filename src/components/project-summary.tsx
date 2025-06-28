@@ -49,12 +49,11 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
       .sort((a, b) => b.value - a.value)
 
     const recTransactions = [...project.transactions]
-        .sort((a, b) => b.date.getTime() - a.createdAt.getTime())
+        .sort((a, b) => b.date.getTime() - a.date.getTime())
         .slice(0, 5)
 
-    const totalProgress = project.categories.reduce((sum, category) => sum + (category.progress ?? 0), 0);
-    const progress = project.categories.length > 0 ? totalProgress / project.categories.length : 0;
-
+    const totalProgress = project.categories.reduce((sum, category) => sum + (category.progress ?? 0), 0)
+    const progress = project.categories.length > 0 ? totalProgress / project.categories.length : 0
 
     return { 
       totalIncome: income,
@@ -67,8 +66,8 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
   }, [project]);
 
   const formatCurrency = (value: number) => {
-    return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-  };
+    return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+  }
 
   return (
     <div className="grid gap-6">
@@ -207,5 +206,5 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
          </Card>
        </div>
     </div>
-  );
+  )
 }
