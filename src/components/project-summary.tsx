@@ -210,17 +210,6 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
              </CardContent>
          </Card>
        </div>
-       {/* {project.address && (
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Ubicación del Proyecto</CardTitle>
-                <CardDescription>{project.address}</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ProjectMap address={project.address} />
-            </CardContent>
-        </Card>
-       )} */}
     </div>
   )
 }
