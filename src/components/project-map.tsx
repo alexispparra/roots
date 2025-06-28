@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, useLoadScript, MarkerF } from '@react-google-maps/api';
+import { GoogleMap, useLoadScript, AdvancedMarkerF } from '@react-google-maps/api';
 import { Skeleton } from './ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { AlertTriangle, KeyRound, MapPin } from 'lucide-react';
@@ -19,6 +19,7 @@ const defaultCenter = {
 
 const libraries: ("geocoding")[] = ['geocoding'];
 const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || '';
 
 type ProjectMapProps = {
   address: string;
@@ -76,6 +77,19 @@ export function ProjectMap({ address }: ProjectMapProps) {
         </Alert>
     );
   }
+  
+  if (!mapId) {
+    return (
+        <Alert variant="destructive">
+            <KeyRound className="h-4 w-4" />
+            <AlertTitle>Falta el Map ID de Google Maps</AlertTitle>
+            <AlertDescription>
+                Para usar los nuevos marcadores avanzados, necesitas un "Map ID". Por favor, créalo en la consola de Google Cloud y añádelo a tu archivo `.env` como `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID=TU_MAP_ID_AQUI`.
+            </AlertDescription>
+        </Alert>
+    );
+  }
+
 
   if (loadError) {
     return (
@@ -106,8 +120,9 @@ export function ProjectMap({ address }: ProjectMapProps) {
             mapContainerStyle={mapContainerStyle}
             center={center}
             zoom={markerPosition ? 15 : 10}
+            mapId={mapId}
         >
-            {markerPosition && <MarkerF position={markerPosition} />}
+            {markerPosition && <AdvancedMarkerF position={markerPosition} />}
         </GoogleMap>
     </div>
   );
