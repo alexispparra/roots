@@ -1,7 +1,8 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, useLoadScript, AdvancedMarkerF } from '@react-google-maps/api';
+import { GoogleMap, useLoadScript, AdvancedMarker } from '@react-google-maps/api';
 import { Skeleton } from './ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { AlertTriangle, KeyRound, MapPin } from 'lucide-react';
@@ -122,7 +123,7 @@ export function ProjectMap({ address }: ProjectMapProps) {
             zoom={markerPosition ? 15 : 10}
             mapId={mapId}
         >
-            {markerPosition && <AdvancedMarkerF position={markerPosition} />}
+            {markerPosition && <AdvancedMarker position={markerPosition} />}
         </GoogleMap>
     </div>
   );
