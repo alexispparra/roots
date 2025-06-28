@@ -49,8 +49,6 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
     }
   }, [address, isLoaded])
   
-  // --- Start of Robust Error Handling ---
-
   if (!apiKey) {
     return (
       <Alert variant="destructive">
@@ -78,9 +76,6 @@ export function ProjectMap({ address }: { address: string | null | undefined }) 
   if (!isLoaded) {
     return <Skeleton className="h-[400px] w-full rounded-lg" />
   }
-
-  // --- End of Robust Error Handling ---
-
 
   return (
     <>
