@@ -88,13 +88,11 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const firebase = getFirebaseInstances();
     
-    // Explicitly wait for auth to finish before doing anything.
     if (authLoading) {
         setLoading(true);
         return;
     }
     
-    // If auth is done and there's no user, clear projects and stop.
     if (!user || !user.email) {
       setProjects([]);
       setLoading(false);
@@ -124,11 +122,20 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           setLoading(false);
         }, (error) => {
           console.error("Error fetching projects:", error);
-          toast({
-            variant: "destructive",
-            title: "Error de Conexión",
-            description: "No se pudieron cargar los proyectos.",
-          });
+          if (error.code === 'permission-denied') {
+             toast({
+                variant: "destructive",
+                title: "Error de Permisos",
+                description: "No tienes permiso para ver los proyectos. Asegúrate de que las reglas de Firestore se hayan desplegado correctamente ejecutando: firebase deploy --only firestore",
+                duration: 15000,
+             });
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Error de Conexión",
+              description: `No se pudieron cargar los proyectos. ${error.message}`,
+            });
+          }
           setLoading(false);
         });
     }).catch(error => {
@@ -184,7 +191,9 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       return newProjectRef.id;
     } catch (error: any) {
       console.error("Error creating project: ", error);
-      const description = error.message ? `Detalle: ${error.message}` : "Por favor, revisa la configuración de Firestore en tu proyecto de Firebase.";
+      const description = error.message.includes('permission-denied') 
+          ? "No tienes permiso para crear proyectos. Asegúrate de que las reglas de Firestore se hayan desplegado correctamente."
+          : "Por favor, revisa la configuración de Firestore en tu proyecto de Firebase.";
       toast({
         variant: "destructive",
         title: "Error al Crear Proyecto",
