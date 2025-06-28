@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
@@ -48,56 +48,37 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
       date: new Date(),
       description: "",
       amountARS: 0,
-      exchangeRate: 1,
+      exchangeRate: undefined,
       amountUSD: 0,
     },
   })
 
-  const { watch, setValue } = form;
-  const isUpdating = useRef(false);
-
-  useEffect(() => {
-    const subscription = watch((value, { name }) => {
-      if (isUpdating.current) return;
-      
-      const amountARS = value.amountARS ?? 0;
-      const amountUSD = value.amountUSD ?? 0;
-      const exchangeRate = value.exchangeRate ?? 1;
-
-      isUpdating.current = true;
-      
-      if (name === 'amountARS') {
-        if (exchangeRate > 0) {
-          setValue('amountUSD', amountARS / exchangeRate, { shouldValidate: true });
-        }
-      } else if (name === 'amountUSD') {
-        if (exchangeRate > 0) {
-          setValue('amountARS', amountUSD * exchangeRate, { shouldValidate: true });
-        }
-      } else if (name === 'exchangeRate') {
-        if (amountARS > 0 && exchangeRate > 0) {
-          setValue('amountUSD', amountARS / exchangeRate, { shouldValidate: true });
-        } else if (amountUSD > 0 && exchangeRate > 0) {
-          setValue('amountARS', amountUSD * exchangeRate, { shouldValidate: true });
-        }
-      }
-      
-      requestAnimationFrame(() => {
-        isUpdating.current = false;
-      });
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, setValue]);
-
-
   function onSubmit(values: AddIncomeInput) {
-    onAddIncome(values);
+    const submittedData: AddIncomeInput & { exchangeRate: number } = {
+      ...values,
+      exchangeRate: values.exchangeRate || 1,
+    };
+    
+    // If USD is entered, it takes precedence. ARS is cleared.
+    if (submittedData.amountUSD && submittedData.amountUSD > 0) {
+        submittedData.amountARS = 0;
+    } 
+    // If only ARS is entered, calculate USD if exchange rate is available.
+    else if (submittedData.amountARS && submittedData.amountARS > 0) {
+        if (submittedData.exchangeRate && submittedData.exchangeRate > 0) {
+            submittedData.amountUSD = submittedData.amountARS / submittedData.exchangeRate;
+        } else {
+            submittedData.amountUSD = 0; // Explicitly set USD to 0 if no exchange rate
+        }
+    }
+
+    onAddIncome(submittedData);
     setOpen(false)
     form.reset({
       date: new Date(),
       description: "",
       amountARS: 0,
-      exchangeRate: 1,
+      exchangeRate: undefined,
       amountUSD: 0,
     })
   }

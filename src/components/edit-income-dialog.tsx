@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
@@ -48,59 +48,36 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
     resolver: zodResolver(UpdateIncomeFormSchema),
   })
 
-  const { watch, setValue } = form;
-  const isUpdating = useRef(false);
-
   useEffect(() => {
     if (income) {
-       const exchangeRate = income.exchangeRate || 1;
-       const amountUSD = (income.amountARS && exchangeRate) 
-        ? income.amountARS / exchangeRate 
-        : 0;
       form.reset({
         ...income,
         date: income.date,
-        exchangeRate,
-        amountUSD,
+        exchangeRate: income.exchangeRate === 1 ? undefined : income.exchangeRate,
+        amountUSD: income.amountUSD,
       })
     }
   }, [income, form, isOpen])
 
-  useEffect(() => {
-    const subscription = watch((value, { name }) => {
-      if (isUpdating.current) return;
-      
-      const amountARS = value.amountARS ?? 0;
-      const amountUSD = value.amountUSD ?? 0;
-      const exchangeRate = value.exchangeRate ?? 1;
-
-      isUpdating.current = true;
-      
-      if (name === 'amountARS') {
-        if (exchangeRate > 0) {
-          setValue('amountUSD', amountARS / exchangeRate, { shouldValidate: true });
-        }
-      } else if (name === 'amountUSD') {
-        if (exchangeRate > 0) {
-          setValue('amountARS', amountUSD * exchangeRate, { shouldValidate: true });
-        }
-      } else if (name === 'exchangeRate') {
-        if (amountARS > 0 && exchangeRate > 0) {
-          setValue('amountUSD', amountARS / exchangeRate, { shouldValidate: true });
-        } else if (amountUSD > 0 && exchangeRate > 0) {
-          setValue('amountARS', amountUSD * exchangeRate, { shouldValidate: true });
-        }
-      }
-      
-      requestAnimationFrame(() => {
-        isUpdating.current = false;
-      });
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, setValue]);
-
   function onSubmit(values: UpdateIncomeInput) {
-    onUpdateIncome(values);
+    const submittedData: UpdateIncomeInput & { exchangeRate: number } = {
+      ...values,
+      exchangeRate: values.exchangeRate || 1,
+    };
+    
+    // If USD is entered, it takes precedence. ARS is cleared.
+    if (submittedData.amountUSD && submittedData.amountUSD > 0) {
+        submittedData.amountARS = 0;
+    } 
+    // If only ARS is entered, calculate USD if exchange rate is available.
+    else if (submittedData.amountARS && submittedData.amountARS > 0) {
+        if (submittedData.exchangeRate && submittedData.exchangeRate > 0) {
+            submittedData.amountUSD = submittedData.amountARS / submittedData.exchangeRate;
+        } else {
+            submittedData.amountUSD = 0;
+        }
+    }
+    onUpdateIncome(submittedData);
   }
 
   return (

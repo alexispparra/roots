@@ -73,8 +73,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
 
         filteredTransactions.forEach(t => {
             if (t.type === 'expense' && t.user && summary[t.user]) {
-                const amountUSD = t.amountARS / (t.exchangeRate || 1);
-                summary[t.user].total += amountUSD;
+                summary[t.user].total += t.amountUSD;
             }
         });
 
@@ -203,7 +202,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                                 )}
                                             </TableCell>
                                             <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                                {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountARS / (t.exchangeRate || 1))}
+                                                {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
                                             </TableCell>
                                             {canEdit && <TableCell>
                                                 <DropdownMenu>

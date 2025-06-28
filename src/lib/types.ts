@@ -35,6 +35,7 @@ export type Transaction = {
   date: Date;
   description: string;
   amountARS: number;
+  amountUSD: number;
   exchangeRate: number;
   attachmentDataUrl?: string;
   // Expense-specific fields
@@ -81,7 +82,7 @@ const BaseExpenseFormSchema = z.object({
   user: z.string().min(1, "El usuario es requerido."),
   paymentMethod: z.string().min(1, "El medio de pago es requerido."),
   amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
-  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").default(1),
+  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").optional(),
   amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
   attachmentDataUrl: z.string().optional(),
 });
@@ -103,7 +104,7 @@ const BaseIncomeFormSchema = z.object({
   date: z.date({ required_error: "La fecha es requerida." }),
   description: z.string().min(1, "La descripción es requerida."),
   amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
-  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").default(1),
+  exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").optional(),
   amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
 });
 const incomeRefinement = (data: { amountARS: number, amountUSD: number }) => data.amountARS > 0 || data.amountUSD > 0;

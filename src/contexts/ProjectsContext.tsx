@@ -33,10 +33,17 @@ const convertFirestoreDataToProject = (docData: any): Project => {
             startDate: c.startDate ? c.startDate.toDate() : null,
             endDate: c.endDate ? c.endDate.toDate() : null,
         })),
-        transactions: (data.transactions || []).map((t: any) => ({
-            ...t,
-            date: t.date.toDate(),
-        })),
+        transactions: (data.transactions || []).map((t: any) => {
+            // Backwards compatibility for old transactions without amountUSD
+            const exchangeRate = t.exchangeRate || 1;
+            const amountUSD = t.amountUSD ?? (t.amountARS / exchangeRate);
+            return {
+                ...t,
+                date: t.date.toDate(),
+                amountUSD: amountUSD,
+                exchangeRate: exchangeRate,
+            }
+        }),
         events: (data.events || []).map((e: any) => ({
             ...e,
             date: e.date.toDate(),
