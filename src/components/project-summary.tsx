@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress'
 import dynamic from 'next/dynamic'
 import { Skeleton } from './ui/skeleton'
 
+// Dynamic import for the map component to avoid SSR issues
 const ProjectMapClient = dynamic(() => import('@/components/project-map-client'), {
   ssr: false,
   loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />
@@ -29,6 +30,7 @@ const COLORS = [
 ];
 
 export function ProjectSummary({ project }: ProjectSummaryProps) {
+  
   const data = useMemo(() => {
     const income = project.transactions
       .filter(t => t.type === 'income')
