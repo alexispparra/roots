@@ -43,6 +43,9 @@ export function CameraCaptureDialog({ isOpen, onOpenChange, onCapture }: CameraC
           setStream(mediaStream);
           if (videoRef.current) {
             videoRef.current.srcObject = mediaStream;
+            videoRef.current.play().catch(e => {
+                console.error("Error attempting to play video:", e);
+            });
           }
           setHasPermission(true);
         } catch (error) {
