@@ -82,7 +82,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const firebase = getFirebaseInstances();
-    if (!user || !firebase) {
+    if (!user || !user.email) {
       setProjects([]);
       setLoading(false);
       return;
@@ -90,13 +90,15 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
 
     setLoading(true);
     let unsubscribe: () => void;
+    
+    const normalizedUserEmail = user.email.toLowerCase();
 
     Promise.all([
       import('firebase/firestore'),
     ]).then(([{ collection, query, where, onSnapshot }]) => {
         const q = query(
           collection(firebase.db, "projects"), 
-          where("participantsEmails", "array-contains", user.email)
+          where("participantsEmails", "array-contains", normalizedUserEmail)
         );
 
         unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -134,27 +136,32 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   }, [projects]);
 
   const getUserRoleForProject = useCallback((projectId: string): UserRole | null => {
-    if (!user) return null;
+    if (!user || !user.email) return null;
     const project = getProjectById(projectId);
     if (!project) return null;
-    const participant = project.participants.find(p => p.email === user.email);
+    
+    const normalizedUserEmail = user.email.toLowerCase();
+    const participant = project.participants.find(p => p.email.toLowerCase() === normalizedUserEmail);
     return participant ? participant.role : null;
   }, [projects, user, getProjectById]);
 
   const addProject = async (projectData: AddProjectData): Promise<string | null> => {
     const firebase = getFirebaseInstances();
-    if (!user || !firebase) {
-      toast({ variant: "destructive", title: "Error de Configuración", description: "La base de datos no está disponible. No se puede crear el proyecto." });
+    if (!user || !user.email) {
+      toast({ variant: "destructive", title: "Error de Autenticación", description: "Debes iniciar sesión para crear un proyecto." });
       return null;
     }
     
     try {
       const { collection, addDoc, Timestamp } = await import('firebase/firestore');
+      const normalizedEmail = user.email.toLowerCase();
+
       const newProjectRef = await addDoc(collection(firebase.db, "projects"), {
         ...projectData,
-        ownerEmail: user.email,
-        participants: [{ email: user.email, name: user.displayName || 'Propietario', role: 'admin' }],
-        participantsEmails: [user.email],
+        address: projectData.address || "",
+        ownerEmail: normalizedEmail,
+        participants: [{ email: normalizedEmail, name: user.displayName || 'Propietario', role: 'admin' }],
+        participantsEmails: [normalizedEmail],
         categories: [],
         transactions: [],
         events: [],
@@ -179,7 +186,10 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { doc, updateDoc } = await import('firebase/firestore');
       const projectRef = doc(firebase.db, 'projects', projectId);
-      await updateDoc(projectRef, projectData as any);
+      await updateDoc(projectRef, {
+        ...projectData,
+        address: projectData.address || ""
+      } as any);
       toast({ title: "Proyecto Actualizado", description: "Los detalles del proyecto se han guardado." });
     } catch (error) {
         console.error("Error updating project: ", error);
@@ -502,19 +512,20 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       const projectDoc = await getDoc(projectRef);
       if (!projectDoc.exists()) throw new Error("Project not found");
       const projectData = projectDoc.data() as Project;
-
-      if (projectData.participants.some(p => p.email === email)) {
+      
+      const normalizedEmail = email.toLowerCase();
+      if (projectData.participants.some(p => p.email.toLowerCase() === normalizedEmail)) {
         toast({ variant: "destructive", title: "Usuario ya existente", description: "Este usuario ya es miembro del proyecto." });
         return;
       }
       
-      const newParticipant: Participant = { email, name: email, role };
+      const newParticipant: Participant = { email: normalizedEmail, name: normalizedEmail, role };
       
       await updateDoc(projectRef, {
         participants: arrayUnion(newParticipant),
-        participantsEmails: arrayUnion(email)
+        participantsEmails: arrayUnion(normalizedEmail)
       });
-      toast({ title: "Usuario añadido", description: `${email} ha sido añadido al proyecto.` });
+      toast({ title: "Usuario añadido", description: `${normalizedEmail} ha sido añadido al proyecto.` });
     } catch (error) {
       console.error("Error adding participant: ", error);
       toast({ variant: "destructive", title: "Error", description: "No se pudo añadir al usuario." });
@@ -534,12 +545,13 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       if (!projectDoc.exists()) throw new Error("Project not found");
       const projectData = projectDoc.data() as Project;
       
+      const normalizedEmail = participantEmail.toLowerCase();
       const newParticipants = projectData.participants.map(p => 
-        p.email === participantEmail ? { ...p, role: newRole } : p
+        p.email.toLowerCase() === normalizedEmail ? { ...p, role: newRole } : p
       );
       
       await updateDoc(projectRef, { participants: newParticipants });
-      toast({ title: "Rol actualizado", description: `El rol de ${participantEmail} ha sido actualizado.` });
+      toast({ title: "Rol actualizado", description: `El rol de ${normalizedEmail} ha sido actualizado.` });
     } catch (error) {
       console.error("Error updating participant role: ", error);
       toast({ variant: "destructive", title: "Error", description: "No se pudo actualizar el rol." });
@@ -559,20 +571,22 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
       if (!projectDoc.exists()) throw new Error("Project not found");
       const projectData = projectDoc.data() as Project;
       
+      const normalizedEmail = participantEmail.toLowerCase();
+      
       const admins = projectData.participants.filter(p => p.role === 'admin');
-      if (admins.length === 1 && admins[0].email === participantEmail) {
+      if (admins.length === 1 && admins[0].email.toLowerCase() === normalizedEmail) {
         toast({ variant: "destructive", title: "Acción no permitida", description: "No se puede eliminar al último administrador del proyecto." });
         return;
       }
       
-      const newParticipants = projectData.participants.filter(p => p.email !== participantEmail);
-      const newParticipantEmails = projectData.participantsEmails.filter(email => email !== participantEmail);
+      const newParticipants = projectData.participants.filter(p => p.email.toLowerCase() !== normalizedEmail);
+      const newParticipantEmails = projectData.participantsEmails.filter(email => email.toLowerCase() !== normalizedEmail);
       
       await updateDoc(projectRef, {
         participants: newParticipants,
         participantsEmails: newParticipantEmails
       });
-      toast({ title: "Usuario eliminado", description: `${participantEmail} ha sido eliminado del proyecto.` });
+      toast({ title: "Usuario eliminado", description: `${normalizedEmail} ha sido eliminado del proyecto.` });
     } catch (error) {
       console.error("Error removing participant: ", error);
       toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar al usuario." });
@@ -617,5 +631,3 @@ export const useProjects = () => {
   }
   return context;
 };
-
-    

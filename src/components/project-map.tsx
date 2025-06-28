@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -34,7 +35,7 @@ export function ProjectMap({ address }: ProjectMapProps) {
   useEffect(() => {
     if (isLoaded && address) {
       const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ address }, (results, status) => {
+      geocoder.geocode({ address: address, region: 'AR' }, (results, status) => {
         if (status === 'OK' && results && results[0]) {
           const location = results[0].geometry.location;
           const newCenter = { lat: location.lat(), lng: location.lng() };
@@ -56,7 +57,7 @@ export function ProjectMap({ address }: ProjectMapProps) {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Error al cargar el mapa</AlertTitle>
             <AlertDescription>
-                No se pudo cargar Google Maps. Por favor, revisa la configuración de la API Key.
+                No se pudo cargar Google Maps. Esto puede deberse a una API Key inválida, a que no has habilitado la facturación en tu proyecto de Google Cloud, o a que no has restringido la clave a este dominio.
             </AlertDescription>
         </Alert>
     );

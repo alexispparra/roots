@@ -114,7 +114,7 @@ export function CreateProjectDialog() {
                 name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Dirección</FormLabel>
+                    <FormLabel>Dirección (Opcional)</FormLabel>
                     <FormControl>
                       <Input placeholder="Ej: Av. Corrientes 123, CABA" {...field} />
                     </FormControl>

@@ -64,7 +64,7 @@ export type Project = {
 export const AddProjectFormSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
   description: z.string().optional(),
-  address: z.string().min(1, "La dirección es requerida."),
+  address: z.string().optional(),
   status: z.enum(['planning', 'in-progress', 'completed', 'on-hold']),
 });
 export type AddProjectData = z.infer<typeof AddProjectFormSchema>;

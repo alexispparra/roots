@@ -48,7 +48,7 @@ export function EditProjectDialog({ project, isOpen, onOpenChange, onUpdateProje
       form.reset({
         name: project.name,
         description: project.description ?? "",
-        address: project.address,
+        address: project.address ?? "",
         status: project.status,
       })
     }
@@ -106,7 +106,7 @@ export function EditProjectDialog({ project, isOpen, onOpenChange, onUpdateProje
                 name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Dirección</FormLabel>
+                    <FormLabel>Dirección (Opcional)</FormLabel>
                     <FormControl>
                       <Input placeholder="Ej: Av. Corrientes 123, CABA" {...field} />
                     </FormControl>
