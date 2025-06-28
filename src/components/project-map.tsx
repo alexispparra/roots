@@ -20,6 +20,10 @@ const defaultCenter = {
 const libraries: ("geocoding")[] = ['geocoding'];
 const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
+type ProjectMapProps = {
+  address: string;
+};
+
 export function ProjectMap({ address }: ProjectMapProps) {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: apiKey,
