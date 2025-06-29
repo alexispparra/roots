@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -65,7 +66,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
 
   return (
     <>
-      <Card className="data-card-theme">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
@@ -152,7 +153,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
           <div className="block md:hidden space-y-4">
             {project.categories.length > 0 ? (
               project.categories.map((category) => (
-                <Card key={category.name} className="data-card-theme">
+                <Card key={category.name}>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between text-lg">
                        <div className="flex items-center gap-3">

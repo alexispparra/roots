@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useMemo } from "react"
@@ -128,7 +129,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     <>
         <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
             <div className="lg:col-span-2 grid gap-6">
-                <Card className="data-card-theme">
+                <Card>
                     <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div>
                             <CardTitle className="font-headline">Transacciones</CardTitle>
@@ -241,7 +242,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                          <div className="block md:hidden space-y-4">
                             {filteredTransactions.length > 0 ? (
                                 filteredTransactions.map((t) => (
-                                <Card key={t.id} className="data-card-theme">
+                                <Card key={t.id}>
                                     <CardHeader className="flex flex-row items-start justify-between pb-2">
                                         <div className="flex-1">
                                             <CardTitle className="text-base font-medium leading-snug">{t.description}</CardTitle>
