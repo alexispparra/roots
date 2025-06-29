@@ -174,7 +174,7 @@ export default function ProjectCategoryClient() {
             </Card>
         </div>
         <div className="md:col-span-2">
-          <Card className="card-light-readable">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Gastos Registrados</CardTitle>
