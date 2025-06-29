@@ -115,17 +115,17 @@
   }
 
   .data-card-theme {
-    --card: hsl(var(--data-card-background));
-    --card-foreground: hsl(var(--data-card-foreground));
-    --popover: hsl(var(--data-card-background));
-    --popover-foreground: hsl(var(--data-card-foreground));
-    --secondary: hsl(var(--data-card-border));
-    --secondary-foreground: hsl(var(--data-card-foreground));
-    --muted: hsl(var(--data-card-border));
-    --muted-foreground: hsl(var(--data-card-muted-foreground));
-    --accent: hsl(var(--data-card-border));
-    --accent-foreground: hsl(var(--data-card-foreground));
-    --border: hsl(var(--data-card-border));
-    --input: hsl(var(--data-card-border));
+    --card: var(--data-card-background);
+    --card-foreground: var(--data-card-foreground);
+    --popover: var(--data-card-background);
+    --popover-foreground: var(--data-card-foreground);
+    --secondary: var(--data-card-border);
+    --secondary-foreground: var(--data-card-foreground);
+    --muted: var(--data-card-border);
+    --muted-foreground: var(--data-card-muted-foreground);
+    --accent: var(--data-card-border);
+    --accent-foreground: var(--data-card-foreground);
+    --border: var(--data-card-border);
+    --input: var(--data-card-border);
   }
 }
