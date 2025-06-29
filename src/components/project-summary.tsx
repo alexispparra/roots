@@ -1,13 +1,16 @@
+
 "use client"
 
+import { useMemo, useState } from "react"
 import { type Project } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Progress } from '@/components/ui/progress'
 import dynamic from 'next/dynamic'
 import { Skeleton } from './ui/skeleton'
 import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 
 const ProjectMapClient = dynamic(() => import('@/components/project-map-client'), {
@@ -20,6 +23,8 @@ const formatCurrency = (value: number) => {
 };
 
 export function ProjectSummary({ project }: { project: Project }) {
+  const [selectedYear, setSelectedYear] = useState<string>(() => new Date().getFullYear().toString());
+
   const totalIncome = project.transactions
     .filter(t => t.type === 'income')
     .reduce((acc, t) => acc + t.amountUSD, 0);
@@ -54,7 +59,53 @@ export function ProjectSummary({ project }: { project: Project }) {
   const latestTransactions = [...project.transactions]
     .sort((a, b) => b.date.getTime() - a.date.getTime())
     .slice(0, 5);
+    
+  const { yearlyData, monthlyData, availableYears } = useMemo(() => {
+    const yearlySummary: { [year: string]: { year: string, income: number, expense: number } } = {}
+    const monthlySummaryForYear: { [month: string]: { month: string, income: number, expense: number } } = {}
+    const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    
+    for (let i = 0; i < 12; i++) {
+        monthlySummaryForYear[i] = { month: monthNames[i], income: 0, expense: 0 };
+    }
 
+    project.transactions.forEach(t => {
+      const year = t.date.getFullYear().toString()
+      const month = t.date.getMonth()
+
+      // Yearly aggregation
+      if (!yearlySummary[year]) {
+        yearlySummary[year] = { year, income: 0, expense: 0 }
+      }
+      if (t.type === 'income') {
+        yearlySummary[year].income += t.amountUSD
+      } else {
+        yearlySummary[year].expense += t.amountUSD
+      }
+
+      // Monthly aggregation for selected year
+      if (year === selectedYear) {
+        if (t.type === 'income') {
+            monthlySummaryForYear[month].income += t.amountUSD
+        } else {
+            monthlySummaryForYear[month].expense += t.amountUSD
+        }
+      }
+    })
+    
+    const allYears = Object.keys(yearlySummary).sort((a, b) => parseInt(b) - parseInt(a));
+    if (allYears.length > 0 && !allYears.includes(selectedYear)) {
+      // This is a side-effect in a memo, which is not ideal, but acceptable for this case.
+      // A better solution would use a separate useEffect.
+      Promise.resolve().then(() => setSelectedYear(allYears[0]));
+    }
+
+    return {
+      yearlyData: Object.values(yearlySummary).sort((a, b) => parseInt(a.year) - parseInt(b.year)),
+      monthlyData: Object.values(monthlySummaryForYear),
+      availableYears: allYears
+    }
+  }, [project.transactions, selectedYear]);
 
   return (
     <div className="grid gap-6">
@@ -172,6 +223,58 @@ export function ProjectSummary({ project }: { project: Project }) {
                 </CardContent>
             </Card>
         </div>
+        
+        <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex-1">
+                        <CardTitle>Ingresos vs. Gastos (Mensual)</CardTitle>
+                        <CardDescription>Resumen mensual para el año seleccionado.</CardDescription>
+                    </div>
+                    <Select value={selectedYear} onValueChange={setSelectedYear}>
+                        <SelectTrigger className="w-full sm:w-[120px]">
+                            <SelectValue placeholder="Año" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </CardHeader>
+                <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={monthlyData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value/1000}k`} />
+                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                        <Legend />
+                        <Bar dataKey="income" name="Ingresos" fill="var(--color-chart-2)" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="expense" name="Gastos" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                    </ResponsiveContainer>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Ingresos vs. Gastos (Anual)</CardTitle>
+                    <CardDescription>Resumen de toda la vida del proyecto.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={yearlyData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="year" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value/1000}k`} />
+                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                        <Legend />
+                        <Bar dataKey="income" name="Ingresos" fill="var(--color-chart-2)" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="expense" name="Gastos" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                    </ResponsiveContainer>
+                </CardContent>
+            </Card>
+        </div>
+
 
       {project.address && (
         <Card>

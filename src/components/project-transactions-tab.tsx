@@ -49,7 +49,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
             }
         });
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-        return Array.from(months).map(m => ({ value: String(m), label: monthNames[m] }));
+        return Array.from(months).sort((a,b) => a - b).map(m => ({ value: String(m), label: monthNames[m] }));
     }, [sortedTransactions, yearFilter]);
 
 
@@ -129,7 +129,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     <>
         <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
             <div className="lg:col-span-2 grid gap-6">
-                <Card>
+                <Card className="data-card-theme">
                     <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div>
                             <CardTitle className="font-headline">Transacciones</CardTitle>
@@ -171,8 +171,6 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                             </div>}
                         </div>
                     </CardHeader>
-                </Card>
-                <Card className="data-card-theme">
                     <CardContent>
                        {/* Desktop Table */}
                         <div className="hidden md:block">
@@ -310,7 +308,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                 </Card>
             </div>
             <div className="lg:col-span-1">
-                 <Card>
+                 <Card className="data-card-theme">
                     <CardHeader>
                         <CardTitle>Resumen del Período</CardTitle>
                         <CardDescription>Total gastado por usuario en el período seleccionado.</CardDescription>
