@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useSearchParams } from 'next/navigation'
@@ -173,7 +174,7 @@ export default function ProjectCategoryClient() {
             </Card>
         </div>
         <div className="md:col-span-2">
-          <Card>
+          <Card className="card-light-readable">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Gastos Registrados</CardTitle>

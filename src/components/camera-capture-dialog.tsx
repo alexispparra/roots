@@ -37,21 +37,37 @@ export function CameraCaptureDialog({ isOpen, onOpenChange, onCapture }: CameraC
 
   useEffect(() => {
     const setupCamera = async () => {
+      let mediaStream: MediaStream | null = null;
       try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        // Prefer the rear camera for mobile convenience
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' },
+        });
+      } catch (error) {
+        console.warn("Rear camera not available, trying any camera.", error);
+        try {
+          // Fallback to any available camera if the rear one fails
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        } catch (fallbackError) {
+          console.error("Error accessing any camera:", fallbackError);
+          setHasPermission(false);
+          toast({
+            variant: "destructive",
+            title: "Acceso a la cámara denegado",
+            description: "Por favor, habilita el permiso de la cámara en tu navegador.",
+          });
+          return;
+        }
+      }
+      
+      if (mediaStream) {
         streamRef.current = mediaStream;
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
+          // Ensure the video plays once the stream is attached
+          videoRef.current.play().catch(err => console.error("Video play failed:", err));
         }
         setHasPermission(true);
-      } catch (error) {
-        console.error("Error accessing camera:", error);
-        setHasPermission(false);
-        toast({
-          variant: "destructive",
-          title: "Acceso a la cámara denegado",
-          description: "Por favor, habilita el permiso de la cámara en tu navegador.",
-        });
       }
     };
 
@@ -86,12 +102,6 @@ export function CameraCaptureDialog({ isOpen, onOpenChange, onCapture }: CameraC
     onOpenChange(false);
   }
 
-  const handleCanPlay = () => {
-    videoRef.current?.play().catch(err => {
-      console.error("Video play failed:", err);
-    });
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -109,7 +119,6 @@ export function CameraCaptureDialog({ isOpen, onOpenChange, onCapture }: CameraC
               autoPlay
               muted
               playsInline
-              onCanPlay={handleCanPlay}
             />
           ) : (
             <Alert variant="destructive">

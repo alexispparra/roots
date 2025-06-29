@@ -107,4 +107,35 @@
   .day-with-event[aria-selected="true"]::after {
       background-color: hsl(var(--primary-foreground));
   }
+
+  /* Inverted Card Style for Readability */
+  .card-light-readable {
+    @apply bg-slate-50 text-slate-900 border-slate-200;
+  }
+  .card-light-readable > .border-t {
+    @apply border-slate-200;
+  }
+  .card-light-readable .text-muted-foreground {
+    @apply text-slate-500;
+  }
+  .card-light-readable .border,
+  .card-light-readable .border-b {
+    @apply border-slate-200;
+  }
+  .card-light-readable tr:hover {
+     @apply bg-slate-100;
+  }
+  .card-light-readable .bg-muted {
+     @apply bg-slate-100;
+  }
+  .card-light-readable .text-destructive {
+    @apply text-red-600;
+  }
+  .card-light-readable .text-emerald-500,
+  .card-light-readable .text-emerald-600 {
+    @apply text-emerald-700;
+  }
+  .card-light-readable .badge {
+    @apply border-slate-300 bg-slate-200 text-slate-700;
+  }
 }

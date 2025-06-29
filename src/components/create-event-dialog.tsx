@@ -76,7 +76,7 @@ export function CreateEventDialog({ onAddEvent, defaultDate, trigger }: CreateEv
             </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Añadir Nuevo Evento</DialogTitle>
           <DialogDescription>
@@ -105,7 +105,7 @@ export function CreateEventDialog({ onAddEvent, defaultDate, trigger }: CreateEv
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Fecha del Evento</FormLabel>
-                    <Popover>
+                    <Popover modal={false}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button

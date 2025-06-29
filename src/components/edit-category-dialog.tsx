@@ -137,7 +137,7 @@ export function EditCategoryDialog({ category, allCategories, isOpen, onOpenChan
                         render={({ field }) => (
                         <FormItem className="flex flex-col">
                             <FormLabel>Fecha de Inicio</FormLabel>
-                            <Popover>
+                            <Popover modal={false}>
                             <PopoverTrigger asChild>
                                 <FormControl>
                                 <Button
@@ -175,7 +175,7 @@ export function EditCategoryDialog({ category, allCategories, isOpen, onOpenChan
                         render={({ field }) => (
                         <FormItem className="flex flex-col">
                             <FormLabel>Fecha de Fin</FormLabel>
-                            <Popover>
+                            <Popover modal={false}>
                             <PopoverTrigger asChild>
                                 <FormControl>
                                 <Button
