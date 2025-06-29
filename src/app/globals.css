@@ -26,7 +26,7 @@
     --accent: 158 22% 35%; /* For hovers */
     --accent-foreground: 150 10% 95%;
     
-    --destructive: 0 63% 51%; /* Softer red: was 0 72% 51% */
+    --destructive: 0 63% 51%; /* Softer red */
     --destructive-foreground: 0 0% 98%;
     
     --border: 158 22% 30%;
@@ -51,12 +51,6 @@
     --sidebar-primary: 35 78% 61%;
     --sidebar-primary-foreground: 158 24% 10%;
     --sidebar-ring: 35 78% 61%;
-
-    /* Light theme for data cards */
-    --data-card-background: 220 20% 98%;
-    --data-card-foreground: 220 10% 20%;
-    --data-card-muted-foreground: 220 10% 45%;
-    --data-card-border: 220 15% 90%;
   }
 
   .dark {
@@ -75,7 +69,7 @@
     --muted-foreground: 150 10% 65%;
     --accent: 158 22% 35%;
     --accent-foreground: 150 10% 95%;
-    --destructive: 0 63% 51%; /* Softer red: was 0 72% 51% */
+    --destructive: 0 63% 51%; /* Softer red */
     --destructive-foreground: 0 0% 98%;
     --border: 158 22% 30%;
     --input: 158 22% 30%;
@@ -113,19 +107,24 @@
   .day-with-event[aria-selected="true"]::after {
       background-color: hsl(var(--primary-foreground));
   }
-
+  
   .data-card-theme {
-    --card: var(--data-card-background);
-    --card-foreground: var(--data-card-foreground);
-    --popover: var(--data-card-background);
-    --popover-foreground: var(--data-card-foreground);
-    --secondary: var(--data-card-border);
-    --secondary-foreground: var(--data-card-foreground);
-    --muted: var(--data-card-border);
-    --muted-foreground: var(--data-card-muted-foreground);
-    --accent: var(--data-card-border);
-    --accent-foreground: var(--data-card-foreground);
-    --border: var(--data-card-border);
-    --input: var(--data-card-border);
+    --card: 158 20% 98%;
+    --card-foreground: 158 24% 18%;
+    --popover: 158 20% 96%;
+    --popover-foreground: 158 24% 18%;
+    --secondary: 158 15% 90%;
+    --secondary-foreground: 158 24% 18%;
+    --muted: 158 15% 90%;
+    --muted-foreground: 158 10% 45%;
+    --accent: 158 15% 92%;
+    --accent-foreground: 158 24% 18%;
+    --border: 158 15% 88%;
+    --input: 158 15% 88%;
+    --background: 158 20% 98%;
+    --foreground: 158 24% 18%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --ring: 35 78% 61%;
   }
 }

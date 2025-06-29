@@ -171,6 +171,8 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                             </div>}
                         </div>
                     </CardHeader>
+                </Card>
+                <Card className="data-card-theme">
                     <CardContent>
                        {/* Desktop Table */}
                         <div className="hidden md:block">

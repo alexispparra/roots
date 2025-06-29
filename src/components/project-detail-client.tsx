@@ -122,11 +122,11 @@ export default function ProjectDetailClient() {
           <ProjectSummary project={project} />
         </TabsContent>
 
-        <TabsContent value="transactions" className="data-card-theme">
+        <TabsContent value="transactions">
            <ProjectTransactionsTab project={project} canEdit={canEdit} />
         </TabsContent>
 
-        <TabsContent value="categories" className="data-card-theme">
+        <TabsContent value="categories">
            <ProjectCategoriesTab project={project} canEdit={canEdit} />
         </TabsContent>
         
