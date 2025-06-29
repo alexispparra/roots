@@ -26,7 +26,7 @@
     --accent: 158 22% 35%; /* For hovers */
     --accent-foreground: 150 10% 95%;
     
-    --destructive: 0 72% 51%;
+    --destructive: 0 63% 51%; /* Softer red: was 0 72% 51% */
     --destructive-foreground: 0 0% 98%;
     
     --border: 158 22% 30%;
@@ -51,6 +51,12 @@
     --sidebar-primary: 35 78% 61%;
     --sidebar-primary-foreground: 158 24% 10%;
     --sidebar-ring: 35 78% 61%;
+
+    /* Light theme for data cards */
+    --data-card-background: 220 20% 98%;
+    --data-card-foreground: 220 10% 20%;
+    --data-card-muted-foreground: 220 10% 45%;
+    --data-card-border: 220 15% 90%;
   }
 
   .dark {
@@ -69,7 +75,7 @@
     --muted-foreground: 150 10% 65%;
     --accent: 158 22% 35%;
     --accent-foreground: 150 10% 95%;
-    --destructive: 0 72% 51%;
+    --destructive: 0 63% 51%; /* Softer red: was 0 72% 51% */
     --destructive-foreground: 0 0% 98%;
     --border: 158 22% 30%;
     --input: 158 22% 30%;
@@ -106,5 +112,20 @@
   
   .day-with-event[aria-selected="true"]::after {
       background-color: hsl(var(--primary-foreground));
+  }
+
+  .data-card-theme {
+    --card: hsl(var(--data-card-background));
+    --card-foreground: hsl(var(--data-card-foreground));
+    --popover: hsl(var(--data-card-background));
+    --popover-foreground: hsl(var(--data-card-foreground));
+    --secondary: hsl(var(--data-card-border));
+    --secondary-foreground: hsl(var(--data-card-foreground));
+    --muted: hsl(var(--data-card-border));
+    --muted-foreground: hsl(var(--data-card-muted-foreground));
+    --accent: hsl(var(--data-card-border));
+    --accent-foreground: hsl(var(--data-card-foreground));
+    --border: hsl(var(--data-card-border));
+    --input: hsl(var(--data-card-border));
   }
 }

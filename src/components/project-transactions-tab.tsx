@@ -129,7 +129,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     <>
         <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
             <div className="lg:col-span-2 grid gap-6">
-                <Card>
+                <Card className="data-card-theme">
                     <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div>
                             <CardTitle className="font-headline">Transacciones</CardTitle>
@@ -230,7 +230,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                         ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={canEdit ? 7 : 6} className="h-24 text-center text-muted-foreground">
+                                            <TableCell colSpan={canEdit ? 7 : 6} className="h-24 text-center">
                                                 No hay transacciones para el período seleccionado.
                                             </TableCell>
                                         </TableRow>
@@ -242,7 +242,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                          <div className="block md:hidden space-y-4">
                             {filteredTransactions.length > 0 ? (
                                 filteredTransactions.map((t) => (
-                                <Card key={t.id}>
+                                <Card key={t.id} className="data-card-theme">
                                     <CardHeader className="flex flex-row items-start justify-between pb-2">
                                         <div className="flex-1">
                                             <CardTitle className="text-base font-medium leading-snug">{t.description}</CardTitle>
@@ -298,7 +298,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                                 </Card>
                                 ))
                             ) : (
-                                <div className="h-24 text-center text-muted-foreground flex items-center justify-center">
+                                <div className="h-24 text-center flex items-center justify-center">
                                     No hay transacciones para el período seleccionado.
                                 </div>
                             )}

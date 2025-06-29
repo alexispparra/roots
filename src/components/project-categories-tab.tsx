@@ -66,7 +66,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
 
   return (
     <>
-      <Card>
+      <Card className="data-card-theme">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="font-headline">Categorías de Gastos</CardTitle>
@@ -139,7 +139,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={canEdit ? 5 : 4} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={canEdit ? 5 : 4} className="h-24 text-center">
                       No hay categorías.
                       {canEdit && " ¡Añade la primera!"}
                     </TableCell>
@@ -153,7 +153,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
           <div className="block md:hidden space-y-4">
             {project.categories.length > 0 ? (
               project.categories.map((category) => (
-                <Card key={category.name}>
+                <Card key={category.name} className="data-card-theme">
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between text-lg">
                        <div className="flex items-center gap-3">
@@ -205,7 +205,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
                 </Card>
               ))
             ) : (
-               <div className="h-24 text-center text-muted-foreground flex items-center justify-center">
+               <div className="h-24 text-center flex items-center justify-center">
                   No hay categorías.
                   {canEdit && " ¡Añade la primera!"}
                 </div>
