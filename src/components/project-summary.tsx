@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
@@ -278,5 +277,5 @@ export function ProjectSummary({ project }: { project: Project }) {
         </Card>
       )}
     </div>
-  );
+  )
 }
