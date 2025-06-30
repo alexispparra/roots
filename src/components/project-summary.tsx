@@ -11,6 +11,7 @@ import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ChartContainer } from "@/components/ui/chart"
 
 
 const ProjectMapClient = dynamic(() => import('@/components/project-map-client'), {
@@ -105,6 +106,17 @@ export function ProjectSummary({ project }: { project: Project }) {
 
   const chartData = timeframe === 'monthly' ? monthlyData : yearlyData;
   const xAxisKey = timeframe === 'monthly' ? 'month' : 'year';
+  
+  const chartConfig = {
+      income: {
+        label: "Ingresos",
+        color: "hsl(var(--chart-2))",
+      },
+      expense: {
+        label: "Gastos",
+        color: "hsl(var(--chart-1))",
+      },
+  }
 
   return (
     <div className="grid gap-6">
@@ -252,17 +264,20 @@ export function ProjectSummary({ project }: { project: Project }) {
             </div>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey={xAxisKey} fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value/1000}k`} />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Legend />
-                <Bar dataKey="income" name="Ingresos" fill="var(--color-chart-2)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expense" name="Gastos" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+             <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                <BarChart data={chartData} accessibilityLayer>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey={xAxisKey} tickLine={false} tickMargin={10} axisLine={false} />
+                  <YAxis tickLine={false} axisLine={false} tickMargin={10} tickFormatter={(value) => `$${Number(value) / 1000}k`} />
+                  <Tooltip
+                    cursor={false}
+                    formatter={(value: number) => formatCurrency(value)}
+                  />
+                  <Legend />
+                  <Bar dataKey="income" name="Ingresos" fill="var(--color-income)" radius={4} />
+                  <Bar dataKey="expense" name="Gastos" fill="var(--color-expense)" radius={4} />
+                </BarChart>
+              </ChartContainer>
           </CardContent>
         </Card>
 

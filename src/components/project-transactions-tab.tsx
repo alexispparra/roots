@@ -108,44 +108,36 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     <>
       <Card className="data-card-theme">
         <CardHeader>
-          <CardTitle className="font-headline">Transacciones</CardTitle>
-          <CardDescription>Todos los ingresos y gastos registrados en el proyecto.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-secondary p-4 rounded-lg mb-6">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="grid gap-1.5">
-                    <label className="text-sm font-medium text-secondary-foreground">Año</label>
-                    <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
-                      <SelectTrigger className="bg-card border-border text-card-foreground">
-                        <SelectValue placeholder="Año" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        {availableYears.map(year => (
-                          <SelectItem key={year} value={String(year)}>{year}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <label className="text-sm font-medium text-secondary-foreground">Mes</label>
-                    <Select value={monthFilter} onValueChange={setMonthFilter}>
-                      <SelectTrigger className="bg-card border-border text-card-foreground">
-                        <SelectValue placeholder="Mes" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        {availableMonths.map(month => (
-                          <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {canEdit && (
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <CardTitle className="font-headline">Transacciones</CardTitle>
+                <CardDescription>Todos los ingresos y gastos registrados en el proyecto.</CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
+                  <SelectTrigger className="w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
+                    <SelectValue placeholder="Año" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {availableYears.map(year => (
+                      <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={monthFilter} onValueChange={setMonthFilter}>
+                  <SelectTrigger className="w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
+                    <SelectValue placeholder="Mes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {availableMonths.map(month => (
+                      <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+               {canEdit && (
                   <div className="flex gap-2">
                     <CreateIncomeDialog onAddIncome={handleAddIncome} />
                     <CreateExpenseDialog
@@ -156,8 +148,8 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                   </div>
                 )}
             </div>
-          </div>
-          
+        </CardHeader>
+        <CardContent>
           {/* Desktop Table */}
           <div className="hidden md:block">
             <Table>
