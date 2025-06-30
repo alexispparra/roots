@@ -192,12 +192,12 @@ export function ProjectSummary({ project }: { project: Project }) {
                     <div className="block md:hidden space-y-4 p-4">
                          {latestTransactions.length > 0 ? (
                             latestTransactions.map(t => (
-                                <div key={t.id} className="flex justify-between items-center rounded-lg border p-3 text-sm">
-                                    <div>
-                                        <p className="font-medium">{t.description}</p>
+                                <div key={t.id} className="flex justify-between items-center gap-3 rounded-lg border p-3 text-sm">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-medium truncate">{t.description}</p>
                                         <p className="text-xs text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</p>
                                     </div>
-                                    <p className={`font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                                    <p className={`font-semibold shrink-0 ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
                                         {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
                                     </p>
                                 </div>
