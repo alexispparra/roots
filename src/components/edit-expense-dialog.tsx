@@ -143,7 +143,7 @@ export function EditExpenseDialog({ expense, isOpen, onOpenChange, categories, p
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Fecha del Gasto</FormLabel>
-                    <Popover modal={false}>
+                    <Popover modal={true}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button

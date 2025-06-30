@@ -159,7 +159,7 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Fecha del Gasto</FormLabel>
-                      <Popover modal={false}>
+                      <Popover modal={true}>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button

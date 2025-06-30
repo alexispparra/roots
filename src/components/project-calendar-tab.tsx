@@ -298,8 +298,10 @@ export function ProjectCalendarTab({ project, canEdit }: { project: Project, can
             Visualiza la línea de tiempo de tus categorías de proyecto.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <ProjectGanttChart categories={project.categories} />
+        <CardContent className="overflow-x-auto">
+          <div className="min-w-[600px]">
+            <ProjectGanttChart categories={project.categories} />
+          </div>
         </CardContent>
       </Card>
     </div>

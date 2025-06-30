@@ -197,7 +197,7 @@ export function AddCategoryDialog({
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>Fecha de Inicio</FormLabel>
-                        <Popover modal={false}>
+                        <Popover modal={true}>
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
@@ -235,7 +235,7 @@ export function AddCategoryDialog({
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>Fecha de Fin</FormLabel>
-                        <Popover modal={false}>
+                        <Popover modal={true}>
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button

@@ -111,7 +111,7 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Fecha del Ingreso</FormLabel>
-                    <Popover modal={false}>
+                    <Popover modal={true}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button

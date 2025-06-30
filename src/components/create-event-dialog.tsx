@@ -105,7 +105,7 @@ export function CreateEventDialog({ onAddEvent, defaultDate, trigger }: CreateEv
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Fecha del Evento</FormLabel>
-                    <Popover modal={false}>
+                    <Popover modal={true}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
