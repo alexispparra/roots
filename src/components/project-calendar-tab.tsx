@@ -145,21 +145,23 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
     <>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         <div className="md:col-span-2 overflow-x-auto">
-            <Calendar
-                locale={es}
-                mode="single"
-                month={month}
-                onMonthChange={setMonth}
-                selected={selectedDay}
-                onSelect={setSelectedDay}
-                modifiers={{
-                    hasEvent: eventDays
-                }}
-                modifiersClassNames={{
-                    hasEvent: 'day-with-event'
-                }}
-                className="rounded-md border"
-            />
+            <div className="border rounded-md inline-block min-w-full">
+                <Calendar
+                    locale={es}
+                    mode="single"
+                    month={month}
+                    onMonthChange={setMonth}
+                    selected={selectedDay}
+                    onSelect={setSelectedDay}
+                    modifiers={{
+                        hasEvent: eventDays
+                    }}
+                    modifiersClassNames={{
+                        hasEvent: 'day-with-event'
+                    }}
+                    className="p-0"
+                />
+            </div>
         </div>
         <div className="md:col-span-1">
              <Card>

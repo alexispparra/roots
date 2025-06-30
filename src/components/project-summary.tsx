@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
@@ -44,7 +45,7 @@ export function ProjectSummary({ project }: { project: Project }) {
   const [timeframe, setTimeframe] = useState<'monthly' | 'annual'>('monthly');
   const [selectedYear, setSelectedYear] = useState<string>(() => new Date().getFullYear().toString());
 
-  const expensesByCategory = project.transactions
+  const expensesByCategory = useMemo(() => project.transactions
     .filter(t => t.type === 'expense' && t.category)
     .reduce((acc, t) => {
       const category = t.category!;
@@ -53,18 +54,18 @@ export function ProjectSummary({ project }: { project: Project }) {
       }
       acc[category] += t.amountUSD;
       return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<string, number>), [project.transactions]);
 
-  const categoryChartData = Object.entries(expensesByCategory)
+  const categoryChartData = useMemo(() => Object.entries(expensesByCategory)
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value)
-    .slice(0, 5); // Show top 5 categories
+    .slice(0, 5), [expensesByCategory]);
 
   const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
   
-  const latestTransactions = [...project.transactions]
+  const latestTransactions = useMemo(() => [...project.transactions]
     .sort((a, b) => b.date.getTime() - a.date.getTime())
-    .slice(0, 5);
+    .slice(0, 5), [project.transactions]);
     
   const { yearlyData, monthlyData, availableYears } = useMemo(() => {
     const yearlySummary: { [year: string]: { year: string, income: number, expense: number } } = {}
@@ -180,7 +181,7 @@ export function ProjectSummary({ project }: { project: Project }) {
                 </CardHeader>
                 <CardContent>
                     <div className="w-full overflow-x-auto">
-                        <Table>
+                        <Table className="table-fixed">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Descripción</TableHead>
@@ -244,7 +245,7 @@ export function ProjectSummary({ project }: { project: Project }) {
           </CardHeader>
           <CardContent>
              <div className="w-full overflow-x-auto">
-                <ChartContainer config={chartConfig} className="h-[300px] min-w-[400px]">
+                <ChartContainer config={chartConfig} className="h-[300px] min-w-0 sm:min-w-[400px]">
                     <BarChart data={chartData} accessibilityLayer>
                       <CartesianGrid vertical={false} />
                       <XAxis dataKey={xAxisKey} tickLine={false} tickMargin={10} axisLine={false} />
