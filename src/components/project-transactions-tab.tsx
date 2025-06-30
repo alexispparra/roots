@@ -131,7 +131,8 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                 <CardDescription>Resumen de gastos por usuario para el período seleccionado.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="overflow-x-auto">
+                {/* Desktop Table */}
+                <div className="hidden md:block">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -159,6 +160,25 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                         </TableBody>
                     </Table>
                 </div>
+                 {/* Mobile Card List */}
+                 <div className="block md:hidden space-y-4">
+                     {userSpendingSummary.length > 0 ? (
+                        userSpendingSummary.map((item) => (
+                            <Card key={item.user} className="data-card-theme">
+                                <CardContent className="p-3 flex justify-between items-center text-sm">
+                                    <p className="font-medium">{item.user}</p>
+                                    <p className="font-semibold text-destructive">
+                                        -{formatCurrency(item.amount)}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        ))
+                    ) : (
+                        <div className="h-24 text-center text-muted-foreground flex items-center justify-center">
+                            No hay gastos de usuarios en este período.
+                        </div>
+                    )}
+                </div>
             </CardContent>
         </Card>
 
@@ -169,7 +189,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                   <CardTitle className="font-headline">Transacciones</CardTitle>
                   <CardDescription>Todos los ingresos y gastos registrados en el proyecto.</CardDescription>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                   <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
                     <SelectTrigger className="w-full sm:w-auto md:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Año" />
@@ -193,27 +213,28 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     </SelectContent>
                   </Select>
                    {canEdit && (
-                    <div className="flex gap-2 w-full sm:w-auto">
+                    <>
                       <CreateIncomeDialog onAddIncome={handleAddIncome} />
                       <CreateExpenseDialog
                         onAddExpense={handleAddExpense}
                         categories={project.categories}
                         participants={project.participants}
                       />
-                    </div>
+                    </>
                   )}
                 </div>
               </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[100px]">Fecha</TableHead>
                     <TableHead>Descripción</TableHead>
-                    <TableHead className="hidden sm:table-cell">Categoría</TableHead>
-                    <TableHead className="hidden sm:table-cell">Usuario</TableHead>
+                    <TableHead>Categoría</TableHead>
+                    <TableHead>Usuario</TableHead>
                     <TableHead className="w-[120px] text-right">Monto (U$S)</TableHead>
                     {canEdit && <TableHead className="w-[50px]"></TableHead>}
                   </TableRow>
@@ -223,15 +244,9 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     filteredTransactions.map((t) => (
                       <TableRow key={t.id}>
                         <TableCell>{t.date.toLocaleDateString('es-ES')}</TableCell>
-                        <TableCell className="font-medium break-all">
-                            {t.description}
-                            <div className="sm:hidden text-xs text-muted-foreground mt-1">
-                                {t.category && <Badge variant="outline" className="mr-1">{t.category}</Badge>}
-                                {t.user}
-                            </div>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell"><Badge variant="outline">{t.category}</Badge></TableCell>
-                        <TableCell className="hidden sm:table-cell">{t.user}</TableCell>
+                        <TableCell className="font-medium break-all">{t.description}</TableCell>
+                        <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
+                        <TableCell>{t.user}</TableCell>
                         <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
                           {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
                         </TableCell>
@@ -273,6 +288,68 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                   )}
                 </TableBody>
               </Table>
+            </div>
+            {/* Mobile Card List */}
+            <div className="block md:hidden space-y-4">
+               {filteredTransactions.length > 0 ? (
+                    filteredTransactions.map((t) => (
+                        <Card key={t.id} className="data-card-theme">
+                            <CardHeader className="flex flex-row items-start justify-between pb-2">
+                                <div>
+                                    <CardTitle className="text-sm font-medium leading-snug break-all">{t.description}</CardTitle>
+                                    <CardDescription>{t.date.toLocaleDateString('es-ES')}</CardDescription>
+                                </div>
+                                 {canEdit && (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" className="h-8 w-8 p-0 -mr-2 -mt-2">
+                                            <span className="sr-only">Abrir menú</span>
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            {t.attachmentDataUrl && (
+                                                <DropdownMenuItem asChild>
+                                                    <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer">
+                                                        <Paperclip className="mr-2 h-4 w-4" /> Ver Adjunto
+                                                    </a>
+                                                </DropdownMenuItem>
+                                            )}
+                                            <DropdownMenuItem onClick={() => handleEditClick(t)}>
+                                                <Pencil className="mr-2 h-4 w-4" />
+                                                Editar
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive">
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                Eliminar
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
+                            </CardHeader>
+                            <CardContent className="pt-2 text-sm">
+                                <div className="flex justify-between items-center border-t pt-2 mt-2">
+                                    <span className="text-muted-foreground">Monto</span>
+                                    <span className={`font-semibold ${t.type === 'income' ? 'text-emerald-600' : 'text-destructive'}`}>
+                                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center pt-2">
+                                    <span className="text-muted-foreground">Categoría</span>
+                                    <Badge variant="outline" className="font-medium">{t.category}</Badge>
+                                </div>
+                                <div className="flex justify-between items-center pt-2">
+                                    <span className="text-muted-foreground">Usuario</span>
+                                    <span className="font-medium">{t.user}</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))
+                ) : (
+                    <div className="h-24 text-center text-muted-foreground flex items-center justify-center">
+                         No hay transacciones para el período seleccionado.
+                    </div>
+                )}
             </div>
           </CardContent>
         </Card>
