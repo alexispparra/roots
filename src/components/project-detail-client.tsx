@@ -118,7 +118,7 @@ export default function ProjectDetailClient() {
             {isAdmin && <TabsTrigger value="team"><Users className="mr-2 h-4 w-4" />Equipo</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="dashboard">
+        <TabsContent value="dashboard" className="overflow-hidden">
           <ProjectSummary project={project} />
         </TabsContent>
 
