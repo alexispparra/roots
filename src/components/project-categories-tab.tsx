@@ -80,8 +80,6 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
               defaultStartDate={project.createdAt}
             />}
           </CardHeader>
-        </Card>
-        <Card>
           <CardContent className="p-0">
             {/* Desktop Table */}
             <div className="hidden md:block">

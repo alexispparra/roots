@@ -7,7 +7,7 @@ import type { Project, Transaction, AddExpenseInput, AddIncomeInput, UpdateExpen
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreHorizontal, Pencil, Trash2, Paperclip } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, Paperclip, Users } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { CreateExpenseDialog } from "@/components/create-expense-dialog"
 import { CreateIncomeDialog } from "@/components/create-income-dialog"
@@ -16,7 +16,6 @@ import { EditIncomeDialog } from "./edit-income-dialog"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ProjectFinancialSummary } from "./project-financial-summary"
 
 type ProjectTransactionsTabProps = {
   project: Project;
@@ -60,6 +59,24 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
         const monthMatch = monthFilter === 'all' || date.getMonth() === parseInt(monthFilter, 10);
         return yearMatch && monthMatch;
     }), [sortedTransactions, yearFilter, monthFilter]);
+
+    const userSpendingSummary = useMemo(() => {
+        const spending = filteredTransactions
+            .filter(t => t.type === 'expense' && t.user)
+            .reduce((acc, t) => {
+                const user = t.user!;
+                if (!acc[user]) {
+                    acc[user] = 0;
+                }
+                acc[user] += t.amountUSD;
+                return acc;
+            }, {} as Record<string, number>);
+        
+        return Object.entries(spending)
+            .map(([user, amount]) => ({ user, amount }))
+            .sort((a, b) => b.amount - a.amount);
+    }, [filteredTransactions]);
+
 
     const handleAddExpense = (data: AddExpenseInput) => {
         addTransaction(project.id, data, "expense");
@@ -108,7 +125,36 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
   return (
     <>
       <div className="grid gap-6">
-        <ProjectFinancialSummary project={project} />
+        {userSpendingSummary.length > 0 && (
+            <Card className="data-card-theme">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5"/> Gastos por Usuario (Período)</CardTitle>
+                    <CardDescription>Resumen de gastos por usuario para el período seleccionado.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Usuario</TableHead>
+                                    <TableHead className="text-right">Monto Gastado (U$S)</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {userSpendingSummary.map(item => (
+                                    <TableRow key={item.user}>
+                                        <TableCell className="font-medium">{item.user}</TableCell>
+                                        <TableCell className="text-right font-medium text-destructive">
+                                            -{formatCurrency(item.amount)}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+        )}
 
         <Card className="data-card-theme">
           <CardHeader>
@@ -117,7 +163,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                   <CardTitle className="font-headline">Transacciones</CardTitle>
                   <CardDescription>Todos los ingresos y gastos registrados en el proyecto.</CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
                     <SelectTrigger className="w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Año" />
@@ -140,8 +186,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                 {canEdit && (
+                   {canEdit && (
                     <div className="flex gap-2">
                       <CreateIncomeDialog onAddIncome={handleAddIncome} />
                       <CreateExpenseDialog
@@ -151,6 +196,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                       />
                     </div>
                   )}
+                </div>
               </div>
           </CardHeader>
           <CardContent>
