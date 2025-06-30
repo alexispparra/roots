@@ -125,36 +125,42 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
   return (
     <>
       <div className="grid gap-6">
-        {userSpendingSummary.length > 0 && (
-            <Card className="data-card-theme">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5"/> Gastos por Usuario (Período)</CardTitle>
-                    <CardDescription>Resumen de gastos por usuario para el período seleccionado.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Usuario</TableHead>
-                                    <TableHead className="text-right">Monto Gastado (U$S)</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {userSpendingSummary.map(item => (
+        <Card className="data-card-theme">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5"/> Gastos por Usuario (Período)</CardTitle>
+                <CardDescription>Resumen de gastos por usuario para el período seleccionado.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Usuario</TableHead>
+                                <TableHead className="text-right">Monto Gastado (U$S)</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {userSpendingSummary.length > 0 ? (
+                                userSpendingSummary.map(item => (
                                     <TableRow key={item.user}>
                                         <TableCell className="font-medium">{item.user}</TableCell>
                                         <TableCell className="text-right font-medium text-destructive">
                                             -{formatCurrency(item.amount)}
                                         </TableCell>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
-        )}
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
+                                        No hay gastos de usuarios en este período.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </CardContent>
+        </Card>
 
         <Card className="data-card-theme">
           <CardHeader>
