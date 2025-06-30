@@ -371,3 +371,5 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     </>
   )
 }
+
+    
