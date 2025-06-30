@@ -143,9 +143,9 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
 
   return (
     <>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-        <div className="md:col-span-2 overflow-x-auto">
-            <div className="border rounded-md inline-block min-w-full">
+    <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="w-full lg:flex-[2] lg:min-w-0">
+            <div className="border rounded-md inline-block min-w-full overflow-x-auto align-middle">
                 <Calendar
                     locale={es}
                     mode="single"
@@ -163,7 +163,7 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
                 />
             </div>
         </div>
-        <div className="md:col-span-1">
+        <div className="w-full lg:flex-1">
              <Card>
                 <CardHeader className="flex flex-row items-center justify-between gap-2">
                     <div className="flex-1">
