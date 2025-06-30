@@ -81,25 +81,25 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
             />}
           </CardHeader>
         </Card>
-        <Card className="data-card-theme">
-          <CardContent>
+        <Card>
+          <CardContent className="p-0">
             {/* Desktop Table */}
             <div className="hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nombre</TableHead>
+                    <TableHead className="pl-6">Nombre</TableHead>
                     <TableHead>Progreso</TableHead>
                     <TableHead>Fechas</TableHead>
                     <TableHead className="text-right">Presupuesto</TableHead>
-                    {canEdit && <TableHead className="w-[50px]"></TableHead>}
+                    {canEdit && <TableHead className="w-[50px] pr-6"></TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {project.categories.length > 0 ? (
                     project.categories.map((category) => (
                       <TableRow key={category.name}>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium pl-6">
                           <div className="flex items-center gap-3">
                             <CategoryIcon name={category.icon ?? undefined} className="h-5 w-5 text-muted-foreground" />
                             <span>{category.name}</span>
@@ -118,7 +118,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
                           </div>
                         </TableCell>
                         <TableCell className="text-right">${category.budget.toLocaleString('es-AR')}</TableCell>
-                        {canEdit && <TableCell>
+                        {canEdit && <TableCell className="pr-6">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0">
@@ -153,7 +153,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
             </div>
 
             {/* Mobile Card List */}
-            <div className="block md:hidden space-y-4">
+            <div className="block md:hidden p-4 space-y-4">
               {project.categories.length > 0 ? (
                 project.categories.map((category) => (
                   <Card key={category.name}>
