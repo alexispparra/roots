@@ -68,42 +68,42 @@ export function ProjectSummary({ project }: { project: Project }) {
     .slice(0, 5), [project.transactions]);
     
   const { yearlyData, monthlyData, availableYears } = useMemo(() => {
-    const yearlySummary: { [year: string]: { year: string, income: number, expense: number } } = {}
+    const yearlySummary: { [year: string]: { year: string, income: number, expense: number } } = {};
     const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-    const monthlySummaryForYear: { [month: number]: { month: string, income: number, expense: number } } = {}
+    const monthlySummaryForYear: { [month: number]: { month: string, income: number, expense: number } } = {};
     for (let i = 0; i < 12; i++) {
         monthlySummaryForYear[i] = { month: monthNames[i], income: 0, expense: 0 };
     }
 
     project.transactions.forEach(t => {
-      const year = t.date.getFullYear().toString()
-      const month = t.date.getMonth()
+      const year = t.date.getFullYear().toString();
+      const month = t.date.getMonth();
 
       if (!yearlySummary[year]) {
-        yearlySummary[year] = { year, income: 0, expense: 0 }
+        yearlySummary[year] = { year, income: 0, expense: 0 };
       }
       if (t.type === 'income') {
-        yearlySummary[year].income += t.amountUSD
+        yearlySummary[year].income += t.amountUSD;
       } else {
-        yearlySummary[year].expense += t.amountUSD
+        yearlySummary[year].expense += t.amountUSD;
       }
       
       if (year === selectedYear) {
         if (t.type === 'income') {
-            monthlySummaryForYear[month].income += t.amountUSD
+            monthlySummaryForYear[month].income += t.amountUSD;
         } else {
-            monthlySummaryForYear[month].expense += t.amountUSD
+            monthlySummaryForYear[month].expense += t.amountUSD;
         }
       }
-    })
+    });
     
     const allYears = Object.keys(yearlySummary).sort((a, b) => parseInt(b) - parseInt(a));
     
     return {
       yearlyData: Object.values(yearlySummary).sort((a, b) => parseInt(a.year) - parseInt(b.year)),
       monthlyData: Object.values(monthlySummaryForYear),
-      availableYears: allYears
-    }
+      availableYears: allYears,
+    };
   }, [project.transactions, selectedYear]);
 
   useEffect(() => {
