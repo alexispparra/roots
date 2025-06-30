@@ -1,7 +1,6 @@
-
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { type Project } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import dynamic from 'next/dynamic'
@@ -98,16 +97,19 @@ export function ProjectSummary({ project }: { project: Project }) {
     })
     
     const allYears = Object.keys(yearlySummary).sort((a, b) => parseInt(b) - parseInt(a));
-    if (allYears.length > 0 && !allYears.includes(selectedYear)) {
-      Promise.resolve().then(() => setSelectedYear(allYears[0]));
-    }
-
+    
     return {
       yearlyData: Object.values(yearlySummary).sort((a, b) => parseInt(a.year) - parseInt(b.year)),
       monthlyData: Object.values(monthlySummaryForYear),
       availableYears: allYears
     }
   }, [project.transactions, selectedYear]);
+
+  useEffect(() => {
+    if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
+      setSelectedYear(availableYears[0]);
+    }
+  }, [availableYears, selectedYear]);
 
   const chartData = timeframe === 'monthly' ? monthlyData : yearlyData;
   const xAxisKey = timeframe === 'monthly' ? 'month' : 'year';
@@ -121,8 +123,8 @@ export function ProjectSummary({ project }: { project: Project }) {
         label: "Gastos",
         color: "hsl(var(--chart-1))",
       },
-  }
-
+  };
+  
   return (
     <div className="grid gap-6">
        <ProjectFinancialSummary project={project} />
@@ -135,32 +137,34 @@ export function ProjectSummary({ project }: { project: Project }) {
                 </CardHeader>
                 <CardContent>
                     {categoryChartData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={300}>
-                            <PieChart>
-                                <Pie
-                                    data={categoryChartData}
-                                    cx="50%"
-                                    cy="50%"
-                                    labelLine={false}
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    dataKey="value"
-                                    label={({ percent }) =>
-                                      new Intl.NumberFormat("default", {
-                                        style: "percent",
-                                        minimumFractionDigits: 0,
-                                        maximumFractionDigits: 0,
-                                      }).format(percent)
-                                    }
-                                >
-                                    {categoryChartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                                <Legend content={renderLegend} />
-                            </PieChart>
-                        </ResponsiveContainer>
+                        <div className="w-full overflow-x-auto">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <PieChart>
+                                    <Pie
+                                        data={categoryChartData}
+                                        cx="50%"
+                                        cy="50%"
+                                        labelLine={false}
+                                        outerRadius={80}
+                                        fill="#8884d8"
+                                        dataKey="value"
+                                        label={({ percent }) =>
+                                          new Intl.NumberFormat("default", {
+                                            style: "percent",
+                                            minimumFractionDigits: 0,
+                                            maximumFractionDigits: 0,
+                                          }).format(percent)
+                                        }
+                                    >
+                                        {categoryChartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                                    <Legend content={renderLegend} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
                     ) : (
                         <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                             No hay gastos registrados para mostrar un gráfico.
@@ -176,7 +180,7 @@ export function ProjectSummary({ project }: { project: Project }) {
                 </CardHeader>
                 <CardContent>
                     <div className="w-full overflow-x-auto">
-                        <Table className="w-full table-fixed">
+                        <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Descripción</TableHead>
@@ -239,20 +243,22 @@ export function ProjectSummary({ project }: { project: Project }) {
             </div>
           </CardHeader>
           <CardContent>
-             <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                <BarChart data={chartData} accessibilityLayer>
-                  <CartesianGrid vertical={false} />
-                  <XAxis dataKey={xAxisKey} tickLine={false} tickMargin={10} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} tickMargin={10} tickFormatter={(value) => `$${Number(value) / 1000}k`} />
-                  <Tooltip
-                    cursor={false}
-                    formatter={(value: number) => formatCurrency(value)}
-                  />
-                  <Legend />
-                  <Bar dataKey="income" name="Ingresos" fill="var(--color-income)" radius={4} />
-                  <Bar dataKey="expense" name="Gastos" fill="var(--color-expense)" radius={4} />
-                </BarChart>
-              </ChartContainer>
+             <div className="w-full overflow-x-auto">
+                <ChartContainer config={chartConfig} className="h-[300px] min-w-[400px]">
+                    <BarChart data={chartData} accessibilityLayer>
+                      <CartesianGrid vertical={false} />
+                      <XAxis dataKey={xAxisKey} tickLine={false} tickMargin={10} axisLine={false} />
+                      <YAxis tickLine={false} axisLine={false} tickMargin={10} tickFormatter={(value) => `$${Number(value) / 1000}k`} />
+                      <Tooltip
+                        cursor={false}
+                        formatter={(value: number) => formatCurrency(value)}
+                      />
+                      <Legend />
+                      <Bar dataKey="income" name="Ingresos" fill="var(--color-income)" radius={4} />
+                      <Bar dataKey="expense" name="Gastos" fill="var(--color-expense)" radius={4} />
+                    </BarChart>
+                  </ChartContainer>
+             </div>
           </CardContent>
         </Card>
 
@@ -262,7 +268,7 @@ export function ProjectSummary({ project }: { project: Project }) {
           <CardHeader>
             <CardTitle>Ubicación del Proyecto</CardTitle>
             <CardDescription>{project.address}</CardDescription>
-          </CardHeader>
+          </Header>
           <CardContent>
             <ProjectMapClient address={project.address} />
           </CardContent>
