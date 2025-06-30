@@ -70,7 +70,7 @@ export function ProjectSummary({ project }: { project: Project }) {
   const { yearlyData, monthlyData, availableYears } = useMemo(() => {
     const yearlySummary: { [year: string]: { year: string, income: number, expense: number } } = {}
     const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-    const monthlySummaryForYear: { [month: string]: { month: string, income: number, expense: number } } = {}
+    const monthlySummaryForYear: { [month: number]: { month: string, income: number, expense: number } } = {}
     for (let i = 0; i < 12; i++) {
         monthlySummaryForYear[i] = { month: monthNames[i], income: 0, expense: 0 };
     }
@@ -178,37 +178,35 @@ export function ProjectSummary({ project }: { project: Project }) {
                     <CardDescription>Los 5 movimientos más recientes del proyecto.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="w-full overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Descripción</TableHead>
-                                    <TableHead className="w-[110px] text-right">Monto (U$S)</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {latestTransactions.length > 0 ? (
-                                    latestTransactions.map(t => (
-                                        <TableRow key={t.id}>
-                                            <TableCell className="font-medium break-words">
-                                                <div className="font-medium">{t.description}</div>
-                                                <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
-                                            </TableCell>
-                                            <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                                {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
-                                            No hay transacciones registradas.
+                    <Table className="table-fixed">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Descripción</TableHead>
+                                <TableHead className="w-[120px] text-right">Monto (U$S)</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {latestTransactions.length > 0 ? (
+                                latestTransactions.map(t => (
+                                    <TableRow key={t.id}>
+                                        <TableCell className="break-words">
+                                            <div className="font-medium">{t.description}</div>
+                                            <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
+                                        </TableCell>
+                                        <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                                            {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
                                         </TableCell>
                                     </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
+                                        No hay transacciones registradas.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>
@@ -242,22 +240,20 @@ export function ProjectSummary({ project }: { project: Project }) {
             </div>
           </CardHeader>
           <CardContent>
-             <div className="w-full overflow-x-auto">
-                <ChartContainer config={chartConfig} className="h-[300px] min-w-[500px]">
-                    <BarChart data={chartData} accessibilityLayer>
-                      <CartesianGrid vertical={false} />
-                      <XAxis dataKey={xAxisKey} tickLine={false} tickMargin={10} axisLine={false} />
-                      <YAxis tickLine={false} axisLine={false} tickMargin={10} tickFormatter={(value) => `$${Number(value) / 1000}k`} />
-                      <Tooltip
-                        cursor={false}
-                        formatter={(value: number) => formatCurrency(value)}
-                      />
-                      <Legend />
-                      <Bar dataKey="income" name="Ingresos" fill="var(--color-income)" radius={4} />
-                      <Bar dataKey="expense" name="Gastos" fill="var(--color-expense)" radius={4} />
-                    </BarChart>
-                  </ChartContainer>
-             </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData} accessibilityLayer>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey={xAxisKey} tickLine={false} tickMargin={10} axisLine={false} />
+                <YAxis tickLine={false} axisLine={false} tickMargin={10} tickFormatter={(value) => `$${Number(value) / 1000}k`} />
+                <Tooltip
+                  cursor={false}
+                  formatter={(value: number) => formatCurrency(value)}
+                />
+                <Legend />
+                <Bar dataKey="income" name="Ingresos" fill="var(--color-income)" radius={4} />
+                <Bar dataKey="expense" name="Gastos" fill="var(--color-expense)" radius={4} />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 

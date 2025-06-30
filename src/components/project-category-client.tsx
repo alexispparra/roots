@@ -190,7 +190,7 @@ export default function ProjectCategoryClient() {
             </CardHeader>
             <CardContent>
                 <div className="w-full overflow-x-auto">
-                    <Table className="w-full table-fixed">
+                    <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Fecha</TableHead>
