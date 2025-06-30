@@ -144,7 +144,7 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
   return (
     <>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-        <div className="md:col-span-2 overflow-x-auto">
+        <div className="md:col-span-2">
             <Calendar
                 locale={es}
                 mode="single"
@@ -158,7 +158,7 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
                 modifiersClassNames={{
                     hasEvent: 'day-with-event'
                 }}
-                className="rounded-md border mx-auto"
+                className="rounded-md border w-full"
             />
         </div>
         <div className="md:col-span-1">

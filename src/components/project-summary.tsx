@@ -186,8 +186,8 @@ export function ProjectSummary({ project }: { project: Project }) {
                             {latestTransactions.length > 0 ? (
                                 latestTransactions.map(t => (
                                     <TableRow key={t.id}>
-                                        <TableCell className="break-all">
-                                            <div className="font-medium">{t.description}</div>
+                                        <TableCell>
+                                            <div className="font-medium break-words">{t.description}</div>
                                             <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
                                         </TableCell>
                                         <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
