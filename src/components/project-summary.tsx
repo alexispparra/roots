@@ -155,36 +155,59 @@ export function ProjectSummary({ project }: { project: Project }) {
                     <CardTitle>Últimas Transacciones</CardTitle>
                     <CardDescription>Los 5 movimientos más recientes del proyecto.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Descripción</TableHead>
-                                <TableHead className="text-right">Monto (U$S)</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {latestTransactions.length > 0 ? (
-                                latestTransactions.map(t => (
-                                    <TableRow key={t.id}>
-                                        <TableCell>
-                                            <div className="font-medium">{t.description}</div>
-                                            <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
-                                        </TableCell>
-                                        <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                            {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
+                <CardContent className="p-0 md:p-6 md:pt-0">
+                    {/* Desktop Table */}
+                    <div className="hidden md:block">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Descripción</TableHead>
+                                    <TableHead className="text-right">Monto (U$S)</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {latestTransactions.length > 0 ? (
+                                    latestTransactions.map(t => (
+                                        <TableRow key={t.id}>
+                                            <TableCell>
+                                                <div className="font-medium">{t.description}</div>
+                                                <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
+                                            </TableCell>
+                                            <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                                                {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
+                                            No hay transacciones registradas.
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
-                                        No hay transacciones registradas.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    {/* Mobile Card List */}
+                    <div className="block md:hidden space-y-4 p-4">
+                         {latestTransactions.length > 0 ? (
+                            latestTransactions.map(t => (
+                                <div key={t.id} className="flex justify-between items-center rounded-lg border p-3 text-sm">
+                                    <div>
+                                        <p className="font-medium">{t.description}</p>
+                                        <p className="text-xs text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</p>
+                                    </div>
+                                    <p className={`font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
+                                    </p>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="py-10 text-center text-muted-foreground">
+                                No hay transacciones registradas.
+                            </div>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
         </div>

@@ -130,8 +130,9 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                 <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5"/> Gastos por Usuario (Período)</CardTitle>
                 <CardDescription>Resumen de gastos por usuario para el período seleccionado.</CardDescription>
             </CardHeader>
-            <CardContent>
-                <div className="overflow-x-auto">
+            <CardContent className="p-0 md:p-6 md:pt-0">
+                {/* Desktop Table */}
+                <div className="hidden md:block">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -159,6 +160,21 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                         </TableBody>
                     </Table>
                 </div>
+                {/* Mobile List */}
+                <div className="block md:hidden space-y-2 p-4">
+                    {userSpendingSummary.length > 0 ? (
+                        userSpendingSummary.map(item => (
+                             <div key={item.user} className="flex justify-between items-center rounded-lg border p-3 text-sm">
+                                <span className="font-medium">{item.user}</span>
+                                <span className="font-semibold text-destructive">-{formatCurrency(item.amount)}</span>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="py-10 text-center text-muted-foreground">
+                            No hay gastos de usuarios.
+                        </div>
+                    )}
+                </div>
             </CardContent>
         </Card>
 
@@ -171,7 +187,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
-                    <SelectTrigger className="w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
+                    <SelectTrigger className="w-full sm:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Año" />
                     </SelectTrigger>
                     <SelectContent>
@@ -182,7 +198,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     </SelectContent>
                   </Select>
                   <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
+                    <SelectTrigger className="w-full sm:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Mes" />
                     </SelectTrigger>
                     <SelectContent>
