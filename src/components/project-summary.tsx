@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
@@ -138,34 +137,32 @@ export function ProjectSummary({ project }: { project: Project }) {
                 </CardHeader>
                 <CardContent>
                     {categoryChartData.length > 0 ? (
-                        <div className="w-full overflow-x-auto">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <PieChart>
-                                    <Pie
-                                        data={categoryChartData}
-                                        cx="50%"
-                                        cy="50%"
-                                        labelLine={false}
-                                        outerRadius={80}
-                                        fill="#8884d8"
-                                        dataKey="value"
-                                        label={({ percent }) =>
-                                          new Intl.NumberFormat("default", {
-                                            style: "percent",
-                                            minimumFractionDigits: 0,
-                                            maximumFractionDigits: 0,
-                                          }).format(percent)
-                                        }
-                                    >
-                                        {categoryChartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                                    <Legend content={renderLegend} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie
+                                    data={categoryChartData}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                    label={({ percent }) =>
+                                      new Intl.NumberFormat("default", {
+                                        style: "percent",
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0,
+                                      }).format(percent)
+                                    }
+                                >
+                                    {categoryChartData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                                <Legend content={renderLegend} />
+                            </PieChart>
+                        </ResponsiveContainer>
                     ) : (
                         <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                             No hay gastos registrados para mostrar un gráfico.
@@ -181,7 +178,7 @@ export function ProjectSummary({ project }: { project: Project }) {
                 </CardHeader>
                 <CardContent>
                     <div className="w-full overflow-x-auto">
-                        <Table className="table-fixed">
+                        <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Descripción</TableHead>
@@ -192,7 +189,7 @@ export function ProjectSummary({ project }: { project: Project }) {
                                 {latestTransactions.length > 0 ? (
                                     latestTransactions.map(t => (
                                         <TableRow key={t.id}>
-                                            <TableCell className="break-words">
+                                            <TableCell className="font-medium break-words">
                                                 <div className="font-medium">{t.description}</div>
                                                 <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
                                             </TableCell>
@@ -245,7 +242,7 @@ export function ProjectSummary({ project }: { project: Project }) {
           </CardHeader>
           <CardContent>
              <div className="w-full overflow-x-auto">
-                <ChartContainer config={chartConfig} className="h-[300px] min-w-0 sm:min-w-[400px]">
+                <ChartContainer config={chartConfig} className="h-[300px] min-w-[500px]">
                     <BarChart data={chartData} accessibilityLayer>
                       <CartesianGrid vertical={false} />
                       <XAxis dataKey={xAxisKey} tickLine={false} tickMargin={10} axisLine={false} />
