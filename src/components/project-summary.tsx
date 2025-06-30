@@ -6,14 +6,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { type Project } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from '@/components/ui/badge'
-import { ArrowUpRight, ArrowDownLeft, Scale, Percent } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
-import { Progress } from '@/components/ui/progress'
-
-type ProjectSummaryProps = {
-  project: Project
-}
+import { ProjectFinancialSummary } from './project-financial-summary'
 
 const COLORS = [
   "hsl(var(--chart-1))",
@@ -23,19 +17,9 @@ const COLORS = [
   "hsl(var(--chart-5))",
 ]
 
-export function ProjectSummary({ project }: ProjectSummaryProps) {
+export function ProjectSummary({ project }: { project: Project }) {
 
-  const { totalIncome, totalExpenses, balance, expensesByCategory, recentTransactions, overallProgress } = useMemo(() => {
-    const income = project.transactions
-      .filter(t => t.type === 'income')
-      .reduce((acc, t) => acc + t.amountUSD, 0)
-
-    const expenses = project.transactions
-      .filter(t => t.type === 'expense')
-      .reduce((acc, t) => acc + t.amountUSD, 0)
-
-    const bal = income - expenses
-
+  const { expensesByCategory, recentTransactions } = useMemo(() => {
     const catExpenses: { [key: string]: number } = {}
     project.transactions
       .filter(t => t.type === 'expense' && t.category)
@@ -55,17 +39,9 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
         .sort((a, b) => b.date.getTime() - a.date.getTime())
         .slice(0, 5)
 
-    const totalProgress = project.categories.reduce((sum, category) => sum + (category.progress ?? 0), 0);
-    const progress = project.categories.length > 0 ? totalProgress / project.categories.length : 0;
-
-
     return { 
-      totalIncome: income,
-      totalExpenses: expenses,
-      balance: bal,
       expensesByCategory: expByCategory,
       recentTransactions: recTransactions,
-      overallProgress: progress,
     }
   }, [project])
 
@@ -75,47 +51,9 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
 
   return (
     <div className="grid gap-6">
-       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Ingresos</CardTitle>
-                <ArrowUpRight className="h-4 w-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold text-emerald-500">{formatCurrency(totalIncome)}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Gastos</CardTitle>
-                <ArrowDownLeft className="h-4 w-4 text-destructive" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold text-destructive">{formatCurrency(totalExpenses)}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Balance</CardTitle>
-                <Scale className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className={`text-2xl font-bold ${balance >= 0 ? 'text-foreground' : 'text-destructive'}`}>{formatCurrency(balance)}</div>
-            </CardContent>
-          </Card>
-           <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Avance Total de Obra</CardTitle>
-                  <Percent className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                  <div className="text-2xl font-bold">{`${overallProgress.toFixed(1)}%`}</div>
-                  <Progress value={overallProgress} className="mt-2" />
-              </CardContent>
-            </Card>
-       </div>
-
-       <div className="grid gap-6 md:grid-cols-2">
+       <ProjectFinancialSummary project={project} />
+      
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
          <Card>
             <CardHeader>
                 <CardTitle className="font-headline">Gastos por Categoría</CardTitle>
@@ -147,22 +85,24 @@ export function ProjectSummary({ project }: ProjectSummaryProps) {
                     </ResponsiveContainer>
                   </div>
                   <Separator className="my-4" />
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Categoría</TableHead>
-                        <TableHead className="text-right">Gasto (U$S)</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {expensesByCategory.map((category) => (
-                        <TableRow key={category.name}>
-                          <TableCell className="font-medium">{category.name}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(category.value)}</TableCell>
+                  <div className="max-h-60 overflow-y-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Categoría</TableHead>
+                          <TableHead className="text-right">Gasto (U$S)</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {expensesByCategory.map((category) => (
+                          <TableRow key={category.name}>
+                            <TableCell className="font-medium">{category.name}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(category.value)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </>
                  ) : (
                 <div className="flex items-center justify-center h-[250px] text-muted-foreground">

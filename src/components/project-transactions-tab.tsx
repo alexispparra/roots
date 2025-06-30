@@ -16,6 +16,7 @@ import { EditIncomeDialog } from "./edit-income-dialog"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 
 type ProjectTransactionsTabProps = {
   project: Project;
@@ -124,41 +125,45 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
 
   return (
     <>
-      <div className="grid gap-6">
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5"/> Gastos por Usuario (Período)</CardTitle>
-                <CardDescription>Resumen de gastos por usuario para el período seleccionado.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table className="table-fixed">
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Usuario</TableHead>
-                            <TableHead className="w-[150px] text-right">Monto Gastado (U$S)</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {userSpendingSummary.length > 0 ? (
-                            userSpendingSummary.map(item => (
-                                <TableRow key={item.user}>
-                                    <TableCell className="font-medium break-words">{item.user}</TableCell>
-                                    <TableCell className="text-right font-medium text-destructive">
-                                        -{formatCurrency(item.amount)}
-                                    </TableCell>
+      <div className={cn("grid gap-6", canEdit ? 'data-card-theme' : '')}>
+        {canEdit && (
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5"/> Gastos por Usuario (Período)</CardTitle>
+                    <CardDescription>Resumen de gastos por usuario para el período seleccionado.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="max-h-60 overflow-y-auto">
+                        <Table className="table-fixed">
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Usuario</TableHead>
+                                    <TableHead className="w-[150px] text-right">Monto Gastado (U$S)</TableHead>
                                 </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
-                                    No hay gastos de usuarios en este período.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+                            </TableHeader>
+                            <TableBody>
+                                {userSpendingSummary.length > 0 ? (
+                                    userSpendingSummary.map(item => (
+                                        <TableRow key={item.user}>
+                                            <TableCell className="font-medium break-words">{item.user}</TableCell>
+                                            <TableCell className="text-right font-medium text-destructive">
+                                                -{formatCurrency(item.amount)}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
+                                            No hay gastos de usuarios en este período.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+        )}
 
         <Card>
           <CardHeader>
@@ -204,66 +209,68 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
               </div>
           </CardHeader>
           <CardContent>
-            <Table className="table-fixed">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">Fecha</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead>Usuario</TableHead>
-                    <TableHead className="w-[120px] text-right">Monto (U$S)</TableHead>
-                    {canEdit && <TableHead className="w-[50px]"></TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTransactions.length > 0 ? (
-                    filteredTransactions.map((t) => (
-                      <TableRow key={t.id}>
-                        <TableCell>{t.date.toLocaleDateString('es-ES')}</TableCell>
-                        <TableCell className="font-medium break-words">{t.description}</TableCell>
-                        <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
-                        <TableCell className="break-words">{t.user}</TableCell>
-                        <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                          {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
-                        </TableCell>
-                        {canEdit && <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Abrir menú</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {t.attachmentDataUrl && (
-                                <DropdownMenuItem asChild>
-                                  <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer">
-                                    <Paperclip className="mr-2 h-4 w-4" /> Ver Adjunto
-                                  </a>
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem onClick={() => handleEditClick(t)}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Eliminar
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>}
+             <div className="max-h-[600px] overflow-y-auto">
+                <Table className="table-fixed">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[100px]">Fecha</TableHead>
+                        <TableHead>Descripción</TableHead>
+                        <TableHead>Categoría</TableHead>
+                        <TableHead>Usuario</TableHead>
+                        <TableHead className="w-[120px] text-right">Monto (U$S)</TableHead>
+                        {canEdit && <TableHead className="w-[50px]"></TableHead>}
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={canEdit ? 6 : 5} className="h-24 text-center">
-                        No hay transacciones para el período seleccionado.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTransactions.length > 0 ? (
+                        filteredTransactions.map((t) => (
+                          <TableRow key={t.id}>
+                            <TableCell>{t.date.toLocaleDateString('es-ES')}</TableCell>
+                            <TableCell className="font-medium break-words">{t.description}</TableCell>
+                            <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
+                            <TableCell className="break-words">{t.user}</TableCell>
+                            <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                              {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
+                            </TableCell>
+                            {canEdit && <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Abrir menú</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {t.attachmentDataUrl && (
+                                    <DropdownMenuItem asChild>
+                                      <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer">
+                                        <Paperclip className="mr-2 h-4 w-4" /> Ver Adjunto
+                                      </a>
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem onClick={() => handleEditClick(t)}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Eliminar
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>}
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={canEdit ? 6 : 5} className="h-24 text-center">
+                            No hay transacciones para el período seleccionado.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+              </div>
           </CardContent>
         </Card>
       </div>
