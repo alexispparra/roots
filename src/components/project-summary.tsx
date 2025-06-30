@@ -123,7 +123,7 @@ export function ProjectSummary({ project }: { project: Project }) {
         label: "Gastos",
         color: "hsl(var(--chart-1))",
       },
-  }
+  };
   
   return (
     <div className="grid gap-6">
