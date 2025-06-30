@@ -207,7 +207,7 @@ export default function ProjectCategoryClient() {
                                 categoryTransactions.map((t) => (
                                     <TableRow key={t.id}>
                                         <TableCell>{t.date.toLocaleDateString('es-ES')}</TableCell>
-                                        <TableCell className="font-medium">{t.description}</TableCell>
+                                        <TableCell className="font-medium break-all">{t.description}</TableCell>
                                         <TableCell>{t.user}</TableCell>
                                         <TableCell>
                                             {t.attachmentDataUrl && (

@@ -189,7 +189,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                   <CardTitle className="font-headline">Transacciones</CardTitle>
                   <CardDescription>Todos los ingresos y gastos registrados en el proyecto.</CardDescription>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
                     <SelectTrigger className="w-full sm:w-auto md:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Año" />
