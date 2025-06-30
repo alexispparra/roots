@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
@@ -124,7 +125,7 @@ export function ProjectSummary({ project }: { project: Project }) {
         color: "hsl(var(--chart-1))",
       },
   };
-
+  
   return (
     <div className="grid gap-6">
        <ProjectFinancialSummary project={project} />
