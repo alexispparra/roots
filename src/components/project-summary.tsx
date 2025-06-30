@@ -175,60 +175,35 @@ export function ProjectSummary({ project }: { project: Project }) {
                     <CardDescription>Los 5 movimientos más recientes del proyecto.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                     {/* Desktop Table */}
-                    <div className="hidden md:block">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Descripción</TableHead>
-                                    <TableHead className="w-[110px] text-right">Monto (U$S)</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {latestTransactions.length > 0 ? (
-                                    latestTransactions.map(t => (
-                                        <TableRow key={t.id}>
-                                            <TableCell>
-                                                <div className="font-medium break-words">{t.description}</div>
-                                                <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
-                                            </TableCell>
-                                            <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                                {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
-                                            No hay transacciones registradas.
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Descripción</TableHead>
+                                <TableHead className="w-[110px] text-right">Monto (U$S)</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {latestTransactions.length > 0 ? (
+                                latestTransactions.map(t => (
+                                    <TableRow key={t.id}>
+                                        <TableCell>
+                                            <div className="font-medium break-all">{t.description}</div>
+                                            <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
+                                        </TableCell>
+                                        <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                                            {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
                                         </TableCell>
                                     </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                     {/* Mobile Card List */}
-                     <div className="block md:hidden space-y-4">
-                        {latestTransactions.length > 0 ? (
-                            latestTransactions.map(t => (
-                                <Card key={t.id} className="data-card-theme">
-                                    <CardContent className="p-3 flex justify-between items-start text-sm">
-                                        <div>
-                                            <p className="font-medium break-all">{t.description}</p>
-                                            <p className="text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</p>
-                                        </div>
-                                        <p className={`font-semibold shrink-0 ml-4 ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                            {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
-                                        </p>
-                                    </CardContent>
-                                </Card>
-                            ))
-                        ) : (
-                            <div className="h-24 text-center flex items-center justify-center text-muted-foreground">
-                                No hay transacciones registradas.
-                            </div>
-                        )}
-                    </div>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
+                                        No hay transacciones registradas.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>
