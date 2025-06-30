@@ -21,6 +21,25 @@ const formatCurrency = (value: number) => {
   return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 };
 
+const renderLegend = (props: any) => {
+  const { payload } = props;
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+      {payload.map((entry: any, index: number) => (
+        <div key={`item-${index}`} className="flex items-center gap-1.5">
+          <span
+            className="h-2 w-2 shrink-0 rounded-full"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span>{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+
 export function ProjectSummary({ project }: { project: Project }) {
   const [timeframe, setTimeframe] = useState<'monthly' | 'annual'>('monthly');
   const [selectedYear, setSelectedYear] = useState<string>(() => new Date().getFullYear().toString());
@@ -138,7 +157,7 @@ export function ProjectSummary({ project }: { project: Project }) {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                                <Legend />
+                                <Legend content={renderLegend} />
                             </PieChart>
                         </ResponsiveContainer>
                     ) : (
