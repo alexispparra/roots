@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useMemo, useState } from "react"
@@ -126,7 +125,13 @@ export function ProjectSummary({ project }: { project: Project }) {
                                     outerRadius={80}
                                     fill="#8884d8"
                                     dataKey="value"
-                                    label={({ percent }) => `${Math.round(percent * 100)}%`}
+                                    label={({ percent }) =>
+                                      new Intl.NumberFormat("default", {
+                                        style: "percent",
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0,
+                                      }).format(percent)
+                                    }
                                 >
                                     {categoryChartData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
