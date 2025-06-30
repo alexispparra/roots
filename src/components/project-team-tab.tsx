@@ -131,8 +131,8 @@ export function ProjectTeamTab({ project }: { project: Project }) {
 
           <Separator />
           
-          <div className="mt-6">
-            <Table>
+          <div className="mt-6 w-full overflow-x-auto">
+            <Table className="w-full table-fixed">
                 <TableHeader>
                     <TableRow>
                         <TableHead>Nombre</TableHead>
@@ -144,8 +144,8 @@ export function ProjectTeamTab({ project }: { project: Project }) {
                 <TableBody>
                     {project.participants.map((participant) => (
                         <TableRow key={participant.email}>
-                            <TableCell className="font-medium break-all">{participant.name}</TableCell>
-                            <TableCell className="break-all">{participant.email}</TableCell>
+                            <TableCell className="font-medium break-words">{participant.name}</TableCell>
+                            <TableCell className="break-words">{participant.email}</TableCell>
                             <TableCell>
                                 {participant.role === 'admin' || participant.email === currentUser?.email ? (
                                     <span>{roleLabels[participant.role]}</span>

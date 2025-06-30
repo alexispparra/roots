@@ -189,67 +189,69 @@ export default function ProjectCategoryClient() {
               }
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Fecha</TableHead>
-                            <TableHead>Descripción</TableHead>
-                            <TableHead>Usuario</TableHead>
-                            <TableHead>Adjunto</TableHead>
-                            <TableHead className="text-right">Monto (U$S)</TableHead>
-                            {canEdit && <TableHead className="w-[50px]"></TableHead>}
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {categoryTransactions.length > 0 ? (
-                            categoryTransactions.map((t) => (
-                                <TableRow key={t.id}>
-                                    <TableCell>{t.date.toLocaleDateString('es-ES')}</TableCell>
-                                    <TableCell className="font-medium break-all">{t.description}</TableCell>
-                                    <TableCell>{t.user}</TableCell>
-                                    <TableCell>
-                                        {t.attachmentDataUrl && (
-                                            <Button asChild variant="ghost" size="icon">
-                                                <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer" title="Ver adjunto">
-                                                    <Paperclip className="h-4 w-4" />
-                                                </a>
-                                            </Button>
-                                        )}
-                                    </TableCell>
-                                    <TableCell className="text-right font-medium text-destructive">
-                                      -{formatCurrency(t.amountUSD)}
-                                    </TableCell>
-                                    {canEdit && <TableCell>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Abrir menú</span>
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => handleEditClick(t)}>
-                                                <Pencil className="mr-2 h-4 w-4" />
-                                                Editar
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive">
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                Eliminar
-                                            </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>}
-                                </TableRow>
-                            ))
-                        ) : (
+                <div className="w-full overflow-x-auto">
+                    <Table className="w-full table-fixed">
+                        <TableHeader>
                             <TableRow>
-                                <TableCell colSpan={canEdit ? 6 : 5} className="h-24 text-center text-muted-foreground">
-                                    No hay gastos en esta categoría.
-                                </TableCell>
+                                <TableHead>Fecha</TableHead>
+                                <TableHead>Descripción</TableHead>
+                                <TableHead>Usuario</TableHead>
+                                <TableHead>Adjunto</TableHead>
+                                <TableHead className="text-right">Monto (U$S)</TableHead>
+                                {canEdit && <TableHead className="w-[50px]"></TableHead>}
                             </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {categoryTransactions.length > 0 ? (
+                                categoryTransactions.map((t) => (
+                                    <TableRow key={t.id}>
+                                        <TableCell>{t.date.toLocaleDateString('es-ES')}</TableCell>
+                                        <TableCell className="font-medium break-words">{t.description}</TableCell>
+                                        <TableCell className="break-words">{t.user}</TableCell>
+                                        <TableCell>
+                                            {t.attachmentDataUrl && (
+                                                <Button asChild variant="ghost" size="icon">
+                                                    <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer" title="Ver adjunto">
+                                                        <Paperclip className="h-4 w-4" />
+                                                    </a>
+                                                </Button>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="text-right font-medium text-destructive">
+                                          -{formatCurrency(t.amountUSD)}
+                                        </TableCell>
+                                        {canEdit && <TableCell>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Abrir menú</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => handleEditClick(t)}>
+                                                    <Pencil className="mr-2 h-4 w-4" />
+                                                    Editar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive">
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Eliminar
+                                                </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>}
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={canEdit ? 6 : 5} className="h-24 text-center text-muted-foreground">
+                                        No hay gastos en esta categoría.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
             </CardContent>
           </Card>
         </div>
