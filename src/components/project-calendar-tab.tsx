@@ -143,27 +143,25 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
 
   return (
     <>
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2">
-            <div className="border rounded-md inline-block min-w-full overflow-x-auto align-middle">
-                <Calendar
-                    locale={es}
-                    mode="single"
-                    month={month}
-                    onMonthChange={setMonth}
-                    selected={selectedDay}
-                    onSelect={setSelectedDay}
-                    modifiers={{
-                        hasEvent: eventDays
-                    }}
-                    modifiersClassNames={{
-                        hasEvent: 'day-with-event'
-                    }}
-                    className="p-0"
-                />
-            </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        <div className="md:col-span-2 flex justify-center">
+            <Calendar
+                locale={es}
+                mode="single"
+                month={month}
+                onMonthChange={setMonth}
+                selected={selectedDay}
+                onSelect={setSelectedDay}
+                modifiers={{
+                    hasEvent: eventDays
+                }}
+                modifiersClassNames={{
+                    hasEvent: 'day-with-event'
+                }}
+                className="rounded-md border w-full sm:w-auto"
+            />
         </div>
-        <div className="lg:col-span-1">
+        <div className="md:col-span-1">
              <Card>
                 <CardHeader className="flex flex-row items-center justify-between gap-2">
                     <div className="flex-1">
@@ -300,10 +298,8 @@ export function ProjectCalendarTab({ project, canEdit }: { project: Project, can
             Visualiza la línea de tiempo de tus categorías de proyecto.
           </CardDescription>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <div className="min-w-[600px]">
-            <ProjectGanttChart categories={project.categories} />
-          </div>
+        <CardContent>
+          <ProjectGanttChart categories={project.categories} />
         </CardContent>
       </Card>
     </div>

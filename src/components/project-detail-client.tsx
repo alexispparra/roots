@@ -108,8 +108,8 @@ export default function ProjectDetailClient() {
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="dashboard" className="grid gap-6">
-        <TabsList className="flex-wrap h-auto justify-start">
+      <Tabs defaultValue="dashboard" className="flex flex-col gap-6">
+        <TabsList>
             <TabsTrigger value="dashboard"><BarChart2 className="mr-2 h-4 w-4" />Resumen</TabsTrigger>
             <TabsTrigger value="transactions"><List className="mr-2 h-4 w-4" />Transacciones</TabsTrigger>
             <TabsTrigger value="categories"><LayoutGrid className="mr-2 h-4 w-4" />Categorías</TabsTrigger>

@@ -16,7 +16,6 @@ import { EditIncomeDialog } from "./edit-income-dialog"
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { cn } from "@/lib/utils"
 
 type ProjectTransactionsTabProps = {
   project: Project;
@@ -125,47 +124,45 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
 
   return (
     <>
-      <div className={cn("grid gap-6", canEdit ? 'data-card-theme' : '')}>
-        {canEdit && (
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5"/> Gastos por Usuario (Período)</CardTitle>
-                    <CardDescription>Resumen de gastos por usuario para el período seleccionado.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="max-h-60 overflow-y-auto">
-                        <Table className="table-fixed">
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Usuario</TableHead>
-                                    <TableHead className="w-[150px] text-right">Monto Gastado (U$S)</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {userSpendingSummary.length > 0 ? (
-                                    userSpendingSummary.map(item => (
-                                        <TableRow key={item.user}>
-                                            <TableCell className="font-medium break-words">{item.user}</TableCell>
-                                            <TableCell className="text-right font-medium text-destructive">
-                                                -{formatCurrency(item.amount)}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
-                                            No hay gastos de usuarios en este período.
+      <div className="grid gap-6">
+        <Card className="data-card-theme">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5"/> Gastos por Usuario (Período)</CardTitle>
+                <CardDescription>Resumen de gastos por usuario para el período seleccionado.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Usuario</TableHead>
+                                <TableHead className="text-right">Monto Gastado (U$S)</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {userSpendingSummary.length > 0 ? (
+                                userSpendingSummary.map(item => (
+                                    <TableRow key={item.user}>
+                                        <TableCell className="font-medium">{item.user}</TableCell>
+                                        <TableCell className="text-right font-medium text-destructive">
+                                            -{formatCurrency(item.amount)}
                                         </TableCell>
                                     </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
-        )}
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
+                                        No hay gastos de usuarios en este período.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </CardContent>
+        </Card>
 
-        <Card>
+        <Card className="data-card-theme">
           <CardHeader>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
@@ -174,7 +171,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
-                    <SelectTrigger className="w-full sm:w-auto md:w-[120px]">
+                    <SelectTrigger className="w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Año" />
                     </SelectTrigger>
                     <SelectContent>
@@ -184,8 +181,8 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select value={monthFilter} onValueChange={setMonthFilter} disabled={availableMonths.length === 0}>
-                    <SelectTrigger className="w-full sm:w-auto md:w-[120px]">
+                  <Select value={monthFilter} onValueChange={setMonthFilter}>
+                    <SelectTrigger className="w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Mes" />
                     </SelectTrigger>
                     <SelectContent>
@@ -196,81 +193,150 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     </SelectContent>
                   </Select>
                    {canEdit && (
-                    <>
+                    <div className="flex gap-2">
                       <CreateIncomeDialog onAddIncome={handleAddIncome} />
                       <CreateExpenseDialog
                         onAddExpense={handleAddExpense}
                         categories={project.categories}
                         participants={project.participants}
                       />
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
           </CardHeader>
           <CardContent>
-             <div className="max-h-[600px] overflow-y-auto">
-                <Table className="table-fixed">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[100px]">Fecha</TableHead>
-                        <TableHead>Descripción</TableHead>
-                        <TableHead>Categoría</TableHead>
-                        <TableHead>Usuario</TableHead>
-                        <TableHead className="w-[120px] text-right">Monto (U$S)</TableHead>
-                        {canEdit && <TableHead className="w-[50px]"></TableHead>}
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead>Categoría</TableHead>
+                    <TableHead>Usuario</TableHead>
+                    <TableHead>Adjunto</TableHead>
+                    <TableHead className="text-right">Monto (U$S)</TableHead>
+                    {canEdit && <TableHead className="w-[50px]"></TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTransactions.length > 0 ? (
+                    filteredTransactions.map((t) => (
+                      <TableRow key={t.id}>
+                        <TableCell>{t.date.toLocaleDateString('es-ES')}</TableCell>
+                        <TableCell className="font-medium">{t.description}</TableCell>
+                        <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
+                        <TableCell>{t.user}</TableCell>
+                        <TableCell>
+                          {t.attachmentDataUrl && (
+                            <Button asChild variant="ghost" size="icon">
+                              <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer" title="Ver adjunto">
+                                <Paperclip className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
+                        </TableCell>
+                        <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                          {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
+                        </TableCell>
+                        {canEdit && <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Abrir menú</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditClick(t)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Eliminar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>}
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTransactions.length > 0 ? (
-                        filteredTransactions.map((t) => (
-                          <TableRow key={t.id}>
-                            <TableCell>{t.date.toLocaleDateString('es-ES')}</TableCell>
-                            <TableCell className="font-medium break-words">{t.description}</TableCell>
-                            <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
-                            <TableCell className="break-words">{t.user}</TableCell>
-                            <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                              {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
-                            </TableCell>
-                            {canEdit && <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <span className="sr-only">Abrir menú</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  {t.attachmentDataUrl && (
-                                    <DropdownMenuItem asChild>
-                                      <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer">
-                                        <Paperclip className="mr-2 h-4 w-4" /> Ver Adjunto
-                                      </a>
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuItem onClick={() => handleEditClick(t)}>
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Editar
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Eliminar
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>}
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={canEdit ? 6 : 5} className="h-24 text-center">
-                            No hay transacciones para el período seleccionado.
-                          </TableCell>
-                        </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={canEdit ? 7 : 6} className="h-24 text-center">
+                        No hay transacciones para el período seleccionado.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            {/* Mobile Card List */}
+            <div className="block md:hidden space-y-4">
+              {filteredTransactions.length > 0 ? (
+                filteredTransactions.map((t) => (
+                  <Card key={t.id}>
+                    <CardHeader className="flex flex-row items-start justify-between pb-2">
+                      <div className="flex-1">
+                        <CardTitle className="text-base font-medium leading-snug">{t.description}</CardTitle>
+                        <CardDescription>{t.date.toLocaleDateString('es-ES')}</CardDescription>
+                      </div>
+                      {canEdit && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 -mr-2 -mt-2">
+                              <span className="sr-only">Abrir menú</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditClick(t)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
-                    </TableBody>
-                  </Table>
-              </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Monto</span>
+                        <span className={`font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                          {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Categoría</span>
+                        <Badge variant="outline" className="font-normal">{t.category}</Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Usuario</span>
+                        <span className="font-medium">{t.user}</span>
+                      </div>
+                      {t.attachmentDataUrl && (
+                        <div className="flex justify-between items-center pt-2">
+                          <span className="text-muted-foreground">Adjunto</span>
+                          <Button asChild variant="outline" size="sm">
+                            <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer">
+                              <Paperclip className="mr-2 h-3 w-3" /> Ver
+                            </a>
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="h-24 text-center flex items-center justify-center">
+                  No hay transacciones para el período seleccionado.
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
