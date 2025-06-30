@@ -186,7 +186,7 @@ export function ProjectSummary({ project }: { project: Project }) {
                             {latestTransactions.length > 0 ? (
                                 latestTransactions.map(t => (
                                     <TableRow key={t.id}>
-                                        <TableCell className="break-words">
+                                        <TableCell className="break-all">
                                             <div className="font-medium">{t.description}</div>
                                             <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
                                         </TableCell>
