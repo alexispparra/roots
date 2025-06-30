@@ -131,8 +131,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                 <CardDescription>Resumen de gastos por usuario para el período seleccionado.</CardDescription>
             </CardHeader>
             <CardContent>
-                {/* Desktop Table */}
-                <div className="hidden md:block overflow-x-auto">
+                <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -160,25 +159,6 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                         </TableBody>
                     </Table>
                 </div>
-                 {/* Mobile Card List */}
-                <div className="block md:hidden space-y-4">
-                    {userSpendingSummary.length > 0 ? (
-                        userSpendingSummary.map(item => (
-                            <Card key={item.user}>
-                                <CardContent className="p-4 flex justify-between items-center">
-                                    <span className="font-medium">{item.user}</span>
-                                    <span className="font-semibold text-destructive">
-                                        -{formatCurrency(item.amount)}
-                                    </span>
-                                </CardContent>
-                            </Card>
-                        ))
-                    ) : (
-                        <div className="h-24 text-center text-muted-foreground flex items-center justify-center">
-                            No hay gastos de usuarios en este período.
-                        </div>
-                    )}
-                </div>
             </CardContent>
         </Card>
 
@@ -191,7 +171,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
-                    <SelectTrigger className="w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
+                    <SelectTrigger className="w-full sm:w-auto md:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Año" />
                     </SelectTrigger>
                     <SelectContent>
@@ -202,7 +182,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     </SelectContent>
                   </Select>
                   <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
+                    <SelectTrigger className="w-full sm:w-auto md:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Mes" />
                     </SelectTrigger>
                     <SelectContent>
@@ -213,7 +193,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     </SelectContent>
                   </Select>
                    {canEdit && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full sm:w-auto">
                       <CreateIncomeDialog onAddIncome={handleAddIncome} />
                       <CreateExpenseDialog
                         onAddExpense={handleAddExpense}
@@ -226,17 +206,15 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
               </div>
           </CardHeader>
           <CardContent>
-            {/* Desktop Table */}
-            <div className="hidden md:block">
-              <Table>
+            <div className="overflow-x-auto">
+              <Table className="w-full table-fixed">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead>Usuario</TableHead>
-                    <TableHead>Adjunto</TableHead>
-                    <TableHead className="text-right">Monto (U$S)</TableHead>
+                    <TableHead className="w-1/4 sm:w-1/6">Fecha</TableHead>
+                    <TableHead className="w-1/2 sm:w-2/6">Descripción</TableHead>
+                    <TableHead className="hidden sm:table-cell sm:w-1/6">Categoría</TableHead>
+                    <TableHead className="hidden sm:table-cell sm:w-1/6">Usuario</TableHead>
+                    <TableHead className="w-1/4 sm:w-[100px] text-right">Monto (U$S)</TableHead>
                     {canEdit && <TableHead className="w-[50px]"></TableHead>}
                   </TableRow>
                 </TableHeader>
@@ -245,18 +223,15 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     filteredTransactions.map((t) => (
                       <TableRow key={t.id}>
                         <TableCell>{t.date.toLocaleDateString('es-ES')}</TableCell>
-                        <TableCell className="font-medium">{t.description}</TableCell>
-                        <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
-                        <TableCell>{t.user}</TableCell>
-                        <TableCell>
-                          {t.attachmentDataUrl && (
-                            <Button asChild variant="ghost" size="icon">
-                              <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer" title="Ver adjunto">
-                                <Paperclip className="h-4 w-4" />
-                              </a>
-                            </Button>
-                          )}
+                        <TableCell className="font-medium break-all">
+                            {t.description}
+                            <div className="sm:hidden text-xs text-muted-foreground mt-1">
+                                {t.category && <Badge variant="outline" className="mr-1">{t.category}</Badge>}
+                                {t.user}
+                            </div>
                         </TableCell>
+                        <TableCell className="hidden sm:table-cell"><Badge variant="outline">{t.category}</Badge></TableCell>
+                        <TableCell className="hidden sm:table-cell">{t.user}</TableCell>
                         <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
                           {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
                         </TableCell>
@@ -269,6 +244,13 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              {t.attachmentDataUrl && (
+                                <DropdownMenuItem asChild>
+                                  <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer">
+                                    <Paperclip className="mr-2 h-4 w-4" /> Ver Adjunto
+                                  </a>
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem onClick={() => handleEditClick(t)}>
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Editar
@@ -284,78 +266,13 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={canEdit ? 7 : 6} className="h-24 text-center">
+                      <TableCell colSpan={canEdit ? 6 : 5} className="h-24 text-center">
                         No hay transacciones para el período seleccionado.
                       </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
               </Table>
-            </div>
-            {/* Mobile Card List */}
-            <div className="block md:hidden space-y-4">
-              {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((t) => (
-                  <Card key={t.id}>
-                    <CardHeader className="flex flex-row items-start justify-between pb-2">
-                      <div className="flex-1">
-                        <CardTitle className="text-base font-medium leading-snug">{t.description}</CardTitle>
-                        <CardDescription>{t.date.toLocaleDateString('es-ES')}</CardDescription>
-                      </div>
-                      {canEdit && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0 -mr-2 -mt-2">
-                              <span className="sr-only">Abrir menú</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditClick(t)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Eliminar
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Monto</span>
-                        <span className={`font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                          {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Categoría</span>
-                        <Badge variant="outline" className="font-normal">{t.category}</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Usuario</span>
-                        <span className="font-medium">{t.user}</span>
-                      </div>
-                      {t.attachmentDataUrl && (
-                        <div className="flex justify-between items-center pt-2">
-                          <span className="text-muted-foreground">Adjunto</span>
-                          <Button asChild variant="outline" size="sm">
-                            <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer">
-                              <Paperclip className="mr-2 h-3 w-3" /> Ver
-                            </a>
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <div className="h-24 text-center flex items-center justify-center">
-                  No hay transacciones para el período seleccionado.
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>

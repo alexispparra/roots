@@ -131,23 +131,42 @@ export function ProjectTeamTab({ project }: { project: Project }) {
 
           <Separator />
           
-          {/* Desktop Table */}
-          <div className="mt-6 hidden md:block">
-             <Table>
+          <div className="mt-6 overflow-x-auto">
+             <Table className="w-full table-fixed">
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Nombre</TableHead>
-                        <TableHead>Correo</TableHead>
-                        <TableHead>Rol</TableHead>
+                        <TableHead className="w-1/3 sm:w-1/4">Nombre</TableHead>
+                        <TableHead className="w-2/3 sm:w-1/2">Correo</TableHead>
+                        <TableHead className="hidden sm:table-cell sm:w-1/4">Rol</TableHead>
                         <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {project.participants.map((participant) => (
                         <TableRow key={participant.email}>
-                            <TableCell className="font-medium">{participant.name}</TableCell>
-                            <TableCell>{participant.email}</TableCell>
-                            <TableCell>
+                            <TableCell className="font-medium break-all">{participant.name}</TableCell>
+                            <TableCell className="break-all">
+                                {participant.email}
+                                <div className="sm:hidden text-xs text-muted-foreground mt-1">
+                                    {participant.role === 'admin' || participant.email === currentUser?.email ? (
+                                        <span>{roleLabels[participant.role]}</span>
+                                    ) : (
+                                        <Select 
+                                            defaultValue={participant.role}
+                                            onValueChange={(newRole) => handleRoleChange(participant.email, newRole as UserRole)}
+                                        >
+                                            <SelectTrigger className="w-[150px] h-8 mt-1">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="editor">{roleLabels.editor}</SelectItem>
+                                                <SelectItem value="viewer">{roleLabels.viewer}</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                </div>
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell">
                                 {participant.role === 'admin' || participant.email === currentUser?.email ? (
                                     <span>{roleLabels[participant.role]}</span>
                                 ) : (
@@ -182,52 +201,6 @@ export function ProjectTeamTab({ project }: { project: Project }) {
                 </TableBody>
             </Table>
           </div>
-
-           {/* Mobile Card List */}
-          <div className="mt-6 block md:hidden space-y-4">
-              {project.participants.map((participant) => (
-                  <Card key={participant.email}>
-                      <CardHeader className="flex flex-row items-start justify-between pb-2">
-                          <div>
-                              <CardTitle className="text-base font-medium leading-snug">{participant.name}</CardTitle>
-                              <CardDescription>{participant.email}</CardDescription>
-                          </div>
-                          {participant.role !== 'admin' && (
-                              <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="text-destructive hover:text-destructive h-8 w-8 -mr-2 -mt-2"
-                                  onClick={() => handleDeleteClick(participant)}
-                              >
-                                  <Trash2 className="h-4 w-4" />
-                              </Button>
-                          )}
-                      </CardHeader>
-                      <CardContent className="text-sm">
-                          <div className="flex justify-between items-center">
-                              <span className="text-muted-foreground">Rol</span>
-                              {participant.role === 'admin' || participant.email === currentUser?.email ? (
-                                  <span className="font-semibold">{roleLabels[participant.role]}</span>
-                              ) : (
-                                  <Select 
-                                      defaultValue={participant.role}
-                                      onValueChange={(newRole) => handleRoleChange(participant.email, newRole as UserRole)}
-                                  >
-                                      <SelectTrigger className="w-[150px] h-9">
-                                          <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                          <SelectItem value="editor">{roleLabels.editor}</SelectItem>
-                                          <SelectItem value="viewer">{roleLabels.viewer}</SelectItem>
-                                      </SelectContent>
-                                  </Select>
-                              )}
-                          </div>
-                      </CardContent>
-                  </Card>
-              ))}
-          </div>
-
         </CardContent>
       </Card>
       <DeleteConfirmationDialog 

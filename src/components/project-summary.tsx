@@ -175,9 +175,8 @@ export function ProjectSummary({ project }: { project: Project }) {
                     <CardDescription>Los 5 movimientos más recientes del proyecto.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {/* Desktop Table */}
-                    <div className="hidden md:block">
-                        <Table>
+                    <div className="overflow-x-auto">
+                        <Table className="w-full table-fixed">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Descripción</TableHead>
@@ -206,29 +205,6 @@ export function ProjectSummary({ project }: { project: Project }) {
                                 )}
                             </TableBody>
                         </Table>
-                    </div>
-
-                    {/* Mobile Card List */}
-                    <div className="block md:hidden space-y-4">
-                        {latestTransactions.length > 0 ? (
-                            latestTransactions.map(t => (
-                                <Card key={t.id}>
-                                    <CardContent className="p-4 flex justify-between items-center">
-                                        <div>
-                                            <p className="font-medium break-all">{t.description}</p>
-                                            <p className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</p>
-                                        </div>
-                                        <div className={`font-semibold text-lg ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                            {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))
-                        ) : (
-                            <div className="h-24 text-center text-muted-foreground flex items-center justify-center">
-                                No hay transacciones registradas.
-                            </div>
-                        )}
                     </div>
                 </CardContent>
             </Card>
