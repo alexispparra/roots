@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -118,7 +117,7 @@ export default function ProjectDetailClient() {
             {isAdmin && <TabsTrigger value="team"><Users className="mr-2 h-4 w-4" />Equipo</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="dashboard" className="overflow-hidden">
+        <TabsContent value="dashboard">
           <ProjectSummary project={project} />
         </TabsContent>
 

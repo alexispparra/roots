@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useMemo, useState } from "react"
@@ -33,7 +32,7 @@ const renderLegend = (props: any) => {
             className="h-2 w-2 shrink-0 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="break-words">{entry.value}</span>
+          <span className="break-all">{entry.value}</span>
         </div>
       ))}
     </div>
@@ -175,19 +174,19 @@ export function ProjectSummary({ project }: { project: Project }) {
                     <CardDescription>Los 5 movimientos más recientes del proyecto.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table>
+                    <Table className="table-fixed">
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Descripción</TableHead>
-                                <TableHead className="text-right">Monto (U$S)</TableHead>
+                                <TableHead className="w-[110px] text-right">Monto (U$S)</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {latestTransactions.length > 0 ? (
                                 latestTransactions.map(t => (
                                     <TableRow key={t.id}>
-                                        <TableCell>
-                                            <div className="font-medium break-words">{t.description}</div>
+                                        <TableCell className="break-words">
+                                            <div className="font-medium">{t.description}</div>
                                             <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
                                         </TableCell>
                                         <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
