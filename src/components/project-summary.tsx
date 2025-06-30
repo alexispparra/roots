@@ -6,7 +6,7 @@ import { type Project } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import dynamic from 'next/dynamic'
 import { Skeleton } from './ui/skeleton'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChartContainer } from "@/components/ui/chart"
@@ -175,35 +175,61 @@ export function ProjectSummary({ project }: { project: Project }) {
                     <CardDescription>Los 5 movimientos más recientes del proyecto.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table className="table-fixed">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Descripción</TableHead>
-                                <TableHead className="w-[110px] text-right">Monto (U$S)</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {latestTransactions.length > 0 ? (
-                                latestTransactions.map(t => (
-                                    <TableRow key={t.id}>
-                                        <TableCell>
-                                            <div className="font-medium break-all">{t.description}</div>
-                                            <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
-                                        </TableCell>
-                                        <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                            {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
+                    {/* Desktop Table */}
+                    <div className="hidden md:block">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Descripción</TableHead>
+                                    <TableHead className="w-[110px] text-right">Monto (U$S)</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {latestTransactions.length > 0 ? (
+                                    latestTransactions.map(t => (
+                                        <TableRow key={t.id}>
+                                            <TableCell>
+                                                <div className="font-medium break-all">{t.description}</div>
+                                                <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
+                                            </TableCell>
+                                            <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                                                {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
+                                            No hay transacciones registradas.
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
-                                        No hay transacciones registradas.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    {/* Mobile Card List */}
+                    <div className="block md:hidden space-y-4">
+                        {latestTransactions.length > 0 ? (
+                            latestTransactions.map(t => (
+                                <Card key={t.id}>
+                                    <CardContent className="p-4 flex justify-between items-center">
+                                        <div>
+                                            <p className="font-medium break-all">{t.description}</p>
+                                            <p className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</p>
+                                        </div>
+                                        <div className={`font-semibold text-lg ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                                            {t.type === 'income' ? '+' : ''}{formatCurrency(t.amountUSD)}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        ) : (
+                            <div className="h-24 text-center text-muted-foreground flex items-center justify-center">
+                                No hay transacciones registradas.
+                            </div>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
         </div>

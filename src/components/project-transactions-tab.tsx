@@ -131,7 +131,8 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                 <CardDescription>Resumen de gastos por usuario para el período seleccionado.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="overflow-x-auto">
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -158,6 +159,25 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                             )}
                         </TableBody>
                     </Table>
+                </div>
+                 {/* Mobile Card List */}
+                <div className="block md:hidden space-y-4">
+                    {userSpendingSummary.length > 0 ? (
+                        userSpendingSummary.map(item => (
+                            <Card key={item.user}>
+                                <CardContent className="p-4 flex justify-between items-center">
+                                    <span className="font-medium">{item.user}</span>
+                                    <span className="font-semibold text-destructive">
+                                        -{formatCurrency(item.amount)}
+                                    </span>
+                                </CardContent>
+                            </Card>
+                        ))
+                    ) : (
+                        <div className="h-24 text-center text-muted-foreground flex items-center justify-center">
+                            No hay gastos de usuarios en este período.
+                        </div>
+                    )}
                 </div>
             </CardContent>
         </Card>
@@ -371,5 +391,3 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
     </>
   )
 }
-
-    
