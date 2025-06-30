@@ -33,7 +33,7 @@ const renderLegend = (props: any) => {
             className="h-2 w-2 shrink-0 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="break-words">{entry.value}</span>
+          <span className="break-all">{entry.value}</span>
         </div>
       ))}
     </div>
@@ -186,8 +186,8 @@ export function ProjectSummary({ project }: { project: Project }) {
                             {latestTransactions.length > 0 ? (
                                 latestTransactions.map(t => (
                                     <TableRow key={t.id}>
-                                        <TableCell className="break-all">
-                                            <div className="font-medium">{t.description}</div>
+                                        <TableCell>
+                                            <div className="font-medium break-all">{t.description}</div>
                                             <div className="text-sm text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</div>
                                         </TableCell>
                                         <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
