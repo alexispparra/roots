@@ -207,14 +207,14 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <Table className="w-full table-fixed">
+              <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-1/4 sm:w-1/6">Fecha</TableHead>
-                    <TableHead className="w-1/2 sm:w-2/6">Descripción</TableHead>
-                    <TableHead className="hidden sm:table-cell sm:w-1/6">Categoría</TableHead>
-                    <TableHead className="hidden sm:table-cell sm:w-1/6">Usuario</TableHead>
-                    <TableHead className="w-1/4 sm:w-[100px] text-right">Monto (U$S)</TableHead>
+                    <TableHead className="w-[100px]">Fecha</TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead className="hidden sm:table-cell">Categoría</TableHead>
+                    <TableHead className="hidden sm:table-cell">Usuario</TableHead>
+                    <TableHead className="w-[120px] text-right">Monto (U$S)</TableHead>
                     {canEdit && <TableHead className="w-[50px]"></TableHead>}
                   </TableRow>
                 </TableHeader>
