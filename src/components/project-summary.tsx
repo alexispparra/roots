@@ -277,5 +277,5 @@ export function ProjectSummary({ project }: { project: Project }) {
         </Card>
       )}
     </div>
-  )
+  );
 }
