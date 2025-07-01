@@ -138,7 +138,6 @@ export type AddCategoryInput = z.infer<typeof AddCategoryFormSchema>;
 
 const UpdateCategoryBaseSchema = BaseCategoryFormSchema.extend({
     icon: z.string().optional().nullable(),
-    progress: z.coerce.number().min(0).max(100).optional().nullable(),
     dependencies: z.array(z.string()).optional(),
 });
 export const UpdateCategoryFormSchema = UpdateCategoryBaseSchema.refine(categoryDateRefinement, categoryDateRefinementMessage);

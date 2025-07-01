@@ -113,12 +113,35 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         );
 
         unsubscribe = onSnapshot(q, (querySnapshot) => {
-          const userProjects: Project[] = [];
+          const rawProjects: Project[] = [];
           querySnapshot.forEach((doc) => {
-              userProjects.push(convertFirestoreDataToProject(doc));
+              rawProjects.push(convertFirestoreDataToProject(doc));
           });
-          userProjects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-          setProjects(userProjects);
+          
+          const projectsWithCalculatedProgress = rawProjects.map(project => {
+            const categoriesWithProgress = project.categories.map(category => {
+              const totalExpensesForCategory = project.transactions
+                .filter(t => t.type === 'expense' && t.category === category.name)
+                .reduce((sum, t) => sum + t.amountUSD, 0);
+              
+              let calculatedProgress = 0;
+              if (category.budget > 0) {
+                calculatedProgress = (totalExpensesForCategory / category.budget) * 100;
+              } else if (totalExpensesForCategory > 0) {
+                calculatedProgress = 100;
+              }
+
+              const finalProgress = Math.round(Math.min(calculatedProgress, 100));
+
+              return { ...category, progress: finalProgress };
+            });
+
+            return { ...project, categories: categoriesWithProgress };
+          });
+
+
+          projectsWithCalculatedProgress.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+          setProjects(projectsWithCalculatedProgress);
           setLoading(false);
         }, (error) => {
           console.error("Error fetching projects:", error);

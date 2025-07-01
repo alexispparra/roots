@@ -27,7 +27,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Slider } from "@/components/ui/slider"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
@@ -50,7 +49,6 @@ export function EditCategoryDialog({ category, allCategories, isOpen, onOpenChan
       name: "",
       budget: 0,
       icon: null,
-      progress: 0,
       startDate: null,
       endDate: null,
       dependencies: [],
@@ -79,7 +77,7 @@ export function EditCategoryDialog({ category, allCategories, isOpen, onOpenChan
         <DialogHeader>
           <DialogTitle>Editar Categoría</DialogTitle>
           <DialogDescription>
-            Actualiza los detalles de la categoría. El icono no se puede cambiar.
+            Actualiza los detalles de la categoría. El progreso se calcula automáticamente.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -111,25 +109,6 @@ export function EditCategoryDialog({ category, allCategories, isOpen, onOpenChan
                   </FormItem>
                 )}
               />
-              <FormField
-                  control={form.control}
-                  name="progress"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Progreso ({field.value ?? 0}%)</FormLabel>
-                      <FormControl>
-                         <Slider
-                          defaultValue={[0]}
-                          value={[field.value ?? 0]}
-                          max={100}
-                          step={1}
-                          onValueChange={(value) => field.onChange(value[0])}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                  <div className="grid grid-cols-2 gap-4">
                      <FormField
                         control={form.control}
