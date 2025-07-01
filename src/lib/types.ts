@@ -172,5 +172,6 @@ export type SupplierFormData = z.infer<typeof SupplierFormSchema>;
 
 export type Supplier = SupplierFormData & {
   id: string;
+  ownerId: string;
   createdAt: Date;
 };

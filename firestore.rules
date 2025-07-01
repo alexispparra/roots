@@ -1,31 +1,35 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // --- Reglas para Perfiles de Usuario ---
+    // --- Users Collection ---
+    // Users can only read and update their own profile.
+    // They cannot create or delete their own user document directly.
     match /users/{userId} {
-      // Un usuario solo puede leer y escribir su propio perfil.
-      allow read, write: if request.auth.uid == userId;
-      
-      // El administrador principal de la app (definido en el código) puede listar y leer todos los perfiles.
-      allow list, get: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email == "alexispparra@gmail.com";
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      // Creation is handled by a server-side function when a user first signs up.
+      // Deletion is not allowed to preserve data integrity.
     }
     
-    // --- Reglas para Proyectos ---
+    // --- Projects Collection ---
+    // Users can read/update projects they are a participant in.
+    // Any authenticated user can create a new project.
+    // Only the project owner (or maybe admins in the future) can delete.
     match /projects/{projectId} {
-      // Un usuario solo puede leer o escribir en un proyecto si es un participante.
-      allow read, write: if request.auth.token.email in resource.data.participantsEmails;
-      
-      // Cualquier usuario autenticado puede crear un proyecto nuevo.
-      allow create: if request.auth != null;
+       allow read, update: if request.auth != null && request.auth.token.email in resource.data.participantsEmails;
+       allow create: if request.auth != null;
+       allow delete: if request.auth != null && request.auth.token.email == resource.data.ownerEmail;
     }
     
-    // --- Reglas para Proveedores ---
+    // --- Suppliers Collection ---
+    // Suppliers are private to the user who created them.
     match /suppliers/{supplierId} {
-      // Cualquier usuario autenticado puede leer y escribir en la lista global de proveedores.
-      allow read, write: if request.auth != null;
+      // Allow read, update, and delete only if the document's ownerId matches the user's uid.
+      allow read, update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      
+      // Allow creation only if the new document's ownerId is the user's uid.
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
     }
   }
 }

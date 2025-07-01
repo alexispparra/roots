@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { getFirebaseInstances } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import type { Supplier, SupplierFormData } from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -31,10 +31,18 @@ export default function SuppliersPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
+    setLoading(true);
     const { db } = getFirebaseInstances();
-    const q = query(collection(db, 'suppliers'), orderBy('createdAt', 'desc'));
+    const q = query(
+      collection(db, 'suppliers'),
+      where('ownerId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const suppliersList = snapshot.docs.map(doc => ({
@@ -54,8 +62,12 @@ export default function SuppliersPage() {
   }, [user]);
 
   const handleAdd = async (data: SupplierFormData) => {
+    if (!user) {
+      toast({ variant: 'destructive', title: "Error", description: "Debes estar autenticado para añadir un proveedor." });
+      return;
+    }
     try {
-      await addSupplier(data);
+      await addSupplier({ ...data, ownerId: user.uid });
       toast({ title: "Proveedor añadido", description: `El proveedor "${data.name}" ha sido creado.` });
       setIsAddDialogOpen(false);
     } catch (e) {
