@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useMemo, useState } from "react"
@@ -189,23 +190,21 @@ export function ProjectSummary({ project }: { project: Project }) {
                     </div>
                     {/* Mobile Card List */}
                     <div className="block md:hidden space-y-4 p-4">
-                        {latestTransactions.length > 0 ? (
+                      {latestTransactions.length > 0 ? (
                         latestTransactions.map(t => (
-                            <div key={t.id} className="flex items-center justify-between gap-4 rounded-lg border p-3 text-sm">
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-medium truncate">{t.description}</p>
-                                    <p className="text-xs text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</p>
-                                </div>
-                                <p className={`flex-shrink-0 text-right font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                    {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
-                                </p>
-                            </div>
+                          <div key={t.id} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 rounded-lg border p-3 text-sm">
+                              <p className="font-medium truncate col-start-1">{t.description}</p>
+                              <p className={`row-span-2 self-center text-right font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                                  {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
+                              </p>
+                              <p className="text-xs text-muted-foreground col-start-1">{t.date.toLocaleDateString('es-ES')}</p>
+                          </div>
                         ))
-                        ) : (
-                            <div className="py-10 text-center text-muted-foreground">
-                                No hay transacciones registradas.
-                            </div>
-                        )}
+                      ) : (
+                          <div className="py-10 text-center text-muted-foreground">
+                              No hay transacciones registradas.
+                          </div>
+                      )}
                     </div>
                 </CardContent>
             </Card>
