@@ -1,8 +1,8 @@
 
 "use client"
 
-import { useMemo } from "react"
-import { type Project } from "@/lib/types"
+import { useMemo, useState, useEffect } from "react"
+import { type Project, type Transaction } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import dynamic from 'next/dynamic'
 import { Skeleton } from './ui/skeleton'
@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ProjectFinancialSummary } from "./project-financial-summary"
 import { format } from "date-fns"
 import { es } from 'date-fns/locale'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 
 const ProjectMapClient = dynamic(() => import('@/components/project-map-client'), {
@@ -22,28 +23,126 @@ const formatCurrency = (value: number) => {
   return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 };
 
-// Component for the responsive bar chart
-function IncomeVsExpensesChart({ data }: { data: { month: string, income: number, expenses: number }[] }) {
+// Component for the responsive bar chart, now with interactive filters
+function IncomeVsExpensesChart({ transactions }: { transactions: Transaction[] }) {
+  const availableYears = useMemo(() => 
+      [...new Set(transactions.map(t => t.date.getFullYear()))].sort((a, b) => b - a), 
+  [transactions]);
+
+  const [chartView, setChartView] = useState<'monthly' | 'annual'>('monthly');
+  const [selectedYear, setSelectedYear] = useState<string>(availableYears[0]?.toString() ?? new Date().getFullYear().toString());
+
+  useEffect(() => {
+    if (availableYears.length > 0 && !availableYears.includes(parseInt(selectedYear))) {
+        setSelectedYear(availableYears[0].toString());
+    }
+  }, [availableYears, selectedYear]);
+
+  const chartData = useMemo(() => {
+    if (chartView === 'annual') {
+      const yearlyData: Record<string, { income: number, expenses: number }> = {};
+      
+      transactions.forEach(t => {
+        const year = t.date.getFullYear().toString();
+        if (!yearlyData[year]) {
+          yearlyData[year] = { income: 0, expenses: 0 };
+        }
+        if (t.type === 'income') {
+          yearlyData[year].income += t.amountUSD;
+        } else {
+          yearlyData[year].expenses += t.amountUSD;
+        }
+      });
+
+      return Object.entries(yearlyData)
+        .map(([year, data]) => ({ label: year, ...data }))
+        .sort((a, b) => parseInt(a.label, 10) - parseInt(b.label, 10));
+    }
+
+    // Monthly view
+    const yearToFilter = parseInt(selectedYear, 10);
+    const monthlyData: { label: string, income: number, expenses: number }[] = [];
+
+    for (let i = 0; i < 12; i++) {
+        const monthName = format(new Date(yearToFilter, i, 1), 'MMM', { locale: es });
+        monthlyData.push({
+            label: monthName.charAt(0).toUpperCase() + monthName.slice(1).replace('.', ''),
+            income: 0,
+            expenses: 0,
+        });
+    }
+
+    transactions
+      .filter(t => t.date.getFullYear() === yearToFilter)
+      .forEach(t => {
+        const monthIndex = t.date.getMonth();
+        if (t.type === 'income') {
+          monthlyData[monthIndex].income += t.amountUSD;
+        } else {
+          monthlyData[monthIndex].expenses += t.amountUSD;
+        }
+      });
+    
+    return monthlyData;
+  }, [transactions, chartView, selectedYear]);
+
+  const chartDescription = chartView === 'annual' 
+    ? "Comparativa anual de ingresos vs. gastos."
+    : `Comparativa mensual para el año ${selectedYear}.`;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Ingresos vs. Gastos</CardTitle>
-        <CardDescription>Comparativa mensual de U$S (Últimos 12 meses)</CardDescription>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+                <CardTitle>Ingresos vs. Gastos</CardTitle>
+                <CardDescription>{chartDescription}</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+                <Select value={chartView} onValueChange={(v) => setChartView(v as any)}>
+                    <SelectTrigger className="w-full sm:w-[120px]">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="monthly">Mensual</SelectItem>
+                        <SelectItem value="annual">Anual</SelectItem>
+                    </SelectContent>
+                </Select>
+                {chartView === 'monthly' && (
+                    <Select value={selectedYear} onValueChange={setSelectedYear} disabled={availableYears.length === 0}>
+                        <SelectTrigger className="w-full sm:w-[100px]">
+                             <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableYears.length > 0 ? (
+                              availableYears.map(y => (
+                                  <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value={new Date().getFullYear().toString()} disabled>
+                                {new Date().getFullYear()}
+                              </SelectItem>
+                            )}
+                        </SelectContent>
+                    </Select>
+                )}
+            </div>
+        </div>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
             <BarChart
-              data={data}
+              data={chartData}
               margin={{
                 top: 5,
                 right: 0,
-                left: -20, // Pulls Y-axis labels in to save space
+                left: -20,
                 bottom: 5,
               }}
             >
                 <CartesianGrid vertical={false} />
                 <XAxis
-                    dataKey="month"
+                    dataKey="label"
                     stroke="#888888"
                     fontSize={12}
                     tickLine={false}
@@ -55,7 +154,6 @@ function IncomeVsExpensesChart({ data }: { data: { month: string, income: number
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(value) => {
-                      if (value === 0) return '$0';
                       if (typeof value === 'number' && value >= 1000) return `$${value / 1000}k`;
                       return `$${value}`;
                     }}
@@ -105,55 +203,12 @@ export function ProjectSummary({ project }: { project: Project }) {
   const latestTransactions = [...project.transactions]
     .sort((a, b) => b.date.getTime() - a.date.getTime())
     .slice(0, 5);
-
-  const incomeVsExpensesData = useMemo(() => {
-    const twelveMonthsAgo = new Date();
-    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
-    twelveMonthsAgo.setDate(1);
-    twelveMonthsAgo.setHours(0,0,0,0);
-
-    const monthlyData: Record<string, { income: number, expenses: number }> = {};
-    
-    // Initialize the last 12 months
-    for (let i = 0; i < 12; i++) {
-        const month = new Date(twelveMonthsAgo.getFullYear(), twelveMonthsAgo.getMonth() + i, 1);
-        const monthKey = format(month, 'yyyy-MM');
-        monthlyData[monthKey] = { income: 0, expenses: 0 };
-    }
-
-    // Populate with transaction data
-    project.transactions.forEach(t => {
-        const transactionDate = new Date(t.date);
-        transactionDate.setHours(0,0,0,0);
-        
-        if (transactionDate >= twelveMonthsAgo) {
-            const monthKey = format(t.date, 'yyyy-MM');
-            if (monthlyData[monthKey]) {
-                if (t.type === 'income') {
-                    monthlyData[monthKey].income += t.amountUSD;
-                } else {
-                    monthlyData[monthKey].expenses += t.amountUSD;
-                }
-            }
-        }
-    });
-    
-    return Object.entries(monthlyData).map(([key, value]) => {
-        const date = new Date(key + '-02'); // Use day 2 to avoid timezone issues
-        const monthName = format(date, 'MMM', { locale: es }); // Use 'MMM' for abbreviation
-        return {
-            month: monthName.charAt(0).toUpperCase() + monthName.slice(1).replace('.', ''),
-            income: value.income,
-            expenses: value.expenses
-        }
-    });
-  }, [project.transactions]);
     
   return (
     <div className="grid gap-6">
        <ProjectFinancialSummary project={project} />
 
-       <IncomeVsExpensesChart data={incomeVsExpensesData} />
+       <IncomeVsExpensesChart transactions={project.transactions} />
       
         <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
             <Card>
