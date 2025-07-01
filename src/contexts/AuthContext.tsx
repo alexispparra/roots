@@ -68,9 +68,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUserProfile(profile);
 
               } else {
-                 // Profile doesn't exist, likely a new login. Let's create it.
-                 // This is also handled by the login/register flows, but serves as a backup.
-                 createUserProfileInDb(currentUser);
+                 // Profile doesn't exist, likely a new login. Let's create it as a backup.
+                 // This is also handled by the login/register flows, but serves as a safety net.
+                 const userData = {
+                   uid: currentUser.uid,
+                   email: currentUser.email,
+                   displayName: currentUser.displayName
+                 };
+                 createUserProfileInDb(userData);
                  setUserProfile(null); // Will be populated by the next snapshot after creation
               }
               setLoading(false);
@@ -100,7 +105,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const handleAuthSuccess = useCallback(async (userCredential: UserCredential) => {
-    await createUserProfileInDb(userCredential.user);
+    // The responsibility of creating the user profile in the DB is now moved
+    // to the specific UI flows (like register page) or the onAuthStateChanged listener
+    // to prevent race conditions and serialization errors.
     return userCredential;
   }, []);
 

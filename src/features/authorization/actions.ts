@@ -1,43 +1,47 @@
-
 'use server';
 
 import { getFirebaseInstances } from '@/lib/firebase';
-import type { User } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import type { DbUser } from './types';
 
 const ADMIN_EMAIL = 'alexispparra@gmail.com';
 
+type UserData = {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+}
+
 /**
- * Ensures a user profile document exists in Firestore upon registration or first Google sign-in.
- * - If the profile doesn't exist, it's created with a 'status'.
- * - If it exists, it only syncs the displayName if it has changed.
- * The logic to self-heal an existing admin profile now lives in AuthContext.
- * @param user The Firebase Auth user object.
+ * Ensures a user profile document exists in Firestore.
+ * Can be called safely from client components as it only accepts serializable data.
+ * If the profile doesn't exist, it's created.
+ * If it exists, it only syncs the displayName if it has been updated in the auth provider.
+ * @param userData A plain object containing the user's serializable data.
  */
-export async function createUserProfileInDb(user: User): Promise<void> {
+export async function createUserProfileInDb(userData: UserData): Promise<void> {
   const { db } = getFirebaseInstances();
-  const userRef = doc(db, 'users', user.uid);
+  const userRef = doc(db, 'users', userData.uid);
 
   try {
     const docSnap = await getDoc(userRef);
 
     if (!docSnap.exists()) {
       // --- Profile does not exist, create it from scratch ---
-      const userEmail = (user.email || "").trim().toLowerCase();
+      const userEmail = (userData.email || "").trim().toLowerCase();
       
       const newUserProfile: DbUser = {
-        uid: user.uid,
+        uid: userData.uid,
         email: userEmail,
-        displayName: user.displayName || userEmail.split('@')[0],
+        displayName: userData.displayName || userEmail.split('@')[0] || "Usuario",
         status: userEmail === ADMIN_EMAIL ? 'approved' : 'pending',
       };
       await setDoc(userRef, newUserProfile);
     } else {
       // --- Profile exists, just sync displayName if it has been updated in the auth provider ---
       const existingData = docSnap.data() as Partial<DbUser>;
-      if (user.displayName && user.displayName !== existingData.displayName) {
-        await updateDoc(userRef, { displayName: user.displayName });
+      if (userData.displayName && userData.displayName !== existingData.displayName) {
+        await updateDoc(userRef, { displayName: userData.displayName });
       }
     }
   } catch (error) {

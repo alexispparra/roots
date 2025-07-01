@@ -46,7 +46,15 @@ export default function RegisterPage() {
       const fullName = `${firstName} ${lastName}`.trim();
       await updateUserProfile(userCredential.user, { displayName: fullName });
 
-      // 3. Create their profile in Firestore database (this is handled by the AuthContext now)
+      // 3. Explicitly create their profile in Firestore with the new, correct data
+      // This is the correct place to ensure the name is saved and to avoid serialization errors.
+      const userData = {
+          uid: userCredential.user.uid,
+          email: userCredential.user.email,
+          displayName: fullName,
+      };
+      await createUserProfileInDb(userData);
+      
       // The redirection is handled by AuthLayout upon detecting the new logged-in user.
       
     } catch (error: any) {
