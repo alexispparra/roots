@@ -6,9 +6,11 @@ import { type Project } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import dynamic from 'next/dynamic'
 import { Skeleton } from './ui/skeleton'
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Bar } from 'recharts'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ProjectFinancialSummary } from "./project-financial-summary"
+import { format } from "date-fns"
+import { es } from 'date-fns/locale'
 
 
 const ProjectMapClient = dynamic(() => import('@/components/project-map-client'), {
@@ -19,6 +21,67 @@ const ProjectMapClient = dynamic(() => import('@/components/project-map-client')
 const formatCurrency = (value: number) => {
   return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 };
+
+// Component for the responsive bar chart
+function IncomeVsExpensesChart({ data }: { data: { month: string, income: number, expenses: number }[] }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Ingresos vs. Gastos</CardTitle>
+        <CardDescription>Comparativa mensual de U$S (Últimos 12 meses)</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={350}>
+            <BarChart
+              data={data}
+              margin={{
+                top: 5,
+                right: 0,
+                left: -20, // Pulls Y-axis labels in to save space
+                bottom: 5,
+              }}
+            >
+                <CartesianGrid vertical={false} />
+                <XAxis
+                    dataKey="month"
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                />
+                <YAxis
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => {
+                      if (value === 0) return '$0';
+                      if (typeof value === 'number' && value >= 1000) return `$${value / 1000}k`;
+                      return `$${value}`;
+                    }}
+                />
+                <Tooltip
+                    contentStyle={{ 
+                        backgroundColor: "hsl(var(--background))", 
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "var(--radius)"
+                    }}
+                    cursor={{fill: 'hsl(var(--muted))'}}
+                    formatter={(value: number, name: string) => {
+                      const formattedName = name === 'income' ? 'Ingresos' : 'Gastos';
+                      return [formatCurrency(value), formattedName];
+                    }}
+                />
+                <Legend iconSize={10} wrapperStyle={{fontSize: "12px", paddingTop: "20px"}} />
+                <Bar dataKey="income" name="Ingresos" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expenses" name="Gastos" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  )
+}
+
 
 export function ProjectSummary({ project }: { project: Project }) {
   const expensesByCategory = project.transactions
@@ -42,10 +105,55 @@ export function ProjectSummary({ project }: { project: Project }) {
   const latestTransactions = [...project.transactions]
     .sort((a, b) => b.date.getTime() - a.date.getTime())
     .slice(0, 5);
+
+  const incomeVsExpensesData = useMemo(() => {
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+    twelveMonthsAgo.setDate(1);
+    twelveMonthsAgo.setHours(0,0,0,0);
+
+    const monthlyData: Record<string, { income: number, expenses: number }> = {};
+    
+    // Initialize the last 12 months
+    for (let i = 0; i < 12; i++) {
+        const month = new Date(twelveMonthsAgo.getFullYear(), twelveMonthsAgo.getMonth() + i, 1);
+        const monthKey = format(month, 'yyyy-MM');
+        monthlyData[monthKey] = { income: 0, expenses: 0 };
+    }
+
+    // Populate with transaction data
+    project.transactions.forEach(t => {
+        const transactionDate = new Date(t.date);
+        transactionDate.setHours(0,0,0,0);
+        
+        if (transactionDate >= twelveMonthsAgo) {
+            const monthKey = format(t.date, 'yyyy-MM');
+            if (monthlyData[monthKey]) {
+                if (t.type === 'income') {
+                    monthlyData[monthKey].income += t.amountUSD;
+                } else {
+                    monthlyData[monthKey].expenses += t.amountUSD;
+                }
+            }
+        }
+    });
+    
+    return Object.entries(monthlyData).map(([key, value]) => {
+        const date = new Date(key + '-02'); // Use day 2 to avoid timezone issues
+        const monthName = format(date, 'MMM', { locale: es }); // Use 'MMM' for abbreviation
+        return {
+            month: monthName.charAt(0).toUpperCase() + monthName.slice(1).replace('.', ''),
+            income: value.income,
+            expenses: value.expenses
+        }
+    });
+  }, [project.transactions]);
     
   return (
     <div className="grid gap-6">
        <ProjectFinancialSummary project={project} />
+
+       <IncomeVsExpensesChart data={incomeVsExpensesData} />
       
         <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
             <Card>
@@ -170,4 +278,3 @@ export function ProjectSummary({ project }: { project: Project }) {
     </div>
   );
 }
-
