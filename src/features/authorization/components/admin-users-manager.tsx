@@ -112,12 +112,14 @@ export function AdminUsersManager() {
       setUsers(userList);
       setLoading(false);
       setError(null);
-    }, (err) => {
-      console.error("Error fetching users:", err);
+    }, (err: any) => {
+      // Improved error logging
+      console.error("Error completo al obtener usuarios desde Firestore:", err);
+      
       if (err.code === 'permission-denied') {
-        setError("No tienes permiso para ver la lista de usuarios. Por favor, revisa las reglas de seguridad de Firestore.");
+        setError("Error de Permisos: No tienes permiso para ver la lista de usuarios. Por favor, asegúrate de que las reglas de seguridad de Firestore se han desplegado correctamente.");
       } else {
-        setError("Ocurrió un error inesperado al cargar los usuarios.");
+        setError(`Ocurrió un error inesperado al cargar los usuarios. Revisa la consola del desarrollador (F12) para ver el objeto de error completo.`);
       }
       setLoading(false);
     });

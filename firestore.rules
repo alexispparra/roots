@@ -2,28 +2,35 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
+    
     function isAdmin() {
-      // Esta función sigue aquí para que el resto del código no falle, pero no se usará en la regla de prueba.
-      return request.auth != null && request.auth.token.email == 'alexispparra@gmail.com';
+      return request.auth.token.email == 'alexispparra@gmail.com';
     }
 
-    // --- PROYECTOS ---
-    match /projects/{projectId} {
-      function isParticipant() {
-        return request.auth != null && request.auth.token.email in resource.data.participantsEmails;
-      }
-      // Mantenemos la seguridad de los proyectos.
-      allow read, write: if isParticipant();
-    }
-
-    // --- USUARIOS ---
     match /users/{userId} {
-      // REGLA DE DIAGNÓSTICO TEMPORAL E INSEGURA:
-      // Permite a CUALQUIER usuario autenticado leer (incluyendo listar) y escribir.
-      // Esto es para verificar si la conexión y la consulta son correctas,
-      // aislando el problema de la condición `isAdmin()`.
-      allow read, write: if request.auth != null;
+      // Any authenticated user can create their own profile
+      allow create: if request.auth.uid == userId;
+
+      // Any authenticated user can read an individual user profile
+      // (e.g., to display names in a project)
+      allow get: if request.auth != null;
+
+      // Only an admin can list all users
+      allow list: if isAdmin();
+
+      // The user themselves, or an admin, can update a profile
+      allow update: if request.auth.uid == userId || isAdmin();
+    }
+
+    match /projects/{projectId} {
+      // Any authenticated user can create a project
+      allow create: if request.auth != null;
+
+      // Only participants of the project can read it
+      allow read: if resource.data.participantsEmails.hasAny([request.auth.token.email]);
+
+      // Only the project owner or an admin can update or delete it
+      allow update, delete: if resource.data.ownerEmail == request.auth.token.email || isAdmin();
     }
   }
 }
