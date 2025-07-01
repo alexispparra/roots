@@ -74,7 +74,14 @@ export function CategorySpendingChart({ categorySpent, totalProjectExpenses, cat
                   outerRadius={80}
                   innerRadius={50}
                   labelLine={false}
-                  label={({ percent }) => `${Math.round(percent * 100)}%`}
+                  label={({ value }) => {
+                    // Manually calculate percentage from the raw value to avoid issues with the `percent` prop.
+                    if (totalProjectExpenses === 0 || value === 0) {
+                      return null; // Don't show a label for zero-value slices.
+                    }
+                    const percentage = (value / totalProjectExpenses) * 100;
+                    return `${Math.round(percentage)}%`;
+                  }}
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
