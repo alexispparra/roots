@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -22,7 +23,7 @@ import {
   Briefcase,
   Settings,
   Shield,
-  Wallet,
+  Truck,
   Users,
   LayoutDashboard,
   ChevronRight
@@ -126,6 +127,28 @@ export function Navigation() {
           No hay proyectos activos.
         </div>
       )}
+
+      <SidebarSeparator />
+      
+      <div className="px-2">
+        <SidebarGroupLabel>Recursos</SidebarGroupLabel>
+      </div>
+
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            asChild
+            isActive={pathname === "/suppliers"}
+            tooltip="Proveedores"
+            onClick={handleLinkClick}
+          >
+            <Link href="/suppliers">
+              <Truck />
+              <span>Proveedores</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
 
       <div className="flex-grow" />
 

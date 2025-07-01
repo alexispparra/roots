@@ -1,28 +1,55 @@
-rules_version = '2';
 
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // --- Projects Collection ---
-    match /projects/{projectId} {
-      // Only participants can read or write to a project.
-      allow read, write: if request.auth != null && request.auth.token.email in resource.data.participantsEmails;
+    // --- Helper Functions ---
+    function isAppAdmin(email) {
+      return email == "alexispparra@gmail.com";
+    }
+
+    function isProjectParticipant(projectId) {
+      return request.auth.token.email in get(/databases/$(database)/documents/projects/$(projectId)).data.participantsEmails;
+    }
+
+    function isProjectAdmin(projectId) {
+      let participants = get(/databases/$(database)/documents/projects/$(projectId)).data.participants;
+      let userEmail = request.auth.token.email;
+      let userParticipant = participants.filter(p => p.email == userEmail);
+      return userParticipant.size() > 0 && userParticipant[0].role == 'admin';
+    }
+
+    // --- Users Collection Rules ---
+    match /users/{userId} {
+      allow get: if request.auth.uid == userId || isAppAdmin(request.auth.token.email);
+      allow create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId || isAppAdmin(request.auth.token.email);
+      allow delete: if isAppAdmin(request.auth.token.email);
     }
     
-    // --- Users Collection ---
-    match /users/{userId} {
-      // The ADMIN can do anything with any user document.
-      // The 'read' permission includes 'get' and 'list'.
-      // This rule is evaluated first for the admin.
-      allow read, write: if request.auth.token.email == 'alexispparra@gmail.com';
+    match /users {
+      allow list: if isAppAdmin(request.auth.token.email);
+    }
+    
+    // --- Projects Collection Rules ---
+    match /projects/{projectId} {
+      // READ: Any participant can read the project.
+      allow get: if isProjectParticipant(projectId);
       
-      // A non-admin user can:
-      // 1. Get their own document.
-      allow get: if request.auth != null && request.auth.uid == userId;
-      // 2. Create their own document upon registration.
-      allow create: if request.auth != null && request.auth.uid == userId;
-      // 3. Update their own document.
-      allow update: if request.auth != null && request.auth.uid == userId;
+      // CREATE: Any authenticated user can create a project. The rules enforce they become the admin.
+      allow create: if request.auth != null && request.resource.data.ownerEmail == request.auth.token.email;
+      
+      // UPDATE: Only project admins can update the project document.
+      allow update, delete: if isProjectAdmin(projectId);
+    }
+
+    // --- Suppliers Collection Rules ---
+    match /suppliers/{supplierId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    match /suppliers {
+      allow list: if request.auth != null;
     }
   }
 }

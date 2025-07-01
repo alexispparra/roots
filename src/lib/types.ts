@@ -157,3 +157,20 @@ export const UpdateEventFormSchema = AddEventFormSchema.extend({
     completed: z.boolean().optional(),
 });
 export type UpdateEventInput = z.infer<typeof UpdateEventFormSchema>;
+
+// --- Supplier Schemas ---
+export const SupplierFormSchema = z.object({
+  name: z.string().min(1, "El nombre es requerido."),
+  rubro: z.string().min(1, "El rubro es requerido."),
+  description: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email("Correo electrónico inválido.").optional().or(z.literal('')),
+  address: z.string().optional(),
+  cuit: z.string().optional(),
+});
+export type SupplierFormData = z.infer<typeof SupplierFormSchema>;
+
+export type Supplier = SupplierFormData & {
+  id: string;
+  createdAt: Date;
+};
