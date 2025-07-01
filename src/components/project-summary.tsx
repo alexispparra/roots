@@ -144,13 +144,14 @@ function IncomeVsExpensesChart({ transactions }: { transactions: Transaction[] }
                 <XAxis
                     dataKey="label"
                     stroke="#888888"
-                    fontSize={12}
+                    fontSize={10}
                     tickLine={false}
                     axisLine={false}
+                    interval={0}
                 />
                 <YAxis
                     stroke="#888888"
-                    fontSize={12}
+                    fontSize={10}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(value) => {
