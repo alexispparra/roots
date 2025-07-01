@@ -248,8 +248,8 @@ export function ProjectSummary({ project }: { project: Project }) {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-             <ChartContainer config={chartConfig} className="h-[300px] w-full">
+          <CardContent className="overflow-x-auto">
+             <ChartContainer config={chartConfig} className="h-[300px] w-full min-w-[600px]">
                 <BarChart data={chartData} accessibilityLayer>
                   <CartesianGrid vertical={false} />
                   <XAxis dataKey={xAxisKey} tickLine={false} tickMargin={10} axisLine={false} />
@@ -281,5 +281,3 @@ export function ProjectSummary({ project }: { project: Project }) {
     </div>
   );
 }
-
-    
