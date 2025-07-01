@@ -1,34 +1,68 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- USERS COLLECTION RULES ---
-    match /users/{userId} {
-      // Any authenticated user can create their own document.
-      allow create: if request.auth.uid == userId;
-
-      // A user can read and update their own document.
-      allow get, update: if request.auth.uid == userId;
-      
-      // The ADMIN can list, get, and update any user document.
-      // This rule explicitly grants the necessary permissions.
-      allow list, get, update: if request.auth.token.email == 'alexispparra@gmail.com';
+    // --- Helper Functions ---
+    function isAdmin() {
+      return request.auth.token.email == 'alexispparra@gmail.com';
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
-    // --- PROJECTS COLLECTION RULES ---
+    // --- User Profile Rules ---
+    match /users/{userId} {
+      // Admin can list all users
+      allow list: if isAdmin();
+      
+      // Admin can get any user's profile
+      // A user can get their own profile
+      allow get: if isAdmin() || isOwner(userId);
+
+      // Admin can update any user's profile
+      // A user can update their own profile
+      allow update: if isAdmin() || isOwner(userId);
+      
+      // A user can create their own profile
+      allow create: if isOwner(userId);
+      
+      // Deletes are not allowed for now
+      allow delete: if false;
+    }
+
+    // --- Project Rules ---
     match /projects/{projectId} {
-      // Any authenticated user can create a project. The app logic handles ownership.
+      
+      function isParticipant() {
+        return request.auth.token.email in resource.data.participantsEmails;
+      }
+
+      function isProjectAdmin() {
+        // Use matchesAny to safely iterate through the list of participants on the document
+        return isParticipant() && resource.data.participants.matchesAny(p => 
+          p.email == request.auth.token.email && p.role == 'admin'
+        );
+      }
+      
+      function isProjectEditor() {
+        return isParticipant() && resource.data.participants.matchesAny(p => 
+          p.email == request.auth.token.email && (p.role == 'admin' || p.role == 'editor')
+        );
+      }
+
+      // Any authenticated user can create a project
       allow create: if request.auth != null;
-
-      // A user can read a project only if they are listed in participantsEmails.
-      // The 'list' permission works because the app query filters by this same field.
-      allow get, list: if request.auth.token.email in resource.data.participantsEmails;
-
-      // A user can update or delete a project only if they are listed in participantsEmails.
-      // The UI is responsible for hiding buttons for "viewer" roles.
-      allow update, delete: if request.auth.token.email in resource.data.participantsEmails;
+      
+      // Only participants can read the project
+      allow read: if isParticipant();
+      
+      // Only editors or admins of the project can update it
+      allow update: if isProjectEditor();
+      
+      // Only the admin of the project can delete it
+      allow delete: if isProjectAdmin();
     }
   }
 }
