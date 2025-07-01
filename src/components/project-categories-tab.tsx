@@ -156,8 +156,8 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
               </Table>
             </div>
 
-            {/* Mobile Card List */}
-            <div className="block md:hidden p-4 space-y-4">
+            {/* Mobile Card List - REBUILT to be responsive */}
+            <div className="block md:hidden space-y-4 p-4">
               {project.categories.length > 0 ? (
                 project.categories.map((category) => (
                   <Card key={category.name} onClick={() => handleNavigateToCategory(category.name)} className="cursor-pointer">
@@ -167,7 +167,7 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
                           <CategoryIcon name={category.icon ?? undefined} className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           <span className="truncate">{category.name}</span>
                         </CardTitle>
-                        <CardDescription>
+                        <CardDescription className="truncate">
                           Presupuesto: ${category.budget.toLocaleString('es-AR')}
                         </CardDescription>
                       </div>
@@ -192,24 +192,20 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
                         </DropdownMenu>
                       )}
                     </CardHeader>
-                    <CardContent className="p-4 pt-2 text-sm space-y-3">
-                      <div>
-                        <div className="flex justify-between items-center mb-1 text-xs">
-                          <span className="text-muted-foreground">Progreso</span>
-                          <span className="font-medium">{category.progress ?? 0}%</span>
+                    <CardContent className="p-4 pt-2 text-sm">
+                        <div className="mb-3">
+                            <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="text-muted-foreground">Progreso</span>
+                                <span className="font-medium">{category.progress ?? 0}%</span>
+                            </div>
+                            <Progress value={category.progress ?? 0} className="h-1.5" />
                         </div>
-                        <Progress value={category.progress ?? 0} className="h-1.5" />
-                      </div>
-                      <div className="text-xs space-y-1">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Inicio:</span>
-                          <span className="font-medium">{category.startDate ? category.startDate.toLocaleDateString('es-ES') : 'N/A'}</span>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                           <div className="text-muted-foreground">Inicio:</div>
+                           <div className="font-medium text-right truncate">{category.startDate ? category.startDate.toLocaleDateString('es-ES') : 'N/A'}</div>
+                           <div className="text-muted-foreground">Fin:</div>
+                           <div className="font-medium text-right truncate">{category.endDate ? category.endDate.toLocaleDateString('es-ES') : 'N/A'}</div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Fin:</span>
-                          <span className="font-medium">{category.endDate ? category.endDate.toLocaleDateString('es-ES') : 'N/A'}</span>
-                        </div>
-                      </div>
                     </CardContent>
                   </Card>
                 ))
