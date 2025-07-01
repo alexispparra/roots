@@ -1,35 +1,56 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Rules for user profiles
+    // Users Collection
     match /users/{userId} {
-      // A user can create their own profile document.
-      allow create: if request.auth.uid == userId;
+      // Helper function to check if the user is the admin.
+      function isAdmin() {
+        return request.auth.token.email == 'alexispparra@gmail.com';
+      }
+
+      // ANY authenticated user can CREATE their own profile.
+      allow create: if request.auth != null && request.auth.uid == userId;
       
-      // A user can read their own profile. An admin can read any profile.
-      allow read: if request.auth.uid == userId 
-                  || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved';
-                  
-      // A user can update their own profile. An admin can update any profile.
-      allow update: if request.auth.uid == userId 
-                    || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved';
-
-      // An admin can list all user profiles.
-      allow list: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved';
+      // A user can READ and UPDATE their own profile.
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      
+      // The ADMIN can LIST, READ, and UPDATE ANY user's profile.
+      allow list, read, update: if isAdmin();
     }
-
-    // Rules for projects
+    
+    // Projects Collection
     match /projects/{projectId} {
-      // Any authenticated user can create a project (they become the owner/admin).
-      allow create: if request.auth != null;
-
-      // A user can read a project if their email is in the participant list.
+      // ANY authenticated user can LIST projects (the query will filter them).
+      allow list: if request.auth != null;
+      
+      // A user can READ a project IF their email is in the participants list.
       allow read: if request.auth.token.email in resource.data.participantsEmails;
+      
+      // A user can CREATE a project. Their email will be added as an admin participant.
+      allow create: if request.auth != null;
+      
+      // Helper function to check if the user has 'admin' role for this project.
+      function isProjectAdmin() {
+        let userParticipant = resource.data.participants[resource.data.participantsEmails.indexOf(request.auth.token.email)];
+        return request.auth.token.email in resource.data.participantsEmails &&
+               userParticipant.role == 'admin';
+      }
+      
+      // Helper function to check if the user has 'admin' or 'editor' role.
+      function isProjectEditor() {
+         let userParticipant = resource.data.participants[resource.data.participantsEmails.indexOf(request.auth.token.email)];
+         return request.auth.token.email in resource.data.participantsEmails &&
+               (userParticipant.role == 'admin' || userParticipant.role == 'editor');
+      }
+      
+      // 'editor' or 'admin' can UPDATE.
+      allow update: if isProjectEditor();
 
-      // A project's admin can update or delete the project.
-      allow update, delete: if request.auth.token.email in resource.data.participants.filter(p => p.role == 'admin').map(p => p.email);
+      // Only 'admin' can DELETE.
+      allow delete: if isProjectAdmin();
     }
   }
 }
