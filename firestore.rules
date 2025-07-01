@@ -1,42 +1,31 @@
-rules_version = '2';
 
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // --- Rules for the "users" collection ---
-    match /users/{userId} {
-      
-      // Admin Rule: The administrator can perform any read (get, list) or write (create, update, delete)
-      // operation on any user document. This single 'allow read' grants the necessary 'list' permission.
-      allow read, write: if request.auth.token.email == 'alexispparra@gmail.com';
-      
-      // User-specific Rules: A regular user can...
-      // 1. Create their own user document.
-      allow create: if request.auth.uid == userId;
-      // 2. Get and update their own user document.
-      allow get, update: if request.auth.uid == userId;
-    }
-    
-    // --- Rules for the "projects" collection ---
+    // Reglas para la colección 'projects'
     match /projects/{projectId} {
-      function isParticipant() {
-        // Checks if the requesting user's email is in the project's 'participantsEmails' array.
-        return request.auth.token.email in resource.data.participantsEmails;
-      }
-      function isOwner() {
-        // Checks if the requesting user is the original owner of the project.
-        return request.auth.token.email == resource.data.ownerEmail;
-      }
       
-      // Read & Update: Participants can read and update projects they are part of.
-      allow read, update: if isParticipant();
-      
-      // Delete: Only the original owner can delete a project.
-      allow delete: if isOwner();
-      
-      // Create: Any authenticated user can create a new project.
-      // The application logic is responsible for correctly setting the initial owner and participant.
-      allow create: if request.auth != null;
+      // Un usuario puede leer un proyecto si su email está en la lista de participantes.
+      allow read: if request.auth != null && request.auth.token.email in resource.data.participantsEmails;
+
+      // Un usuario puede escribir (actualizar) en un proyecto si es 'admin' o 'editor' de ese proyecto.
+      allow write: if request.auth != null && get(/databases/$(database)/documents/projects/$(projectId)).data.participants.filter(p => p.email == request.auth.token.email && (p.role == 'admin' || p.role == 'editor')).size() == 1;
+    }
+
+    // Reglas para la colección 'users'
+    match /users/{userId} {
+      // 1. Un usuario puede crear su propio perfil.
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // 2. Un usuario puede leer y actualizar su propio perfil.
+      allow get, update: if request.auth != null && request.auth.uid == userId;
+
+      // 3. El administrador puede leer (get) y actualizar cualquier perfil de usuario.
+      allow get, update: if request.auth != null && request.auth.token.email == 'alexispparra@gmail.com';
+
+      // 4. El administrador puede listar toda la colección de usuarios. ESTA ES LA REGLA CLAVE.
+      allow list: if request.auth != null && request.auth.token.email == 'alexispparra@gmail.com';
     }
   }
 }
