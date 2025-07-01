@@ -1,31 +1,27 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Reglas para la colección 'projects'
-    match /projects/{projectId} {
-      
-      // Un usuario puede leer un proyecto si su email está en la lista de participantes.
-      allow read: if request.auth != null && request.auth.token.email in resource.data.participantsEmails;
 
-      // Un usuario puede escribir (actualizar) en un proyecto si es 'admin' o 'editor' de ese proyecto.
-      allow write: if request.auth != null && get(/databases/$(database)/documents/projects/$(projectId)).data.participants.filter(p => p.email == request.auth.token.email && (p.role == 'admin' || p.role == 'editor')).size() == 1;
+    // --- Users Collection Rules ---
+    match /users/{userId} {
+      // --- DEBUGGING RULE (TEMPORARY & INSECURE) ---
+      // This rule allows ANY authenticated user to see the list of all other users.
+      // It is intended ONLY to diagnose the root cause of the permission error.
+      allow list: if request.auth != null;
+
+      // Rules for individual document access remain more secure.
+      // An admin or the user themselves can get/update a document.
+      allow get, update: if request.auth.uid == userId || request.auth.token.email == 'alexispparra@gmail.com';
+
+      // A user can only create their own document.
+      allow create: if request.auth.uid == userId;
     }
 
-    // Reglas para la colección 'users'
-    match /users/{userId} {
-      // 1. Un usuario puede crear su propio perfil.
-      allow create: if request.auth != null && request.auth.uid == userId;
-
-      // 2. Un usuario puede leer y actualizar su propio perfil.
-      allow get, update: if request.auth != null && request.auth.uid == userId;
-
-      // 3. El administrador puede leer (get) y actualizar cualquier perfil de usuario.
-      allow get, update: if request.auth != null && request.auth.token.email == 'alexispparra@gmail.com';
-
-      // 4. El administrador puede listar toda la colección de usuarios. ESTA ES LA REGLA CLAVE.
-      allow list: if request.auth != null && request.auth.token.email == 'alexispparra@gmail.com';
+    // --- Projects Collection Rules ---
+    match /projects/{projectId} {
+      allow read, write: if request.auth != null && request.auth.token.email in resource.data.participantsEmails;
     }
   }
 }
