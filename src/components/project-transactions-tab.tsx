@@ -180,14 +180,14 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
 
         <Card className="data-card-theme">
           <CardHeader>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <CardTitle className="font-headline">Transacciones</CardTitle>
                   <CardDescription>Todos los ingresos y gastos registrados en el proyecto.</CardDescription>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
-                    <SelectTrigger className="w-full sm:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
+                    <SelectTrigger className="w-full sm:w-auto bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Año" />
                     </SelectTrigger>
                     <SelectContent>
@@ -198,7 +198,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     </SelectContent>
                   </Select>
                   <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-full sm:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
+                    <SelectTrigger className="w-full sm:w-auto bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Mes" />
                     </SelectTrigger>
                     <SelectContent>
@@ -209,7 +209,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     </SelectContent>
                   </Select>
                    {canEdit && (
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <CreateIncomeDialog onAddIncome={handleAddIncome} />
                       <CreateExpenseDialog
                         onAddExpense={handleAddExpense}
@@ -294,14 +294,14 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                 filteredTransactions.map((t) => (
                   <Card key={t.id}>
                     <CardHeader className="flex flex-row items-start justify-between pb-2">
-                      <div className="flex-1">
-                        <CardTitle className="text-base font-medium leading-snug">{t.description}</CardTitle>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-base font-medium leading-snug truncate">{t.description}</CardTitle>
                         <CardDescription>{t.date.toLocaleDateString('es-ES')}</CardDescription>
                       </div>
                       {canEdit && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0 -mr-2 -mt-2">
+                            <Button variant="ghost" className="h-8 w-8 p-0 -mr-2 -mt-2 shrink-0">
                               <span className="sr-only">Abrir menú</span>
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>

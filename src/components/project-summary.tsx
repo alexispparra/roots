@@ -192,7 +192,7 @@ export function ProjectSummary({ project }: { project: Project }) {
                     <div className="block md:hidden space-y-4 p-4">
                       {latestTransactions.length > 0 ? (
                         latestTransactions.map(t => (
-                          <div key={t.id} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 rounded-lg border p-3 text-sm">
+                          <div key={t.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 rounded-lg border p-3 text-sm">
                               <p className="font-medium truncate col-start-1">{t.description}</p>
                               <p className={`row-span-2 self-center text-right font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
                                   {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
@@ -211,31 +211,33 @@ export function ProjectSummary({ project }: { project: Project }) {
         </div>
         
         <Card>
-          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <CardTitle>Ingresos vs. Gastos</CardTitle>
-              <CardDescription>Resumen financiero del proyecto.</CardDescription>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Select value={timeframe} onValueChange={(value) => setTimeframe(value as 'monthly' | 'annual')}>
-                <SelectTrigger className="w-full sm:w-[120px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="monthly">Mensual</SelectItem>
-                  <SelectItem value="annual">Anual</SelectItem>
-                </SelectContent>
-              </Select>
-              {timeframe === 'monthly' && (
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-full sm:w-[120px]">
+          <CardHeader>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div>
+                <CardTitle>Ingresos vs. Gastos</CardTitle>
+                <CardDescription>Resumen financiero del proyecto.</CardDescription>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <Select value={timeframe} onValueChange={(value) => setTimeframe(value as 'monthly' | 'annual')}>
+                  <SelectTrigger className="w-full sm:w-auto">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                    <SelectItem value="monthly">Mensual</SelectItem>
+                    <SelectItem value="annual">Anual</SelectItem>
                   </SelectContent>
                 </Select>
-              )}
+                {timeframe === 'monthly' && (
+                  <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="w-full sm:w-auto">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
