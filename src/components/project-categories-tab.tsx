@@ -161,53 +161,55 @@ export function ProjectCategoriesTab({ project, canEdit }: ProjectCategoriesTabP
               {project.categories.length > 0 ? (
                 project.categories.map((category) => (
                   <Card key={category.name} onClick={() => handleNavigateToCategory(category.name)} className="cursor-pointer">
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between text-lg">
-                        <div className="flex items-center gap-3">
-                          <CategoryIcon name={category.icon ?? undefined} className="h-5 w-5 text-muted-foreground" />
-                          <span className="flex-1 truncate">{category.name}</span>
-                        </div>
-                        {canEdit && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
-                                <span className="sr-only">Abrir menú</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEditClick(category)}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeleteClick(category)} className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Eliminar
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </CardTitle>
+                    <CardHeader className="flex flex-row items-start justify-between p-4 pb-2">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-base font-medium leading-snug flex items-center gap-2">
+                          <CategoryIcon name={category.icon ?? undefined} className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="truncate">{category.name}</span>
+                        </CardTitle>
+                        <CardDescription>
+                          Presupuesto: ${category.budget.toLocaleString('es-AR')}
+                        </CardDescription>
+                      </div>
+                      {canEdit && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 -mr-2 -mt-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                              <span className="sr-only">Abrir menú</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditClick(category)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteClick(category)} className="text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </CardHeader>
-                    <CardContent className="space-y-4 text-sm">
+                    <CardContent className="p-4 pt-2 text-sm space-y-3">
                       <div>
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="font-medium">Progreso</span>
-                            <span className="text-muted-foreground">{category.progress ?? 0}%</span>
-                          </div>
-                          <Progress value={category.progress ?? 0} />
+                        <div className="flex justify-between items-center mb-1 text-xs">
+                          <span className="text-muted-foreground">Progreso</span>
+                          <span className="font-medium">{category.progress ?? 0}%</span>
                         </div>
-                        <div className="flex justify-between items-baseline">
-                          <span className="font-medium">Presupuesto</span>
-                          <span className="font-semibold">${category.budget.toLocaleString('es-AR')}</span>
+                        <Progress value={category.progress ?? 0} className="h-1.5" />
+                      </div>
+                      <div className="text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Inicio:</span>
+                          <span className="font-medium">{category.startDate ? category.startDate.toLocaleDateString('es-ES') : 'N/A'}</span>
                         </div>
-                        <div>
-                          <span className="font-medium">Fechas</span>
-                          <div className="text-muted-foreground">
-                            <p>Inicio: {category.startDate ? category.startDate.toLocaleDateString('es-ES') : 'N/A'}</p>
-                            <p>Fin: {category.endDate ? category.endDate.toLocaleDateString('es-ES') : 'N/A'}</p>
-                          </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Fin:</span>
+                          <span className="font-medium">{category.endDate ? category.endDate.toLocaleDateString('es-ES') : 'N/A'}</span>
                         </div>
+                      </div>
                     </CardContent>
                   </Card>
                 ))
