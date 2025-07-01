@@ -86,7 +86,7 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
+        <Button size="sm" variant="ghost" className="h-9 px-3 flex-1 sm:flex-none border border-emerald-500/40 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 hover:text-emerald-500 font-semibold">
           <PlusCircle className="mr-2 h-4 w-4" />
           Registrar Ingreso
         </Button>

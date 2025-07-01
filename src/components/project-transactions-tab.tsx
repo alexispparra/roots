@@ -185,9 +185,9 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                   <CardTitle className="font-headline">Transacciones</CardTitle>
                   <CardDescription>Todos los ingresos y gastos registrados en el proyecto.</CardDescription>
                 </div>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="flex flex-wrap items-center gap-2">
                   <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
-                    <SelectTrigger className="w-full sm:w-auto bg-secondary text-secondary-foreground border-sidebar-border">
+                    <SelectTrigger className="h-9 flex-1 sm:flex-none sm:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Año" />
                     </SelectTrigger>
                     <SelectContent>
@@ -198,7 +198,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     </SelectContent>
                   </Select>
                   <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-full sm:w-auto bg-secondary text-secondary-foreground border-sidebar-border">
+                    <SelectTrigger className="h-9 flex-1 sm:flex-none sm:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
                       <SelectValue placeholder="Mes" />
                     </SelectTrigger>
                     <SelectContent>
@@ -209,7 +209,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     </SelectContent>
                   </Select>
                    {canEdit && (
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex w-full sm:w-auto sm:flex-none gap-2">
                       <CreateIncomeDialog onAddIncome={handleAddIncome} />
                       <CreateExpenseDialog
                         onAddExpense={handleAddExpense}
