@@ -1,12 +1,13 @@
 
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, Camera, Upload, X } from "lucide-react"
+import Image from "next/image"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -33,7 +34,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Separator } from "./ui/separator"
 import { type Transaction, UpdateIncomeFormSchema, type UpdateIncomeInput } from "@/lib/types"
+import { CameraCaptureDialog } from "./camera-capture-dialog"
 
 
 type EditIncomeDialogProps = {
@@ -44,9 +47,15 @@ type EditIncomeDialogProps = {
 }
 
 export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome }: EditIncomeDialogProps) {
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<UpdateIncomeInput>({
     resolver: zodResolver(UpdateIncomeFormSchema),
   })
+
+  const { watch, setValue } = form;
+  const attachment = watch("attachmentDataUrl");
 
   useEffect(() => {
     if (income) {
@@ -55,6 +64,7 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
         date: income.date,
         exchangeRate: income.exchangeRate === 1 ? undefined : income.exchangeRate,
         amountUSD: income.amountUSD,
+        attachmentDataUrl: income.attachmentDataUrl || "",
       })
     }
   }, [income, form, isOpen])
@@ -63,9 +73,21 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
     onUpdateIncome(values);
   }
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue("attachmentDataUrl", reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Editar Ingreso</DialogTitle>
           <DialogDescription>
@@ -170,6 +192,45 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
                 )}
               />
             </div>
+
+            <Separator />
+
+              <div className="grid gap-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Adjuntar Comprobante (Opcional)</h3>
+                {attachment ? (
+                  <div className="relative w-48 h-48 border rounded-md">
+                    <Image src={attachment} alt="Vista previa del comprobante" layout="fill" objectFit="contain" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                      onClick={() => setValue("attachmentDataUrl", "", { shouldValidate: true })}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*,application/pdf"
+                      onChange={handleFileChange}
+                    />
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Subir Archivo
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setIsCameraOpen(true)}>
+                      <Camera className="mr-2 h-4 w-4" />
+                      Tomar Foto
+                    </Button>
+                  </div>
+                )}
+              </div>
+
             <DialogFooter>
               <Button type="submit">Guardar Cambios</Button>
             </DialogFooter>
@@ -177,5 +238,11 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
         </Form>
       </DialogContent>
     </Dialog>
+     <CameraCaptureDialog
+        isOpen={isCameraOpen}
+        onOpenChange={setIsCameraOpen}
+        onCapture={(dataUrl) => setValue("attachmentDataUrl", dataUrl, { shouldValidate: true })}
+      />
+    </>
   )
 }

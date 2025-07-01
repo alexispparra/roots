@@ -1,12 +1,13 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { CalendarIcon, PlusCircle } from "lucide-react"
+import { CalendarIcon, PlusCircle, Upload, Camera, X } from "lucide-react"
+import Image from "next/image"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -34,7 +35,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Separator } from "@/components/ui/separator"
 import { AddIncomeFormSchema, type AddIncomeInput } from "@/lib/types"
+import { CameraCaptureDialog } from "./camera-capture-dialog"
 
 type CreateIncomeDialogProps = {
   onAddIncome: (data: AddIncomeInput) => void;
@@ -42,6 +45,9 @@ type CreateIncomeDialogProps = {
 
 export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
   const [open, setOpen] = useState(false)
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<AddIncomeInput>({
     resolver: zodResolver(AddIncomeFormSchema),
     defaultValues: {
@@ -50,8 +56,12 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
       amountARS: 0,
       exchangeRate: undefined,
       amountUSD: 0,
+      attachmentDataUrl: "",
     },
   })
+
+  const { watch, setValue } = form;
+  const attachment = watch("attachmentDataUrl");
 
   function onSubmit(values: AddIncomeInput) {
     onAddIncome(values);
@@ -62,10 +72,23 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
       amountARS: 0,
       exchangeRate: undefined,
       amountUSD: 0,
+      attachmentDataUrl: "",
     })
   }
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue("attachmentDataUrl", reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="ghost" className="h-9 px-3 w-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 hover:text-emerald-500 font-semibold">
@@ -73,7 +96,7 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
           Ingreso
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Registrar Nuevo Ingreso</DialogTitle>
           <DialogDescription>
@@ -178,6 +201,45 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
                 )}
               />
             </div>
+
+            <Separator />
+
+              <div className="grid gap-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Adjuntar Comprobante (Opcional)</h3>
+                {attachment ? (
+                  <div className="relative w-48 h-48 border rounded-md">
+                    <Image src={attachment} alt="Vista previa del comprobante" layout="fill" objectFit="contain" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                      onClick={() => setValue("attachmentDataUrl", "", { shouldValidate: true })}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*,application/pdf"
+                      onChange={handleFileChange}
+                    />
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Subir Archivo
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setIsCameraOpen(true)}>
+                      <Camera className="mr-2 h-4 w-4" />
+                      Tomar Foto
+                    </Button>
+                  </div>
+                )}
+              </div>
+
             <DialogFooter>
               <Button type="submit">Registrar Ingreso</Button>
             </DialogFooter>
@@ -185,5 +247,11 @@ export function CreateIncomeDialog({ onAddIncome }: CreateIncomeDialogProps) {
         </Form>
       </DialogContent>
     </Dialog>
+     <CameraCaptureDialog
+        isOpen={isCameraOpen}
+        onOpenChange={setIsCameraOpen}
+        onCapture={(dataUrl) => setValue("attachmentDataUrl", dataUrl, { shouldValidate: true })}
+      />
+    </>
   )
 }

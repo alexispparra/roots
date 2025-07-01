@@ -106,6 +106,7 @@ const BaseIncomeFormSchema = z.object({
   amountARS: z.coerce.number().min(0, "El monto no puede ser negativo."),
   exchangeRate: z.coerce.number().min(0, "El cambio no puede ser negativo.").optional(),
   amountUSD: z.coerce.number().min(0, "El monto no puede ser negativo."),
+  attachmentDataUrl: z.string().optional(),
 });
 const incomeRefinement = (data: { amountARS: number, amountUSD: number }) => data.amountARS > 0 || data.amountUSD > 0;
 const incomeRefinementMessage = {

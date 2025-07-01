@@ -277,7 +277,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
         const { doc, updateDoc, arrayUnion, Timestamp, collection } = await import('firebase/firestore');
         const projectRef = doc(firebase.db, 'projects', projectId);
 
-        const data = { ...transactionData };
+        const data = transactionData;
 
         // --- Robust Financial Calculation ---
         const exchangeRateToUse = data.exchangeRate && data.exchangeRate > 0 ? data.exchangeRate : 1;
@@ -296,8 +296,8 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
             amountARS: data.amountARS || 0,
             amountUSD: finalUsdAmount,
             exchangeRate: exchangeRateToUse,
+            attachmentDataUrl: data.attachmentDataUrl || "",
             // Expense-specific fields with defaults to prevent saving 'undefined'
-            attachmentDataUrl: type === 'expense' ? (data as AddExpenseInput).attachmentDataUrl || "" : "",
             category: type === 'expense' ? (data as AddExpenseInput).category : 'Ingreso',
             user: type === 'expense' ? (data as AddExpenseInput).user || '' : '',
             paymentMethod: type === 'expense' ? (data as AddExpenseInput).paymentMethod || '' : '',
@@ -367,11 +367,11 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
                           amountARS: updatedData.amountARS,
                           amountUSD: finalUsdAmount,
                           exchangeRate: exchangeRateToUse,
+                          attachmentDataUrl: updatedData.attachmentDataUrl || '',
                           // Reset expense fields
                           category: 'Ingreso',
                           user: '',
                           paymentMethod: '',
-                          attachmentDataUrl: ''
                       };
                   }
               }
