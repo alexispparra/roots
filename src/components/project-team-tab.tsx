@@ -131,55 +131,102 @@ export function ProjectTeamTab({ project }: { project: Project }) {
 
           <Separator />
           
-          <div className="mt-6 w-full overflow-x-auto">
-            <Table className="w-full table-fixed">
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Nombre</TableHead>
-                        <TableHead>Correo</TableHead>
-                        <TableHead>Rol</TableHead>
-                        <TableHead className="w-[50px]"></TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {project.participants.map((participant) => (
-                        <TableRow key={participant.email}>
-                            <TableCell className="font-medium break-words">{participant.name}</TableCell>
-                            <TableCell className="break-words">{participant.email}</TableCell>
-                            <TableCell>
-                                {participant.role === 'admin' || participant.email === currentUser?.email ? (
-                                    <span>{roleLabels[participant.role]}</span>
-                                ) : (
-                                    <Select 
-                                        defaultValue={participant.role}
-                                        onValueChange={(newRole) => handleRoleChange(participant.email, newRole as UserRole)}
-                                    >
-                                        <SelectTrigger className="w-[150px]">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="editor">{roleLabels.editor}</SelectItem>
-                                            <SelectItem value="viewer">{roleLabels.viewer}</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                )}
-                            </TableCell>
-                            <TableCell>
-                                {participant.role !== 'admin' && (
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="text-destructive hover:text-destructive"
-                                        onClick={() => handleDeleteClick(participant)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                )}
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+          <div className="mt-6">
+            {/* Desktop Table */}
+            <div className="hidden md:block">
+              <Table>
+                  <TableHeader>
+                      <TableRow>
+                          <TableHead>Nombre</TableHead>
+                          <TableHead>Correo</TableHead>
+                          <TableHead>Rol</TableHead>
+                          <TableHead className="w-[50px]"></TableHead>
+                      </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                      {project.participants.map((participant) => (
+                          <TableRow key={participant.email}>
+                              <TableCell className="font-medium">{participant.name}</TableCell>
+                              <TableCell>{participant.email}</TableCell>
+                              <TableCell>
+                                  {participant.role === 'admin' || participant.email === currentUser?.email ? (
+                                      <span>{roleLabels[participant.role]}</span>
+                                  ) : (
+                                      <Select 
+                                          defaultValue={participant.role}
+                                          onValueChange={(newRole) => handleRoleChange(participant.email, newRole as UserRole)}
+                                      >
+                                          <SelectTrigger className="w-[150px]">
+                                              <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                              <SelectItem value="editor">{roleLabels.editor}</SelectItem>
+                                              <SelectItem value="viewer">{roleLabels.viewer}</SelectItem>
+                                          </SelectContent>
+                                      </Select>
+                                  )}
+                              </TableCell>
+                              <TableCell>
+                                  {participant.role !== 'admin' && (
+                                      <Button 
+                                          variant="ghost" 
+                                          size="icon" 
+                                          className="text-destructive hover:text-destructive"
+                                          onClick={() => handleDeleteClick(participant)}
+                                      >
+                                          <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                  )}
+                              </TableCell>
+                          </TableRow>
+                      ))}
+                  </TableBody>
+              </Table>
+            </div>
+             {/* Mobile Card List */}
+            <div className="block md:hidden space-y-4">
+              {project.participants.map((participant) => (
+                <Card key={participant.email}>
+                  <CardHeader className="pb-4">
+                      <CardTitle className="text-base font-medium leading-snug truncate">{participant.name}</CardTitle>
+                      <CardDescription className="truncate">{participant.email}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex-1">
+                      {participant.role === 'admin' || participant.email === currentUser?.email ? (
+                          <div className="text-sm p-2 rounded-md bg-muted text-muted-foreground w-full sm:w-[150px]">
+                            {roleLabels[participant.role]}
+                          </div>
+                      ) : (
+                          <Select
+                              defaultValue={participant.role}
+                              onValueChange={(newRole) => handleRoleChange(participant.email, newRole as UserRole)}
+                          >
+                              <SelectTrigger className="w-full sm:w-[150px]">
+                                  <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  <SelectItem value="editor">{roleLabels.editor}</SelectItem>
+                                  <SelectItem value="viewer">{roleLabels.viewer}</SelectItem>
+                              </SelectContent>
+                          </Select>
+                      )}
+                    </div>
+                    {participant.role !== 'admin' && (
+                        <Button 
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/50 w-full sm:w-auto"
+                            onClick={() => handleDeleteClick(participant)}
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                        </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
