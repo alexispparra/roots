@@ -1,44 +1,28 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
+    
     // --- Projects Collection ---
     match /projects/{projectId} {
-      function isParticipant() {
-        return request.auth.token.email in resource.data.participantsEmails;
-      }
-      
-      function isOwner() {
-        return request.auth.token.email == request.resource.data.ownerEmail;
-      }
-
-      allow read, write: if isParticipant();
-      allow create: if request.auth != null && isOwner() && isParticipant();
+      // Only participants can read or write to a project.
+      allow read, write: if request.auth != null && request.auth.token.email in resource.data.participantsEmails;
     }
-
-    // --- Users Collection Rules ---
-
-    // Rule for LISTING the entire collection.
-    // This is the key fix: 'list' applies to the collection path, not the document path with a wildcard.
-    match /users {
-      allow list: if request.auth.token.email == 'alexispparra@gmail.com';
-    }
-
-    // Rules for individual user documents (GET, CREATE, UPDATE).
+    
+    // --- Users Collection ---
     match /users/{userId} {
-      function isOwner() {
-        return request.auth.uid == userId;
-      }
+      // The ADMIN can do anything with any user document.
+      // The 'read' permission includes 'get' and 'list'.
+      // This rule is evaluated first for the admin.
+      allow read, write: if request.auth.token.email == 'alexispparra@gmail.com';
       
-      function isAdmin() {
-        return request.auth.token.email == 'alexispparra@gmail.com';
-      }
-
-      // Allow creating own user document upon signup.
-      allow create: if isOwner();
-      
-      // Allow getting and updating own document, or any document if admin.
-      allow get, update: if isOwner() || isAdmin();
+      // A non-admin user can:
+      // 1. Get their own document.
+      allow get: if request.auth != null && request.auth.uid == userId;
+      // 2. Create their own document upon registration.
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // 3. Update their own document.
+      allow update: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
