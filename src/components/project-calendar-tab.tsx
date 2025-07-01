@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, GanttChartSquare, CalendarPlus, MoreHorizontal, Trash2, Bell } from "lucide-react";
+import { CalendarDays, CalendarPlus, MoreHorizontal, Trash2, Bell } from "lucide-react";
 import { type Project, type Category, type Event, type AddEventInput } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -17,7 +17,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { ProjectGanttChart } from "./project-gantt-chart";
 
 
 function generateGoogleCalendarLinkForCategory(category: Category, project: Project): string {
@@ -275,33 +274,18 @@ function ProjectCalendarView({ project, canEdit }: ProjectCalendarViewProps) {
 
 export function ProjectCalendarTab({ project, canEdit }: { project: Project, canEdit: boolean }) {
   return (
-    <div className="grid gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center gap-2">
-            <CalendarDays /> Calendario de Actividades
-          </CardTitle>
-          <CardDescription>
-            Visualiza las actividades y fechas clave del proyecto. Haz clic en un día para ver los detalles o añadir un nuevo evento.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ProjectCalendarView project={project} canEdit={canEdit} />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center gap-2">
-            <GanttChartSquare /> Diagrama de Gantt
-          </CardTitle>
-          <CardDescription>
-            Visualiza la línea de tiempo de tus categorías de proyecto.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ProjectGanttChart categories={project.categories} />
-        </CardContent>
-      </Card>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="font-headline flex items-center gap-2">
+          <CalendarDays /> Calendario de Actividades
+        </CardTitle>
+        <CardDescription>
+          Visualiza las actividades y fechas clave del proyecto. Haz clic en un día para ver los detalles o añadir un nuevo evento.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ProjectCalendarView project={project} canEdit={canEdit} />
+      </CardContent>
+    </Card>
   )
 }

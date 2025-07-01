@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -7,7 +8,7 @@ import type { Project, UpdateProjectData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, AlertTriangle, LayoutGrid, BarChart2, List, Users, MoreVertical, Pencil, Trash2, CalendarDays } from "lucide-react";
+import { Loader2, AlertTriangle, LayoutGrid, BarChart2, List, Users, MoreVertical, Pencil, Trash2, CalendarDays, GanttChartSquare } from "lucide-react";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ProjectCategoriesTab } from '@/components/project-categories-tab';
@@ -18,6 +19,7 @@ import { EditProjectDialog } from '@/components/edit-project-dialog';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { ProjectCalendarTab } from './project-calendar-tab';
 import { ProjectTeamTab } from './project-team-tab';
+import { ProjectGanttTab } from './project-gantt-tab';
 
 export default function ProjectDetailClient() {
   const searchParams = useSearchParams();
@@ -114,6 +116,7 @@ export default function ProjectDetailClient() {
             <TabsTrigger value="transactions"><List className="mr-2 h-4 w-4" />Transacciones</TabsTrigger>
             <TabsTrigger value="categories"><LayoutGrid className="mr-2 h-4 w-4" />Categorías</TabsTrigger>
             <TabsTrigger value="calendar"><CalendarDays className="mr-2 h-4 w-4" />Calendario</TabsTrigger>
+            <TabsTrigger value="gantt"><GanttChartSquare className="mr-2 h-4 w-4" />Gantt</TabsTrigger>
             {isAdmin && <TabsTrigger value="team"><Users className="mr-2 h-4 w-4" />Equipo</TabsTrigger>}
         </TabsList>
 
@@ -131,6 +134,10 @@ export default function ProjectDetailClient() {
         
         <TabsContent value="calendar">
           <ProjectCalendarTab project={project} canEdit={canEdit} />
+        </TabsContent>
+
+        <TabsContent value="gantt">
+          <ProjectGanttTab project={project} />
         </TabsContent>
 
         {isAdmin && <TabsContent value="team">
