@@ -296,7 +296,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
               {filteredTransactions.length > 0 ? (
                 filteredTransactions.map((t) => (
                   <Card key={t.id}>
-                    <CardHeader className="flex flex-row items-start justify-between pb-2">
+                    <CardHeader className="flex flex-row items-start justify-between p-4 pb-2">
                       <div className="flex-1 min-w-0">
                         <CardTitle className="text-base font-medium leading-snug truncate">{t.description}</CardTitle>
                         <CardDescription>{t.date.toLocaleDateString('es-ES')}</CardDescription>
@@ -322,23 +322,21 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                         </DropdownMenu>
                       )}
                     </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Monto</span>
-                        <span className={`font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                    <CardContent className="p-4 pt-2 text-sm">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                        <div className="text-muted-foreground">Monto</div>
+                        <div className={`font-semibold text-right ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
                           {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Categoría</span>
-                        <Badge variant="outline" className="font-normal">{t.category}</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Usuario</span>
-                        <span className="font-medium">{t.user}</span>
+                        </div>
+
+                        <div className="text-muted-foreground">Categoría</div>
+                        <div className="text-right"><Badge variant="outline" className="font-normal">{t.category}</Badge></div>
+
+                        <div className="text-muted-foreground">Usuario</div>
+                        <div className="font-medium text-right">{t.user}</div>
                       </div>
                       {t.attachmentDataUrl && (
-                        <div className="flex justify-between items-center pt-2">
+                        <div className="flex justify-between items-center pt-3 mt-3 border-t">
                           <span className="text-muted-foreground">Adjunto</span>
                           <Button asChild variant="outline" size="sm">
                             <a href={t.attachmentDataUrl} target="_blank" rel="noopener noreferrer">

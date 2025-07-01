@@ -456,13 +456,24 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
               return c;
             });
 
+          // Re-assign transactions from the deleted category to a generic one
+          const newTransactions = rawProjectData.transactions.map(t => {
+            if (t.category === categoryName) {
+              return { ...t, category: 'Sin Categoría' };
+            }
+            return t;
+          });
+
+
           const categoriesForDb = newCategories.map(c => ({
               ...c,
               startDate: c.startDate ? Timestamp.fromDate(c.startDate) : null,
               endDate: c.endDate ? Timestamp.fromDate(c.endDate) : null,
           }));
+          
+          const transactionsForDb = newTransactions.map(t => ({...t, date: Timestamp.fromDate(t.date)}));
 
-          await updateDoc(projectRef, { categories: categoriesForDb });
+          await updateDoc(projectRef, { categories: categoriesForDb, transactions: transactionsForDb });
           toast({ title: "Categoría Eliminada" });
       } catch (error) {
           console.error("Error deleting category: ", error);
