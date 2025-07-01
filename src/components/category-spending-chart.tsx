@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Pie, PieChart, Tooltip, Cell, ResponsiveContainer } from "recharts"
@@ -74,13 +75,14 @@ export function CategorySpendingChart({ categorySpent, totalProjectExpenses, cat
                   outerRadius={80}
                   innerRadius={50}
                   labelLine={false}
-                  label={({ value }) => {
-                    // Manually calculate percentage from the raw value to avoid issues with the `percent` prop.
-                    if (totalProjectExpenses === 0 || value === 0) {
-                      return null; // Don't show a label for zero-value slices.
+                  label={({ percent }) => {
+                    // Use the `percent` value provided by recharts (a value from 0 to 1)
+                    // and format it manually to ensure correctness.
+                    if (!percent || percent === 0) {
+                      return null;
                     }
-                    const percentage = (value / totalProjectExpenses) * 100;
-                    return `${Math.round(percentage)}%`;
+                    const roundedPercent = Math.round(percent * 100);
+                    return `${roundedPercent}%`;
                   }}
                 >
                   {chartData.map((entry, index) => (
