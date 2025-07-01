@@ -3,25 +3,56 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    function isAdmin() {
+      return request.auth.token.email == 'alexispparra@gmail.com';
+    }
 
     // --- Users Collection Rules ---
+    
+    // Rule for the entire 'users' collection and subcollections.
+    // This gives the admin full read/write access to all user data.
+    match /users/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Rule for a single user document.
+    // This allows a non-admin user to manage ONLY their own profile.
     match /users/{userId} {
-      // --- DEBUGGING RULE (TEMPORARY & INSECURE) ---
-      // This rule allows ANY authenticated user to see the list of all other users.
-      // It is intended ONLY to diagnose the root cause of the permission error.
-      allow list: if request.auth != null;
-
-      // Rules for individual document access remain more secure.
-      // An admin or the user themselves can get/update a document.
-      allow get, update: if request.auth.uid == userId || request.auth.token.email == 'alexispparra@gmail.com';
-
-      // A user can only create their own document.
-      allow create: if request.auth.uid == userId;
+      allow get, update, delete: if request.auth.uid == userId;
+      allow create: if request.auth != null;
     }
 
     // --- Projects Collection Rules ---
     match /projects/{projectId} {
-      allow read, write: if request.auth != null && request.auth.token.email in resource.data.participantsEmails;
+      
+      function isParticipant() {
+        return request.auth.token.email in resource.data.participantsEmails;
+      }
+      
+      function isEditorOrAdmin() {
+        // Find the participant's entry in the participants list
+        let participant = resource.data.participants.filter(p => p.email == request.auth.token.email);
+        // Check if the participant exists and their role is 'admin' or 'editor'
+        return participant.size() > 0 && (participant[0].role == 'admin' || participant[0].role == 'editor');
+      }
+
+      function isProjectAdmin() {
+        let participant = resource.data.participants.filter(p => p.email == request.auth.token.email);
+        return participant.size() > 0 && participant[0].role == 'admin';
+      }
+
+      // Any participant can read the project
+      allow read: if isParticipant();
+
+      // Only editors or admins can update (add transactions, categories, etc.)
+      allow update: if isEditorOrAdmin();
+
+      // Only a project admin can delete the project
+      allow delete: if isProjectAdmin();
+      
+      // Any authenticated user can create a project (owner is set in code)
+      allow create: if request.auth != null;
     }
   }
 }
