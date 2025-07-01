@@ -1,58 +1,39 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    function isAdmin() {
-      return request.auth.token.email == 'alexispparra@gmail.com';
-    }
 
-    // --- Users Collection Rules ---
-    
-    // Rule for the entire 'users' collection and subcollections.
-    // This gives the admin full read/write access to all user data.
-    match /users/{document=**} {
-      allow read, write: if isAdmin();
-    }
-    
-    // Rule for a single user document.
-    // This allows a non-admin user to manage ONLY their own profile.
-    match /users/{userId} {
-      allow get, update, delete: if request.auth.uid == userId;
-      allow create: if request.auth != null;
-    }
-
-    // --- Projects Collection Rules ---
+    // PROJECTS:
+    // A user can query, read, or write projects where their email is in the participants list.
+    // This rule correctly supports the query used in the application.
     match /projects/{projectId} {
-      
-      function isParticipant() {
-        return request.auth.token.email in resource.data.participantsEmails;
-      }
-      
-      function isEditorOrAdmin() {
-        // Find the participant's entry in the participants list
-        let participant = resource.data.participants.filter(p => p.email == request.auth.token.email);
-        // Check if the participant exists and their role is 'admin' or 'editor'
-        return participant.size() > 0 && (participant[0].role == 'admin' || participant[0].role == 'editor');
-      }
+      allow read, write: if request.auth.token.email in resource.data.participantsEmails;
+    }
 
-      function isProjectAdmin() {
-        let participant = resource.data.participants.filter(p => p.email == request.auth.token.email);
-        return participant.size() > 0 && participant[0].role == 'admin';
-      }
+    // USERS:
+    // This block defines all rules for the 'users' collection.
+    match /users/{userId} {
+      // --- Rules for accessing a SINGLE user document ---
 
-      // Any participant can read the project
-      allow read: if isParticipant();
+      // A user can GET their own document.
+      allow get: if request.auth.uid == userId;
+      // An admin can GET any user's document.
+      allow get: if request.auth.token.email == 'alexispparra@gmail.com';
 
-      // Only editors or admins can update (add transactions, categories, etc.)
-      allow update: if isEditorOrAdmin();
+      // A user can CREATE their own document (e.g., on sign-up).
+      allow create: if request.auth.uid == userId;
 
-      // Only a project admin can delete the project
-      allow delete: if isProjectAdmin();
-      
-      // Any authenticated user can create a project (owner is set in code)
-      allow create: if request.auth != null;
+      // A user can UPDATE their own document.
+      allow update: if request.auth.uid == userId;
+      // An admin can UPDATE any user's document.
+      allow update: if request.auth.token.email == 'alexispparra@gmail.com';
+
+
+      // --- Rule for accessing the ENTIRE user collection ---
+
+      // An admin can LIST the entire collection.
+      // NOTE: This rule's condition CANNOT use `userId`. It is evaluated
+      // on the collection, and is placed here for organization.
+      allow list: if request.auth.token.email == 'alexispparra@gmail.com';
     }
   }
 }
