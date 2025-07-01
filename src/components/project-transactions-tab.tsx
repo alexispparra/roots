@@ -180,46 +180,49 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
 
         <Card className="data-card-theme">
           <CardHeader>
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
                   <CardTitle className="font-headline">Transacciones</CardTitle>
                   <CardDescription>Todos los ingresos y gastos registrados en el proyecto.</CardDescription>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
-                    <SelectTrigger className="h-9 flex-1 sm:flex-none sm:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
-                      <SelectValue placeholder="Año" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {availableYears.map(year => (
-                        <SelectItem key={year} value={String(year)}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="h-9 flex-1 sm:flex-none sm:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
-                      <SelectValue placeholder="Mes" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {availableMonths.map(month => (
-                        <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                   {canEdit && (
-                    <div className="grid grid-cols-2 w-full sm:w-auto gap-2">
-                      <CreateIncomeDialog onAddIncome={handleAddIncome} />
-                      <CreateExpenseDialog
-                        onAddExpense={handleAddExpense}
-                        categories={project.categories}
-                        participants={project.participants}
-                      />
-                    </div>
-                  )}
+                {canEdit && (
+                <div className="grid grid-cols-2 w-full sm:w-auto gap-2">
+                    <CreateIncomeDialog onAddIncome={handleAddIncome} />
+                    <CreateExpenseDialog
+                    onAddExpense={handleAddExpense}
+                    categories={project.categories}
+                    participants={project.participants}
+                    />
                 </div>
-              </div>
+                )}
+            </div>
+            <div className="flex flex-col sm:flex-row items-center gap-2 pt-4 mt-4 border-t border-border/50">
+                <span className="text-sm font-medium text-muted-foreground mr-2">Filtrar por:</span>
+                <div className="flex w-full sm:w-auto gap-2">
+                    <Select value={yearFilter} onValueChange={(val) => { setYearFilter(val); setMonthFilter('all'); }}>
+                        <SelectTrigger className="h-9 flex-1 sm:flex-none sm:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
+                        <SelectValue placeholder="Año" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        {availableYears.map(year => (
+                            <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                    <Select value={monthFilter} onValueChange={setMonthFilter}>
+                        <SelectTrigger className="h-9 flex-1 sm:flex-none sm:w-[120px] bg-secondary text-secondary-foreground border-sidebar-border">
+                        <SelectValue placeholder="Mes" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        {availableMonths.map(month => (
+                            <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
           </CardHeader>
           <CardContent>
             {/* Desktop Table */}
