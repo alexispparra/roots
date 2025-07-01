@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { User, Auth, UserCredential } from 'firebase/auth';
-import { getFirebaseInstances } from '@/lib/firebase';
+import { getFirebaseInstances, APP_ADMIN_EMAIL } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 import type { DbUser } from '@/features/authorization/types';
 import { createUserProfileInDb } from '@/features/authorization/actions';
@@ -23,8 +23,6 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const ADMIN_EMAIL = 'alexispparra@gmail.com';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -48,7 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (currentUser) {
             // --- NEW LOGIC: IMMEDIATE ADMIN RECOGNITION ---
             // The UI should not wait for the database. If the email matches, they are an admin.
-            const isAdminByEmail = currentUser.email === ADMIN_EMAIL;
+            const isAdminByEmail = currentUser.email === APP_ADMIN_EMAIL;
             setIsAppAdmin(isAdminByEmail);
 
             const userDocRef = doc(firebase.db, 'users', currentUser.uid);
@@ -104,14 +102,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const handleAuthSuccess = useCallback(async (userCredential: UserCredential) => {
-    // The responsibility of creating the user profile in the DB is now moved
-    // to the specific UI flows (like register page) or the onAuthStateChanged listener
-    // to prevent race conditions and serialization errors.
-    return userCredential;
-  }, []);
-
-
   const authOperations = useMemo(() => {
     if (!firebaseAuth) return {
       signOut: async () => { throw new Error("Firebase no inicializado")},
@@ -130,19 +120,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
       signInWithEmail: async (email:string, password:string) => {
         const { signInWithEmailAndPassword } = await import('firebase/auth');
-        const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
-        return handleAuthSuccess(userCredential);
+        return signInWithEmailAndPassword(firebaseAuth, email, password);
       },
       signInWithGoogle: async () => {
         const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
         const provider = new GoogleAuthProvider();
         const userCredential = await signInWithPopup(firebaseAuth, provider);
-        return handleAuthSuccess(userCredential);
+        // The onAuthStateChanged listener handles profile creation now.
+        return userCredential;
       },
       registerWithEmail: async (email:string, password:string) => {
           const { createUserWithEmailAndPassword } = await import('firebase/auth');
-          const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-          return handleAuthSuccess(userCredential);
+          // Profile creation is now handled explicitly on the register page.
+          return createUserWithEmailAndPassword(firebaseAuth, email, password);
       },
       updateUserProfile: async (userToUpdate: User, profileData: { displayName?: string, photoURL?: string }) => {
         const { updateProfile } = await import('firebase/auth');
@@ -168,7 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return updatePassword(firebaseAuth.currentUser, newPassword);
       }
     };
-  }, [firebaseAuth, handleAuthSuccess]);
+  }, [firebaseAuth]);
   
   const value: AuthContextType = {
     user,

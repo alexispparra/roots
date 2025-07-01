@@ -60,24 +60,7 @@ export function EditIncomeDialog({ income, isOpen, onOpenChange, onUpdateIncome 
   }, [income, form, isOpen])
 
   function onSubmit(values: UpdateIncomeInput) {
-    const submittedData: UpdateIncomeInput & { exchangeRate: number } = {
-      ...values,
-      exchangeRate: values.exchangeRate || 1,
-    };
-    
-    // If USD is entered, it takes precedence. ARS is cleared.
-    if (submittedData.amountUSD && submittedData.amountUSD > 0) {
-        submittedData.amountARS = 0;
-    } 
-    // If only ARS is entered, calculate USD if exchange rate is available.
-    else if (submittedData.amountARS && submittedData.amountARS > 0) {
-        if (submittedData.exchangeRate && submittedData.exchangeRate > 0) {
-            submittedData.amountUSD = submittedData.amountARS / submittedData.exchangeRate;
-        } else {
-            submittedData.amountUSD = 0;
-        }
-    }
-    onUpdateIncome(submittedData);
+    onUpdateIncome(values);
   }
 
   return (

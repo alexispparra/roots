@@ -253,11 +253,19 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
     try {
         const { doc, updateDoc, arrayUnion, Timestamp, collection } = await import('firebase/firestore');
         const projectRef = doc(firebase.db, 'projects', projectId);
+        
+        const finalData = { ...transactionData };
+        if (finalData.amountUSD && finalData.amountUSD > 0) {
+            finalData.amountARS = 0;
+        } else if (finalData.amountARS && finalData.amountARS > 0) {
+            finalData.amountUSD = finalData.amountARS / (finalData.exchangeRate || 1);
+        }
+
         const transactionForDb = {
-            ...transactionData,
+            ...finalData,
             type: type,
-            date: Timestamp.fromDate(transactionData.date),
-            category: type === 'income' ? 'Ingreso' : (transactionData as AddExpenseInput).category,
+            date: Timestamp.fromDate(finalData.date),
+            category: type === 'income' ? 'Ingreso' : (finalData as AddExpenseInput).category,
         };
         
         await updateDoc(projectRef, { 
@@ -285,9 +293,18 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           
           const rawProjectData = convertFirestoreDataToProject(projectDoc);
           
-          const newTransactions = rawProjectData.transactions.map(t => 
-              t.id === transactionId ? { ...t, ...transactionData, id: t.id } : t
-          );
+          const newTransactions = rawProjectData.transactions.map(t => {
+              if (t.id === transactionId) {
+                  const finalData = { ...t, ...transactionData };
+                  if (finalData.amountUSD && finalData.amountUSD > 0) {
+                      finalData.amountARS = 0;
+                  } else if (finalData.amountARS && finalData.amountARS > 0) {
+                      finalData.amountUSD = finalData.amountARS / (finalData.exchangeRate || 1);
+                  }
+                  return { ...finalData, id: t.id };
+              }
+              return t;
+          });
           
           const transactionsForDb = newTransactions.map(t => ({...t, date: Timestamp.fromDate(t.date)}));
 

@@ -14,6 +14,10 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// The admin email is also loaded from the environment.
+export const APP_ADMIN_EMAIL = process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL || 'alexispparra@gmail.com';
+
+
 // --- DO NOT EDIT BELOW THIS LINE ---
 
 let firebaseInstances: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;

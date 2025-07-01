@@ -1,10 +1,9 @@
+
 'use server';
 
-import { getFirebaseInstances } from '@/lib/firebase';
+import { getFirebaseInstances, APP_ADMIN_EMAIL } from '@/lib/firebase';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import type { DbUser } from './types';
-
-const ADMIN_EMAIL = 'alexispparra@gmail.com';
 
 type UserData = {
   uid: string;
@@ -13,14 +12,18 @@ type UserData = {
 }
 
 /**
- * Ensures a user profile document exists in Firestore.
- * Can be called safely from client components as it only accepts serializable data.
- * If the profile doesn't exist, it's created.
+ * Ensures a user profile document exists in Firestore. Can be called safely from client components
+ * as it only accepts serializable data. If the profile doesn't exist, it's created.
  * If it exists, it only syncs the displayName if it has been updated in the auth provider.
- * @param userData A plain object containing the user's serializable data.
+ * This is the single source of truth for creating/updating user documents in the database.
+ * @param userData A plain object containing the user's serializable data (uid, email, displayName).
  */
 export async function createUserProfileInDb(userData: UserData): Promise<void> {
   const { db } = getFirebaseInstances();
+  if (!userData.uid) {
+    console.error('Error: createUserProfileInDb called without a user UID.');
+    return;
+  }
   const userRef = doc(db, 'users', userData.uid);
 
   try {
@@ -34,7 +37,7 @@ export async function createUserProfileInDb(userData: UserData): Promise<void> {
         uid: userData.uid,
         email: userEmail,
         displayName: userData.displayName || userEmail.split('@')[0] || "Usuario",
-        status: userEmail === ADMIN_EMAIL ? 'approved' : 'pending',
+        status: userEmail === APP_ADMIN_EMAIL ? 'approved' : 'pending',
       };
       await setDoc(userRef, newUserProfile);
     } else {

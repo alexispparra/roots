@@ -76,25 +76,7 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
   const attachment = watch("attachmentDataUrl");
 
   function onSubmit(values: AddExpenseInput) {
-    const submittedData: AddExpenseInput & { exchangeRate: number } = {
-      ...values,
-      exchangeRate: values.exchangeRate || 1,
-    };
-
-    // If USD is entered, it takes precedence. ARS is cleared.
-    if (submittedData.amountUSD && submittedData.amountUSD > 0) {
-        submittedData.amountARS = 0;
-    } 
-    // If only ARS is entered, calculate USD if exchange rate is available.
-    else if (submittedData.amountARS && submittedData.amountARS > 0) {
-        if (submittedData.exchangeRate && submittedData.exchangeRate > 0) {
-            submittedData.amountUSD = submittedData.amountARS / submittedData.exchangeRate;
-        } else {
-            submittedData.amountUSD = 0; // Explicitly set USD to 0 if no exchange rate
-        }
-    }
-    
-    onAddExpense(submittedData);
+    onAddExpense(values);
     setOpen(false)
     form.reset({
       date: new Date(),
