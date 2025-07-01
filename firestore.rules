@@ -1,36 +1,44 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    function isAdmin() {
-      return request.auth.token.email == 'alexispparra@gmail.com';
-    }
 
-    match /users/{userId} {
-      // Any authenticated user can create their own profile
-      allow create: if request.auth.uid == userId;
-
-      // Any authenticated user can read an individual user profile
-      // (e.g., to display names in a project)
-      allow get: if request.auth != null;
-
-      // Only an admin can list all users
-      allow list: if isAdmin();
-
-      // The user themselves, or an admin, can update a profile
-      allow update: if request.auth.uid == userId || isAdmin();
-    }
-
+    // --- Projects Collection ---
     match /projects/{projectId} {
-      // Any authenticated user can create a project
-      allow create: if request.auth != null;
+      function isParticipant() {
+        return request.auth.token.email in resource.data.participantsEmails;
+      }
+      
+      function isOwner() {
+        return request.auth.token.email == request.resource.data.ownerEmail;
+      }
 
-      // Only participants of the project can read it
-      allow read: if resource.data.participantsEmails.hasAny([request.auth.token.email]);
+      allow read, write: if isParticipant();
+      allow create: if request.auth != null && isOwner() && isParticipant();
+    }
 
-      // Only the project owner or an admin can update or delete it
-      allow update, delete: if resource.data.ownerEmail == request.auth.token.email || isAdmin();
+    // --- Users Collection Rules ---
+
+    // Rule for LISTING the entire collection.
+    // This is the key fix: 'list' applies to the collection path, not the document path with a wildcard.
+    match /users {
+      allow list: if request.auth.token.email == 'alexispparra@gmail.com';
+    }
+
+    // Rules for individual user documents (GET, CREATE, UPDATE).
+    match /users/{userId} {
+      function isOwner() {
+        return request.auth.uid == userId;
+      }
+      
+      function isAdmin() {
+        return request.auth.token.email == 'alexispparra@gmail.com';
+      }
+
+      // Allow creating own user document upon signup.
+      allow create: if isOwner();
+      
+      // Allow getting and updating own document, or any document if admin.
+      allow get, update: if isOwner() || isAdmin();
     }
   }
 }
