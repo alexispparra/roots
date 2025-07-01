@@ -1,32 +1,30 @@
-
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- Projects Collection ---
-    match /projects/{projectId} {
-      // Any authenticated user can create a project. The owner is set in client code.
-      allow create: if request.auth != null;
-
-      // Only users listed in the 'participantsEmails' array can read or write to the project.
-      allow read, write: if request.auth.token.email in resource.data.participantsEmails;
-    }
-
-    // --- Users Collection ---
+    // --- Rules for the 'users' collection ---
     match /users/{userId} {
-      // 1. Admin Rule: An admin can read and write ANY user document.
-      // 'read' covers 'get' and 'list'. 'write' covers 'create', 'update', 'delete'.
-      // This is the broad rule for the admin.
-      allow read, write: if request.auth.token.email == 'alexispparra@gmail.com';
+      // ANY authenticated user can CREATE their own profile document.
+      allow create: if request.auth != null && request.resource.id == request.auth.uid;
 
-      // 2. User Rule: A non-admin user can get and update THEIR OWN document.
-      // This rule is evaluated if the admin rule is false.
+      // A user can GET and UPDATE their OWN document.
       allow get, update: if request.auth.uid == userId;
 
-      // 3. Create Rule: Any authenticated user can create a user document,
-      // but only if the UID of the new document matches their own auth UID.
-      // This prevents users from creating profiles for others.
-      allow create: if request.auth.uid == userId;
+      // The ADMIN can LIST the entire collection. This is the key fix.
+      allow list: if request.auth.token.email == 'alexispparra@gmail.com';
+      
+      // The ADMIN can also GET and UPDATE any user document.
+      allow get, update: if request.auth.token.email == 'alexispparra@gmail.com';
+    }
+
+    // --- Rules for the 'projects' collection ---
+    match /projects/{projectId} {
+      // Any authenticated user can create a project. The rules in the context ensure they become the owner.
+      allow create: if request.auth != null;
+
+      // Only users listed in the project's 'participantsEmails' array can read or write to it.
+      allow read, write: if request.auth.token.email in resource.data.participantsEmails;
     }
   }
 }
