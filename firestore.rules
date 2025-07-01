@@ -1,37 +1,40 @@
-
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if the requester is the app admin
+
+    // --- Funciones de Ayuda ---
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
     function isAdmin() {
       return request.auth != null && request.auth.token.email == 'alexispparra@gmail.com';
     }
 
-    // Rules for the 'users' collection
+    // --- Reglas para la Colección 'users' ---
     match /users/{userId} {
-      // ANYONE can create their own user profile (e.g., on registration)
-      allow create: if request.auth.uid == userId;
+      // Un usuario puede crear su propio perfil.
+      allow create: if isOwner(userId);
+      // Un usuario puede leer y actualizar su propio perfil.
+      allow get, update: if isOwner(userId);
 
-      // A user can GET and UPDATE their OWN profile.
-      // The ADMIN can GET and UPDATE ANY profile.
-      allow get, update: if request.auth.uid == userId || isAdmin();
-      
-      // ONLY the admin can LIST all users.
-      allow list: if isAdmin();
+      // El administrador puede leer (get) y actualizar (update) cualquier perfil.
+      // Y, crucialmente, el administrador puede listar (list) toda la colección.
+      allow list, get, update: if isAdmin();
     }
-
-    // Rules for the 'projects' collection
+    
+    // --- Reglas para la Colección 'projects' ---
     match /projects/{projectId} {
-      // A user can READ a project if their email is in the participants list
-      allow read: if request.auth != null && resource.data.participantsEmails.hasAny([request.auth.token.email]);
+      function isParticipant() {
+        return request.auth != null && request.auth.token.email in resource.data.participantsEmails;
+      }
       
-      // A user can CREATE a project if they are authenticated.
+      // Cualquier usuario autenticado puede crear un proyecto.
       allow create: if request.auth != null;
-
-      // A user can UPDATE or DELETE a project only if they are an 'admin' for that project.
-      allow update, delete: if request.auth != null && (let projectData = get(/databases/$(database)/documents/projects/$(projectId)).data;
-          (request.auth.token.email in projectData.participants.map(p => p.email).filter(e => projectData.participants.filter(p => p.email == e)[0].role == 'admin'))
-      );
+      
+      // Solo los participantes pueden leer, actualizar o eliminar un proyecto.
+      allow read, update, delete: if isParticipant();
     }
   }
 }
