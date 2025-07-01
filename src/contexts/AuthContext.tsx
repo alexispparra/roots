@@ -24,6 +24,11 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// --- THIS IS THE CRITICAL FIX ---
+// Hardcoding the admin email removes the fragile dependency on environment variables
+// that were not set, which was the root cause of the admin recognition failure.
+const ADMIN_EMAIL = 'alexispparra@gmail.com';
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<DbUser | null>(null);
@@ -44,32 +49,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(currentUser);
           
           if (currentUser) {
-            // User is logged in, now listen for their profile changes.
             const userDocRef = doc(firebase.db, 'users', currentUser.uid);
             const unsubscribeProfile = onSnapshot(userDocRef, async (docSnap) => {
               if (docSnap.exists()) {
-                const profile = docSnap.data() as DbUser;
+                let profile = docSnap.data() as DbUser;
 
                 // --- PATCH LOGIC ---
                 // If profile exists but is missing the status field, update it.
-                // This is a migration step for pre-existing accounts like the admin's.
                 if (!profile.status) {
                     try {
                         const { updateDoc } = await import('firebase/firestore');
-                        const adminEmail = (process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL || "").trim().toLowerCase();
-                        const newStatus = profile.email === adminEmail ? 'approved' : 'pending';
+                        const newStatus = profile.email === ADMIN_EMAIL ? 'approved' : 'pending';
+                        
+                        // Update the local profile object immediately for instant UI feedback
+                        profile = { ...profile, status: newStatus };
+                        
+                        // Update the database in the background
                         await updateDoc(userDocRef, { status: newStatus });
-                        // The onSnapshot listener will fire again automatically with the updated data,
-                        // so we don't need to manually update the state here. The component will re-render.
                     } catch (e) {
                         console.error("Failed to patch user status:", e);
                     }
                 }
-
+                
                 setUserProfile(profile);
-                setIsAppAdmin(profile.status === 'approved' && profile.email === process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL);
+                setIsAppAdmin(profile.status === 'approved' && profile.email === ADMIN_EMAIL);
+
               } else {
-                 // This can happen briefly if the user profile is not created yet after registration.
                  setUserProfile(null);
               }
               setLoading(false);
@@ -99,7 +104,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const handleAuthSuccess = useCallback(async (userCredential: UserCredential) => {
-    // This function ensures a user profile exists in Firestore after any successful auth event.
     await createUserProfileInDb(userCredential.user);
     return userCredential;
   }, []);
@@ -139,7 +143,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
       updateUserProfile: async (userToUpdate: User, profileData: { displayName?: string, photoURL?: string }) => {
         const { updateProfile } = await import('firebase/auth');
-        // Also update the profile in Firestore
         const { doc, updateDoc } = await import('firebase/firestore');
         const { db } = getFirebaseInstances();
         await updateProfile(userToUpdate, profileData);
