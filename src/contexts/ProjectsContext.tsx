@@ -296,8 +296,8 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
             amountARS: data.amountARS || 0,
             amountUSD: finalUsdAmount,
             exchangeRate: exchangeRateToUse,
-            attachmentDataUrl: data.attachmentDataUrl || "",
-            // Add expense-specific fields with defaults to prevent saving 'undefined'
+            // Expense-specific fields with defaults to prevent saving 'undefined'
+            attachmentDataUrl: type === 'expense' ? (data as AddExpenseInput).attachmentDataUrl || "" : "",
             category: type === 'expense' ? (data as AddExpenseInput).category : 'Ingreso',
             user: type === 'expense' ? (data as AddExpenseInput).user || '' : '',
             paymentMethod: type === 'expense' ? (data as AddExpenseInput).paymentMethod || '' : '',
@@ -331,27 +331,49 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           
           const newTransactions = rawProjectData.transactions.map(t => {
               if (t.id === transactionId) {
-                  const updatedData = { ...t, ...transactionData };
+                  // The original transaction 't' tells us the type
+                  if (t.type === 'expense') {
+                      const data = transactionData as UpdateExpenseInput;
+                      const updatedData = { ...t, ...data };
+                      
+                      const exchangeRateToUse = updatedData.exchangeRate && updatedData.exchangeRate > 0 ? updatedData.exchangeRate : 1;
+                      let finalUsdAmount = updatedData.amountUSD || 0;
+                      if (finalUsdAmount <= 0 && updatedData.amountARS && updatedData.amountARS > 0) {
+                          finalUsdAmount = updatedData.amountARS / exchangeRateToUse;
+                      }
 
-                  // --- Robust Financial Calculation ---
-                  const exchangeRateToUse = updatedData.exchangeRate && updatedData.exchangeRate > 0 ? updatedData.exchangeRate : 1;
-                  let finalUsdAmount = updatedData.amountUSD || 0;
+                      return {
+                          ...updatedData,
+                          amountUSD: finalUsdAmount,
+                          exchangeRate: exchangeRateToUse,
+                          attachmentDataUrl: updatedData.attachmentDataUrl || ""
+                      };
+                  } else { // 'income'
+                      const data = transactionData as UpdateIncomeInput;
+                      const updatedData = { ...t, ...data };
 
-                  if (finalUsdAmount <= 0 && updatedData.amountARS && updatedData.amountARS > 0) {
-                      finalUsdAmount = updatedData.amountARS / exchangeRateToUse;
+                      const exchangeRateToUse = updatedData.exchangeRate && updatedData.exchangeRate > 0 ? updatedData.exchangeRate : 1;
+                      let finalUsdAmount = updatedData.amountUSD || 0;
+                      if (finalUsdAmount <= 0 && updatedData.amountARS && updatedData.amountARS > 0) {
+                          finalUsdAmount = updatedData.amountARS / exchangeRateToUse;
+                      }
+                      
+                      // For income, we rebuild the object to ensure expense-specific fields are reset
+                      return {
+                          id: t.id,
+                          type: 'income' as const,
+                          date: updatedData.date,
+                          description: updatedData.description,
+                          amountARS: updatedData.amountARS,
+                          amountUSD: finalUsdAmount,
+                          exchangeRate: exchangeRateToUse,
+                          // Reset expense fields
+                          category: 'Ingreso',
+                          user: '',
+                          paymentMethod: '',
+                          attachmentDataUrl: ''
+                      };
                   }
-
-                  // Return a clean, fully-formed object
-                  return {
-                      ...updatedData,
-                      id: t.id,
-                      date: updatedData.date,
-                      amountUSD: finalUsdAmount,
-                      exchangeRate: exchangeRateToUse,
-                      attachmentDataUrl: updatedData.attachmentDataUrl || "",
-                      user: updatedData.type === 'expense' ? updatedData.user : '',
-                      paymentMethod: updatedData.type === 'expense' ? updatedData.paymentMethod : '',
-                  };
               }
               return t;
           });
