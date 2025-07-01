@@ -269,32 +269,45 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   const addTransaction = async (projectId: string, transactionData: AddExpenseInput | AddIncomeInput, type: 'income' | 'expense') => {
     const firebase = getFirebaseInstances();
     if (!firebase) {
-      toast({ variant: "destructive", title: "Error de Configuración", description: "La base de datos no está disponible." });
-      return;
+        toast({ variant: "destructive", title: "Error", description: "La base de datos no está disponible." });
+        return;
     }
-    
+
     try {
         const { doc, updateDoc, arrayUnion, Timestamp, collection } = await import('firebase/firestore');
         const projectRef = doc(firebase.db, 'projects', projectId);
-        
-        const finalData = { ...transactionData };
-        if (finalData.amountUSD && finalData.amountUSD > 0) {
-            finalData.amountARS = 0;
-        } else if (finalData.amountARS && finalData.amountARS > 0) {
-            finalData.amountUSD = finalData.amountARS / (finalData.exchangeRate || 1);
+
+        const data = { ...transactionData };
+
+        // --- Robust Financial Calculation ---
+        const exchangeRateToUse = data.exchangeRate && data.exchangeRate > 0 ? data.exchangeRate : 1;
+        let finalUsdAmount = data.amountUSD || 0;
+
+        // If USD is not provided or zero, calculate it from ARS. This makes USD the source of truth for all calculations.
+        if (finalUsdAmount <= 0 && data.amountARS && data.amountARS > 0) {
+            finalUsdAmount = data.amountARS / exchangeRateToUse;
         }
 
-        const transactionForDb = {
-            ...finalData,
-            type: type,
-            date: Timestamp.fromDate(finalData.date),
-            category: type === 'income' ? 'Ingreso' : (finalData as AddExpenseInput).category,
+        const newTransaction = {
+            id: doc(collection(firebase.db, 'dummy')).id,
+            type,
+            date: Timestamp.fromDate(data.date),
+            description: data.description,
+            amountARS: data.amountARS || 0,
+            amountUSD: finalUsdAmount,
+            exchangeRate: exchangeRateToUse,
+            attachmentDataUrl: data.attachmentDataUrl || "",
+            // Add expense-specific fields with defaults to prevent saving 'undefined'
+            category: type === 'expense' ? (data as AddExpenseInput).category : 'Ingreso',
+            user: type === 'expense' ? (data as AddExpenseInput).user || '' : '',
+            paymentMethod: type === 'expense' ? (data as AddExpenseInput).paymentMethod || '' : '',
         };
-        
-        await updateDoc(projectRef, { 
-            transactions: arrayUnion({ ...transactionForDb, id: doc(collection(firebase.db, 'dummy')).id })
+
+        await updateDoc(projectRef, {
+            transactions: arrayUnion(newTransaction)
         });
         toast({ title: "Transacción Añadida" });
+
     } catch (error) {
         console.error("Error adding transaction: ", error);
         toast({ variant: "destructive", title: "Error", description: "No se pudo añadir la transacción." });
@@ -304,7 +317,7 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
   const updateTransaction = async (projectId: string, transactionId: string, transactionData: UpdateExpenseInput | UpdateIncomeInput) => {
       const firebase = getFirebaseInstances();
       if (!firebase) {
-        toast({ variant: "destructive", title: "Error de Configuración", description: "La base de datos no está disponible." });
+        toast({ variant: "destructive", title: "Error", description: "La base de datos no está disponible." });
         return;
       }
 
@@ -318,13 +331,27 @@ export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
           
           const newTransactions = rawProjectData.transactions.map(t => {
               if (t.id === transactionId) {
-                  const finalData = { ...t, ...transactionData };
-                  if (finalData.amountUSD && finalData.amountUSD > 0) {
-                      finalData.amountARS = 0;
-                  } else if (finalData.amountARS && finalData.amountARS > 0) {
-                      finalData.amountUSD = finalData.amountARS / (finalData.exchangeRate || 1);
+                  const updatedData = { ...t, ...transactionData };
+
+                  // --- Robust Financial Calculation ---
+                  const exchangeRateToUse = updatedData.exchangeRate && updatedData.exchangeRate > 0 ? updatedData.exchangeRate : 1;
+                  let finalUsdAmount = updatedData.amountUSD || 0;
+
+                  if (finalUsdAmount <= 0 && updatedData.amountARS && updatedData.amountARS > 0) {
+                      finalUsdAmount = updatedData.amountARS / exchangeRateToUse;
                   }
-                  return { ...finalData, id: t.id };
+
+                  // Return a clean, fully-formed object
+                  return {
+                      ...updatedData,
+                      id: t.id,
+                      date: updatedData.date,
+                      amountUSD: finalUsdAmount,
+                      exchangeRate: exchangeRateToUse,
+                      attachmentDataUrl: updatedData.attachmentDataUrl || "",
+                      user: updatedData.type === 'expense' ? updatedData.user : '',
+                      paymentMethod: updatedData.type === 'expense' ? updatedData.paymentMethod : '',
+                  };
               }
               return t;
           });
