@@ -46,13 +46,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (currentUser) {
             // User is logged in, now listen for their profile changes.
             const userDocRef = doc(firebase.db, 'users', currentUser.uid);
-            const unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
+            const unsubscribeProfile = onSnapshot(userDocRef, async (docSnap) => {
               if (docSnap.exists()) {
                 const profile = docSnap.data() as DbUser;
+
+                // --- PATCH LOGIC ---
+                // If profile exists but is missing the status field, update it.
+                // This is a migration step for pre-existing accounts like the admin's.
+                if (!profile.status) {
+                    try {
+                        const { updateDoc } = await import('firebase/firestore');
+                        const adminEmail = (process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL || "").trim().toLowerCase();
+                        const newStatus = profile.email === adminEmail ? 'approved' : 'pending';
+                        await updateDoc(userDocRef, { status: newStatus });
+                        // The onSnapshot listener will fire again automatically with the updated data,
+                        // so we don't need to manually update the state here. The component will re-render.
+                    } catch (e) {
+                        console.error("Failed to patch user status:", e);
+                    }
+                }
+
                 setUserProfile(profile);
                 setIsAppAdmin(profile.status === 'approved' && profile.email === process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL);
               } else {
-                 // This can happen briefly if the user profile is not created yet.
+                 // This can happen briefly if the user profile is not created yet after registration.
                  setUserProfile(null);
               }
               setLoading(false);
@@ -82,6 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const handleAuthSuccess = useCallback(async (userCredential: UserCredential) => {
+    // This function ensures a user profile exists in Firestore after any successful auth event.
     await createUserProfileInDb(userCredential.user);
     return userCredential;
   }, []);

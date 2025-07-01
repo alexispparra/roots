@@ -6,10 +6,10 @@ import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import type { DbUser } from './types';
 
 /**
- * Creates or updates a user profile document in Firestore.
+ * Ensures a user profile document exists in Firestore.
  * - If the profile doesn't exist, it's created with a 'status' ('approved' for admin, 'pending' for others).
- * - If the profile exists, it checks if the 'status' field is missing and adds it.
- * - It also updates the displayName if it has changed in the auth provider (e.g., Google).
+ * - If it exists, it only syncs the displayName if it has changed (e.g., after a Google sign-in).
+ * This function is designed to be called after a successful authentication event.
  * @param user The Firebase Auth user object.
  */
 export async function createUserProfileInDb(user: User): Promise<void> {
@@ -18,10 +18,10 @@ export async function createUserProfileInDb(user: User): Promise<void> {
 
   try {
     const docSnap = await getDoc(userRef);
-    const userEmail = (user.email || "").trim().toLowerCase();
 
     if (!docSnap.exists()) {
-      // Profile does not exist, create it from scratch
+      // --- Profile does not exist, create it from scratch ---
+      const userEmail = (user.email || "").trim().toLowerCase();
       const adminEmail = (process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL || "").trim().toLowerCase();
       
       const newUserProfile: DbUser = {
@@ -32,28 +32,14 @@ export async function createUserProfileInDb(user: User): Promise<void> {
       };
       await setDoc(userRef, newUserProfile);
     } else {
-      // Profile exists, check for missing fields or updates.
+      // --- Profile exists, just sync displayName if it has been updated in the auth provider ---
       const existingData = docSnap.data() as Partial<DbUser>;
-      const updates: Partial<DbUser> = {};
-
-      // If status is missing, add it. This is the fix for the admin account.
-      if (!existingData.status) {
-        const adminEmail = (process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL || "").trim().toLowerCase();
-        updates.status = adminEmail && userEmail === adminEmail ? 'approved' : 'pending';
-      }
-
-      // If displayName has been updated in the auth provider, sync it.
       if (user.displayName && user.displayName !== existingData.displayName) {
-        updates.displayName = user.displayName;
-      }
-      
-      // Only write to the database if there are actual updates to perform.
-      if (Object.keys(updates).length > 0) {
-        await updateDoc(userRef, updates);
+        await updateDoc(userRef, { displayName: user.displayName });
       }
     }
   } catch (error) {
-    console.error('Error creating/updating user profile in Firestore:', error);
+    console.error('Error ensuring user profile in Firestore:', error);
     // We don't re-throw the error to avoid breaking the login/register flow.
     // Error logging is sufficient here.
   }
