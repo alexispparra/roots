@@ -190,18 +190,18 @@ export function ProjectSummary({ project }: { project: Project }) {
                     </div>
                     {/* Mobile Card List */}
                     <div className="block md:hidden space-y-4 p-4">
-                         {latestTransactions.length > 0 ? (
-                            latestTransactions.map(t => (
-                                <div key={t.id} className="flex items-center justify-between gap-4 rounded-lg border p-3 text-sm">
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium truncate">{t.description}</p>
-                                        <p className="text-xs text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</p>
-                                    </div>
-                                    <p className={`shrink-0 font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
-                                    </p>
+                        {latestTransactions.length > 0 ? (
+                        latestTransactions.map(t => (
+                            <div key={t.id} className="grid grid-cols-[1fr_auto] items-center gap-x-4 rounded-lg border p-3 text-sm">
+                                <div className="min-w-0">
+                                    <p className="font-medium truncate">{t.description}</p>
+                                    <p className="text-xs text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</p>
                                 </div>
-                            ))
+                                <p className={`font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                                    {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
+                                </p>
+                            </div>
+                        ))
                         ) : (
                             <div className="py-10 text-center text-muted-foreground">
                                 No hay transacciones registradas.
