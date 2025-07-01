@@ -3,34 +3,27 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // USERS COLLECTION
-    // A user can create their own profile.
-    // A user can read and update their own profile.
+    // Reglas para perfiles de usuario
     match /users/{userId} {
-      allow read, update, create: if request.auth != null && request.auth.uid == userId;
+      // Un usuario solo puede leer y actualizar su propio perfil.
+      allow read, update: if request.auth.uid == userId;
+      // Un usuario solo puede crear su propio perfil.
+      allow create: if request.auth.uid == userId;
     }
 
-    // PROJECTS COLLECTION
+    // Reglas para proyectos
     match /projects/{projectId} {
-      // Any authenticated user can create a project.
-      allow create: if request.auth != null;
-
-      // Allow reading a project if the user's email is in the participantsEmails array.
-      allow read: if request.auth.token.email in resource.data.participantsEmails;
-
-      // A user can list projects if they are authenticated.
-      // The actual security of which projects they see is handled by the Firestore query in the app code.
-      // This rule is essential to prevent "Missing or insufficient permissions" on the main projects page.
+      // Cualquiera que haya iniciado sesión puede pedir la lista de proyectos.
+      // La aplicación se encargará de filtrar y mostrar solo los que le corresponden.
       allow list: if request.auth != null;
       
-      // Allow updating a project if the user is a participant with the role 'admin' or 'editor'.
-      allow update: if request.auth.token.email in resource.data.participantsEmails &&
-                    (get(/databases/$(database)/documents/projects/$(projectId)).data.participants.filter(p => p.email == request.auth.token.email)[0].role == 'admin' ||
-                     get(/databases/$(database)/documents/projects/$(projectId)).data.participants.filter(p => p.email == request.auth.token.email)[0].role == 'editor');
+      // Un usuario solo puede leer, actualizar o borrar un proyecto si su email
+      // está en la lista de `participantsEmails` de ese proyecto.
+      allow read, update, delete: if request.auth.uid != null 
+                                  && request.auth.token.email in resource.data.participantsEmails;
       
-      // Allow deleting a project only if the user is a participant with the role 'admin'.
-      allow delete: if request.auth.token.email in resource.data.participantsEmails &&
-                    get(/databases/$(database)/documents/projects/$(projectId)).data.participants.filter(p => p.email == request.auth.token.email)[0].role == 'admin';
+      // Cualquier usuario que haya iniciado sesión puede crear un proyecto nuevo.
+      allow create: if request.auth.uid != null;
     }
   }
 }

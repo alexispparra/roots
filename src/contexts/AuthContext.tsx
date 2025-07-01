@@ -24,8 +24,6 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// --- THIS IS THE CRITICAL FIX ---
-// Hardcoding the admin email removes the fragile dependency on environment variables.
 const ADMIN_EMAIL = 'alexispparra@gmail.com';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -48,36 +46,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(currentUser);
           
           if (currentUser) {
+            // --- NEW LOGIC: IMMEDIATE ADMIN RECOGNITION ---
+            // The UI should not wait for the database. If the email matches, they are an admin.
+            const isAdminByEmail = currentUser.email === ADMIN_EMAIL;
+            setIsAppAdmin(isAdminByEmail);
+
             const userDocRef = doc(firebase.db, 'users', currentUser.uid);
             const unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
               if (docSnap.exists()) {
                 const profile = docSnap.data() as DbUser;
 
-                // --- ROBUST SELF-HEALING LOGIC ---
-                const isAdminByEmail = profile.email === ADMIN_EMAIL;
-                const isApprovedInDb = profile.status === 'approved';
-
-                // 1. Immediate UI update: If email matches, set admin state true.
-                setIsAppAdmin(isAdminByEmail);
-
-                // 2. Background DB fix: If user is admin by email but not in DB, fix it.
-                if (isAdminByEmail && !isApprovedInDb) {
+                // --- BACKGROUND SELF-HEALING ---
+                // If the user is an admin (by email) but their DB status is not 'approved', fix it.
+                // This does not block the UI, which already knows they are an admin.
+                if (isAdminByEmail && profile.status !== 'approved') {
                   updateDoc(userDocRef, { status: 'approved' }).catch(e => 
-                    console.error("Failed to self-heal admin status:", e)
+                    console.error("Failed to self-heal admin status in DB:", e)
                   );
                 }
                 
                 setUserProfile(profile);
 
               } else {
-                 setUserProfile(null);
-                 setIsAppAdmin(false);
+                 // Profile doesn't exist, likely a new login. Let's create it.
+                 // This is also handled by the login/register flows, but serves as a backup.
+                 createUserProfileInDb(currentUser);
+                 setUserProfile(null); // Will be populated by the next snapshot after creation
               }
               setLoading(false);
             }, (error) => {
                 console.error("Error fetching user profile:", error);
                 setUserProfile(null);
-                setIsAppAdmin(false);
                 setLoading(false);
             });
             return () => unsubscribeProfile();
@@ -172,7 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     ...authOperations
   };
 
-  if (loading && !user && !userProfile) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-svh bg-background">
         <Loader2 className="h-8 w-8 animate-spin" />
