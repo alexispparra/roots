@@ -31,6 +31,9 @@ export function CategorySpendingChart({ categorySpent, totalProjectExpenses, cat
     { name: "Otros Gastos", value: otherExpenses },
   ];
 
+  // A single wedge means one category makes up 100% of the expenses shown in the chart.
+  const isSingleWedge = chartData.filter(d => d.value > 0).length === 1;
+
   const chartConfig = {
     [categoryName]: {
       label: categoryName,
@@ -75,9 +78,8 @@ export function CategorySpendingChart({ categorySpent, totalProjectExpenses, cat
                   outerRadius={80}
                   innerRadius={50}
                   labelLine={false}
-                  label={({ percent }) => {
-                    // Use the `percent` value provided by recharts (a value from 0 to 1)
-                    // and format it manually to ensure correctness.
+                  // Disable default label for the 100% case to manually render it, otherwise use standard logic.
+                  label={isSingleWedge ? false : ({ percent }) => {
                     if (!percent || percent === 0) {
                       return null;
                     }
@@ -89,6 +91,12 @@ export function CategorySpendingChart({ categorySpent, totalProjectExpenses, cat
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
+                 {/* Manually render the "100%" label in the center for the single-wedge case */}
+                {isSingleWedge && (
+                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" fill="hsl(var(--card-foreground))" className="text-base font-bold">
+                        100%
+                    </text>
+                )}
               </PieChart>
             </ResponsiveContainer>
           </ChartContainer>
