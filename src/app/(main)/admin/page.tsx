@@ -4,9 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from 'next/navigation';
 import { useEffect } from "react";
-import { Loader2, Shield } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
+import { Loader2 } from "lucide-react";
+import { AdminUsersManager } from "@/features/authorization/components/admin-users-manager";
 
 export default function AdminPage() {
   const { isAppAdmin, loading: authLoading } = useAuth();
@@ -14,11 +13,11 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!authLoading && !isAppAdmin) {
-      router.push('/'); // Redirect non-admins to the dashboard
+      router.push('/projects'); // Redirect non-admins to the main projects page
     }
   }, [isAppAdmin, authLoading, router]);
 
-  if (authLoading) {
+  if (authLoading || !isAppAdmin) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -26,30 +25,17 @@ export default function AdminPage() {
     );
   }
 
-  if (!isAppAdmin) {
-    // Return null or a simple message, the redirect will handle the rest
-    return null;
-  }
-
   return (
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Panel de Administración Global</CardTitle>
+          <CardTitle className="font-headline">Gestión de Usuarios</CardTitle>
           <CardDescription>
-            Gestiona los roles de todos los participantes en todos los proyectos de la aplicación.
+            Aprueba, rechaza o modifica el estado de los usuarios registrados en la aplicación.
           </CardDescription>
         </CardHeader>
-         <CardContent>
-            <Alert>
-                <Shield className="h-4 w-4" />
-                <AlertTitle>Función en Desarrollo</AlertTitle>
-                <AlertDescription>
-                    El panel de administración global para gestionar usuarios y proyectos en toda la aplicación está en construcción y se habilitará en una futura actualización.
-                </AlertDescription>
-            </Alert>
-        </CardContent>
       </Card>
+      <AdminUsersManager />
     </div>
   );
 }
