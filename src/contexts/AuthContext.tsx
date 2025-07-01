@@ -11,7 +11,7 @@ import { createUserProfileInDb } from '@/features/authorization/actions';
 type AuthContextType = {
   user: User | null;
   userProfile: DbUser | null;
-  loading: boolean; // This now represents the combined loading state
+  loading: boolean;
   isAppAdmin: boolean;
   signOut: () => Promise<void>;
   signInWithEmail: (email:string, password:string) => Promise<UserCredential>;
@@ -25,8 +25,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // --- THIS IS THE CRITICAL FIX ---
-// Hardcoding the admin email removes the fragile dependency on environment variables
-// that were not set, which was the root cause of the admin recognition failure.
+// Hardcoding the admin email removes the fragile dependency on environment variables.
 const ADMIN_EMAIL = 'alexispparra@gmail.com';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -44,43 +43,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const authModulePromise = import('firebase/auth');
       const firestoreModulePromise = import('firebase/firestore');
 
-      Promise.all([authModulePromise, firestoreModulePromise]).then(([{ onAuthStateChanged }, { doc, onSnapshot }]) => {
+      Promise.all([authModulePromise, firestoreModulePromise]).then(([{ onAuthStateChanged }, { doc, onSnapshot, updateDoc }]) => {
         const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser) => {
           setUser(currentUser);
           
           if (currentUser) {
             const userDocRef = doc(firebase.db, 'users', currentUser.uid);
-            const unsubscribeProfile = onSnapshot(userDocRef, async (docSnap) => {
+            const unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
               if (docSnap.exists()) {
-                let profile = docSnap.data() as DbUser;
+                const profile = docSnap.data() as DbUser;
 
-                // --- PATCH LOGIC ---
-                // If profile exists but is missing the status field, update it.
-                if (!profile.status) {
-                    try {
-                        const { updateDoc } = await import('firebase/firestore');
-                        const newStatus = profile.email === ADMIN_EMAIL ? 'approved' : 'pending';
-                        
-                        // Update the local profile object immediately for instant UI feedback
-                        profile = { ...profile, status: newStatus };
-                        
-                        // Update the database in the background
-                        await updateDoc(userDocRef, { status: newStatus });
-                    } catch (e) {
-                        console.error("Failed to patch user status:", e);
-                    }
+                // --- ROBUST SELF-HEALING LOGIC ---
+                const isAdminByEmail = profile.email === ADMIN_EMAIL;
+                const isApprovedInDb = profile.status === 'approved';
+
+                // 1. Immediate UI update: If email matches, set admin state true.
+                setIsAppAdmin(isAdminByEmail);
+
+                // 2. Background DB fix: If user is admin by email but not in DB, fix it.
+                if (isAdminByEmail && !isApprovedInDb) {
+                  updateDoc(userDocRef, { status: 'approved' }).catch(e => 
+                    console.error("Failed to self-heal admin status:", e)
+                  );
                 }
                 
                 setUserProfile(profile);
-                setIsAppAdmin(profile.status === 'approved' && profile.email === ADMIN_EMAIL);
 
               } else {
                  setUserProfile(null);
+                 setIsAppAdmin(false);
               }
               setLoading(false);
             }, (error) => {
                 console.error("Error fetching user profile:", error);
                 setUserProfile(null);
+                setIsAppAdmin(false);
                 setLoading(false);
             });
             return () => unsubscribeProfile();
