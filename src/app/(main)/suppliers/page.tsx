@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { getFirebaseInstances } from '@/lib/firebase';
-import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import type { Supplier, SupplierFormData } from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -38,10 +38,11 @@ export default function SuppliersPage() {
 
     setLoading(true);
     const { db } = getFirebaseInstances();
+    // Removed orderBy from the query to avoid needing a composite index.
+    // Sorting will now be handled on the client-side.
     const q = query(
       collection(db, 'suppliers'),
-      where('ownerId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('ownerId', '==', user.uid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -50,6 +51,8 @@ export default function SuppliersPage() {
         ...doc.data(),
         createdAt: doc.data().createdAt.toDate(),
       } as Supplier));
+      // Sort on the client-side.
+      suppliersList.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       setSuppliers(suppliersList);
       setLoading(false);
     }, (err) => {
