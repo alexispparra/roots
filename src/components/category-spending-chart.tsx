@@ -74,13 +74,7 @@ export function CategorySpendingChart({ categorySpent, totalProjectExpenses, cat
                   outerRadius={80}
                   innerRadius={50}
                   labelLine={false}
-                  label={({ percent }) =>
-                    new Intl.NumberFormat("default", {
-                      style: "percent",
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }).format(percent)
-                  }
+                  label={({ percent }) => `${Math.round(percent * 100)}%`}
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
