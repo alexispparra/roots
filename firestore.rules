@@ -1,40 +1,34 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- Funciones de Ayuda ---
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
-    }
-
-    function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'alexispparra@gmail.com';
-    }
-
-    // --- Reglas para la Colección 'users' ---
+    // --- USERS COLLECTION RULES ---
     match /users/{userId} {
-      // Un usuario puede crear su propio perfil.
-      allow create: if isOwner(userId);
-      // Un usuario puede leer y actualizar su propio perfil.
-      allow get, update: if isOwner(userId);
+      // Any authenticated user can create their own document.
+      allow create: if request.auth.uid == userId;
 
-      // El administrador puede leer (get) y actualizar (update) cualquier perfil.
-      // Y, crucialmente, el administrador puede listar (list) toda la colección.
-      allow list, get, update: if isAdmin();
+      // A user can read and update their own document.
+      allow get, update: if request.auth.uid == userId;
+      
+      // The ADMIN can list, get, and update any user document.
+      // This rule explicitly grants the necessary permissions.
+      allow list, get, update: if request.auth.token.email == 'alexispparra@gmail.com';
     }
-    
-    // --- Reglas para la Colección 'projects' ---
+
+    // --- PROJECTS COLLECTION RULES ---
     match /projects/{projectId} {
-      function isParticipant() {
-        return request.auth != null && request.auth.token.email in resource.data.participantsEmails;
-      }
-      
-      // Cualquier usuario autenticado puede crear un proyecto.
+      // Any authenticated user can create a project. The app logic handles ownership.
       allow create: if request.auth != null;
-      
-      // Solo los participantes pueden leer, actualizar o eliminar un proyecto.
-      allow read, update, delete: if isParticipant();
+
+      // A user can read a project only if they are listed in participantsEmails.
+      // The 'list' permission works because the app query filters by this same field.
+      allow get, list: if request.auth.token.email in resource.data.participantsEmails;
+
+      // A user can update or delete a project only if they are listed in participantsEmails.
+      // The UI is responsible for hiding buttons for "viewer" roles.
+      allow update, delete: if request.auth.token.email in resource.data.participantsEmails;
     }
   }
 }
