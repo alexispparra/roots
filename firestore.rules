@@ -1,21 +1,53 @@
-
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Reglas para Perfiles de Usuario
+    match /users/{userId} {
+      // Un usuario solo puede leer su propio perfil.
+      allow get: if request.auth.uid == userId;
+      
+      // Un usuario puede crear su propio perfil.
+      allow create: if request.auth.uid == userId;
+      
+      // Un usuario puede actualizar su propio nombre. El status no puede ser modificado por él mismo.
+      allow update: if request.auth.uid == userId && request.resource.data.status == resource.data.status;
+      
+      // El administrador de la app puede leer y escribir en cualquier perfil de usuario.
+      // Esto es necesario para que el admin pueda cambiar el status de otros usuarios.
+      allow list, write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email == "alexispparra@gmail.com";
+    }
+
+    // Reglas para Proyectos
     match /projects/{projectId} {
-
-      // CREATE: Allow any authenticated user to create a project.
-      // The app's logic ensures the creator becomes the owner and admin.
-      allow create: if request.auth != null;
-
-      // READ, UPDATE: Allow if the user is a participant in the project.
-      // The app's UI enforces finer-grained permissions (e.g., admin vs. editor).
-      allow read, update: if request.auth != null && 
-                             request.auth.token.email in resource.data.participantsEmails;
-
-      // DELETE: Allow only if the user is the original owner of the project.
-      allow delete: if request.auth != null &&
-                       request.auth.token.email == resource.data.ownerEmail;
+      // PERMISO DE LECTURA (GET):
+      // Un usuario puede leer un proyecto si su email está en la lista de participantes.
+      allow get: if request.auth.uid != null && request.auth.token.email in resource.data.participantsEmails;
+      
+      // PERMISO DE LISTADO (LIST):
+      // Un usuario autenticado puede solicitar la lista de proyectos. 
+      // La consulta en la aplicación se encargará de filtrar solo aquellos en los que participa.
+      allow list: if request.auth.uid != null;
+      
+      // PERMISO DE CREACIÓN (CREATE):
+      // Un usuario puede crear un proyecto. La lógica de la app asegura que él mismo
+      // se añade como participante y propietario.
+      allow create: if request.auth.uid != null;
+      
+      // PERMISO DE ACTUALIZACIÓN (UPDATE):
+      // Un usuario puede actualizar un proyecto si es un participante con rol 'admin' o 'editor'.
+      function getUserRole(projectId) {
+        let participants = get(/databases/$(database)/documents/projects/$(projectId)).data.participants;
+        let userEmail = request.auth.token.email;
+        let userParticipant = participants.filter(p => p.email == userEmail)[0];
+        return userParticipant.role;
+      }
+      allow update: if request.auth.uid != null && getUserRole(projectId) in ['admin', 'editor'];
+      
+      // PERMISO DE ELIMINACIÓN (DELETE):
+      // Un usuario puede eliminar un proyecto si es un participante con rol 'admin'.
+      allow delete: if request.auth.uid != null && getUserRole(projectId) == 'admin';
     }
   }
 }

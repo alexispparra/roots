@@ -1,14 +1,17 @@
 
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { User, Auth, UserCredential } from 'firebase/auth';
 import { getFirebaseInstances } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
+import type { DbUser } from '@/features/authorization/types';
+import { createUserProfileInDb } from '@/features/authorization/actions';
 
 type AuthContextType = {
   user: User | null;
-  loading: boolean;
+  userProfile: DbUser | null;
+  loading: boolean; // This now represents the combined loading state
   isAppAdmin: boolean;
   signOut: () => Promise<void>;
   signInWithEmail: (email:string, password:string) => Promise<UserCredential>;
@@ -23,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<DbUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAppAdmin, setIsAppAdmin] = useState(false);
   const [firebaseAuth, setFirebaseAuth] = useState<Auth | null>(null);
@@ -33,21 +37,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setFirebaseAuth(firebase.auth);
       
       const authModulePromise = import('firebase/auth');
-      authModulePromise.then(({ onAuthStateChanged }) => {
+      const firestoreModulePromise = import('firebase/firestore');
+
+      Promise.all([authModulePromise, firestoreModulePromise]).then(([{ onAuthStateChanged }, { doc, onSnapshot }]) => {
         const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser) => {
           setUser(currentUser);
           
-          // Robust admin check, now reading directly from process.env
-          const adminEmailFromEnv = (process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL || "").trim().toLowerCase();
-          const userEmail = (currentUser?.email || "").trim().toLowerCase();
-          
-          setIsAppAdmin(!!(adminEmailFromEnv && userEmail && adminEmailFromEnv === userEmail));
-          
-          setLoading(false);
+          if (currentUser) {
+            // User is logged in, now listen for their profile changes.
+            const userDocRef = doc(firebase.db, 'users', currentUser.uid);
+            const unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
+              if (docSnap.exists()) {
+                const profile = docSnap.data() as DbUser;
+                setUserProfile(profile);
+                setIsAppAdmin(profile.status === 'approved' && profile.email === process.env.NEXT_PUBLIC_APP_ADMIN_EMAIL);
+              } else {
+                 // This can happen briefly if the user profile is not created yet.
+                 setUserProfile(null);
+              }
+              setLoading(false);
+            }, (error) => {
+                console.error("Error fetching user profile:", error);
+                setUserProfile(null);
+                setLoading(false);
+            });
+            return () => unsubscribeProfile();
+          } else {
+            // User is logged out
+            setUserProfile(null);
+            setIsAppAdmin(false);
+            setLoading(false);
+          }
         });
         return () => unsubscribe();
       }).catch(err => {
-          console.error("Failed to load firebase/auth module", err);
+          console.error("Failed to load Firebase modules", err);
           setLoading(false);
       });
 
@@ -56,6 +80,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   }, []);
+
+  const handleAuthSuccess = useCallback(async (userCredential: UserCredential) => {
+    await createUserProfileInDb(userCredential.user);
+    return userCredential;
+  }, []);
+
 
   const authOperations = useMemo(() => {
     if (!firebaseAuth) return {
@@ -75,20 +105,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
       signInWithEmail: async (email:string, password:string) => {
         const { signInWithEmailAndPassword } = await import('firebase/auth');
-        return signInWithEmailAndPassword(firebaseAuth, email, password);
+        const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
+        return handleAuthSuccess(userCredential);
       },
       signInWithGoogle: async () => {
         const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
         const provider = new GoogleAuthProvider();
-        return signInWithPopup(firebaseAuth, provider);
+        const userCredential = await signInWithPopup(firebaseAuth, provider);
+        return handleAuthSuccess(userCredential);
       },
       registerWithEmail: async (email:string, password:string) => {
           const { createUserWithEmailAndPassword } = await import('firebase/auth');
-          return createUserWithEmailAndPassword(firebaseAuth, email, password);
+          const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+          return handleAuthSuccess(userCredential);
       },
       updateUserProfile: async (userToUpdate: User, profileData: { displayName?: string, photoURL?: string }) => {
         const { updateProfile } = await import('firebase/auth');
-        return updateProfile(userToUpdate, profileData);
+        // Also update the profile in Firestore
+        const { doc, updateDoc } = await import('firebase/firestore');
+        const { db } = getFirebaseInstances();
+        await updateProfile(userToUpdate, profileData);
+        if (profileData.displayName) {
+          const userDocRef = doc(db, 'users', userToUpdate.uid);
+          await updateDoc(userDocRef, { displayName: profileData.displayName });
+        }
       },
       sendPasswordReset: async (email: string) => {
         const { sendPasswordResetEmail } = await import("firebase/auth");
@@ -104,16 +144,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return updatePassword(firebaseAuth.currentUser, newPassword);
       }
     };
-  }, [firebaseAuth]);
+  }, [firebaseAuth, handleAuthSuccess]);
   
   const value: AuthContextType = {
     user,
+    userProfile,
     loading,
     isAppAdmin,
     ...authOperations
   };
 
-  if (loading) {
+  if (loading && !user && !userProfile) {
     return (
       <div className="flex items-center justify-center min-h-svh bg-background">
         <Loader2 className="h-8 w-8 animate-spin" />

@@ -26,7 +26,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, userProfile } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {

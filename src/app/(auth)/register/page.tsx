@@ -16,6 +16,7 @@ import Link from "next/link"
 import { Logo } from "@/components/logo"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { createUserProfileInDb } from "@/features/authorization/actions"
 
 export default function RegisterPage() {
   const { registerWithEmail, updateUserProfile } = useAuth();
@@ -38,12 +39,16 @@ export default function RegisterPage() {
     }
 
     try {
+      // 1. Create the user in Firebase Auth
       const userCredential = await registerWithEmail(email, password)
       
+      // 2. Update their Auth profile (displayName)
       const fullName = `${firstName} ${lastName}`.trim();
-      await updateUserProfile(userCredential.user, { displayName: fullName })
+      await updateUserProfile(userCredential.user, { displayName: fullName });
+
+      // 3. Create their profile in Firestore database (this is handled by the AuthContext now)
+      // The redirection is handled by AuthLayout upon detecting the new logged-in user.
       
-      // Redirection is handled by AuthLayout upon detecting the new logged-in user.
     } catch (error: any) {
       console.error("Firebase Register Error:", error.code, error.message)
       if (error.code === 'auth/email-already-in-use') {
