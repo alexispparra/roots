@@ -137,7 +137,7 @@ function IncomeVsExpensesChart({ transactions }: { transactions: Transaction[] }
                 top: 5,
                 right: 0,
                 left: -20,
-                bottom: 5,
+                bottom: 30, // Increased bottom margin for rotated labels
               }}
             >
                 <CartesianGrid vertical={false} />
@@ -148,6 +148,8 @@ function IncomeVsExpensesChart({ transactions }: { transactions: Transaction[] }
                     tickLine={false}
                     axisLine={false}
                     interval={0}
+                    angle={-45}
+                    textAnchor="end"
                 />
                 <YAxis
                     stroke="#888888"
