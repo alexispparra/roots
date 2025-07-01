@@ -189,20 +189,23 @@ export function ProjectSummary({ project }: { project: Project }) {
                             </TableBody>
                         </Table>
                     </div>
-                    {/* Mobile Card List - CORRECTED */}
+                    {/* Mobile Card List - REBUILT to be responsive */}
                     <div className="block md:hidden space-y-4 p-4">
                       {latestTransactions.length > 0 ? (
                         latestTransactions.map(t => (
-                          <Card key={t.id} className="min-w-0">
-                            <CardHeader className="flex flex-row items-center justify-between p-4">
-                              <div className="grid gap-1 min-w-0 flex-1">
-                                <p className="font-medium truncate">{t.description}</p>
-                                <p className="text-xs text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</p>
-                              </div>
-                              <div className={`ml-4 text-right font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
-                                {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
-                              </div>
+                          <Card key={t.id}>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-base font-medium leading-snug">{t.description}</CardTitle>
+                                <CardDescription>{t.date.toLocaleDateString('es-ES')}</CardDescription>
                             </CardHeader>
+                            <CardContent>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-muted-foreground">Monto</span>
+                                    <span className={`font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
+                                    </span>
+                                </div>
+                            </CardContent>
                           </Card>
                         ))
                       ) : (
@@ -278,3 +281,5 @@ export function ProjectSummary({ project }: { project: Project }) {
     </div>
   );
 }
+
+    
