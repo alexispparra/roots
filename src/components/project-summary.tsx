@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChartContainer } from "@/components/ui/chart"
 import { ProjectFinancialSummary } from "./project-financial-summary"
+import { Badge } from "./ui/badge"
 
 
 const ProjectMapClient = dynamic(() => import('@/components/project-map-client'), {
@@ -188,19 +189,21 @@ export function ProjectSummary({ project }: { project: Project }) {
                             </TableBody>
                         </Table>
                     </div>
-                    {/* Mobile Card List */}
+                    {/* Mobile Card List - CORRECTED */}
                     <div className="block md:hidden space-y-4 p-4">
                       {latestTransactions.length > 0 ? (
                         latestTransactions.map(t => (
-                          <div key={t.id} className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-lg border p-3 text-sm">
-                            <div className="min-w-0">
+                          <Card key={t.id} className="min-w-0">
+                            <CardHeader className="flex flex-row items-center justify-between p-4">
+                              <div className="grid gap-1 min-w-0 flex-1">
                                 <p className="font-medium truncate">{t.description}</p>
                                 <p className="text-xs text-muted-foreground">{t.date.toLocaleDateString('es-ES')}</p>
-                            </div>
-                            <div className={`text-right font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
+                              </div>
+                              <div className={`ml-4 text-right font-semibold ${t.type === 'income' ? 'text-emerald-500' : 'text-destructive'}`}>
                                 {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amountUSD)}
-                            </div>
-                          </div>
+                              </div>
+                            </CardHeader>
+                          </Card>
                         ))
                       ) : (
                           <div className="py-10 text-center text-muted-foreground">
