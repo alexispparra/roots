@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef } from "react"
@@ -123,8 +124,8 @@ export function CreateExpenseDialog({ categories, participants, onAddExpense }: 
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button size="sm" variant="ghost" className="h-9 px-3 gap-1 flex-1 sm:flex-none border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20 font-semibold">
-            <PlusCircle className="h-4 w-4" />
+          <Button size="sm" variant="ghost" className="h-9 px-3 w-full border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20 font-semibold">
+            <PlusCircle className="mr-2 h-4 w-4" />
             Gasto
           </Button>
         </DialogTrigger>

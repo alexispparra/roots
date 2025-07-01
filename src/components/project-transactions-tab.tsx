@@ -209,7 +209,7 @@ export function ProjectTransactionsTab({ project, canEdit }: ProjectTransactions
                     </SelectContent>
                   </Select>
                    {canEdit && (
-                    <div className="flex w-full sm:w-auto sm:flex-none gap-2">
+                    <div className="grid grid-cols-2 w-full sm:w-auto gap-2">
                       <CreateIncomeDialog onAddIncome={handleAddIncome} />
                       <CreateExpenseDialog
                         onAddExpense={handleAddExpense}
